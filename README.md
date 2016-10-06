@@ -8,3 +8,4 @@ YET TO DO:
 *add model/service structure
 *incorporate db migration tools
 *employ a cohesive client-side dev strategy
+*add authentication
