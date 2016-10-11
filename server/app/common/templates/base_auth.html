@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block body_class %}auth{% endblock %}
+
+{% block flash_messages %}
+    <div id="flash-messages" class="container">
+        <div class="row">
+            <h1>&nbsp;</h1>
+            <div class="col-md-6 center-block">
+                {% include 'flash_messages.html' %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,33 @@
+<div id="common-header-view-model" class="site-header navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <div class="drawer-header">
+                <button class="navbar-toggle drawer-toggle">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div class="navbar-brand">
+                <a href="{{ url_for('main.index') }}">Home</a>
+            </div>
+        </div>
+        <ul id="main-menu" class="nav navbar-nav navbar-right">
+            {% if not current_user.is_authenticated %}
+                <li>
+                    <a href="{{ url_for('auth.login', next=request.url) }}">Log In</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+                </li>
+            {% else %}
+                <li id="account-dropdown" class="dropdown">
+                    <a href="{{ url_for('auth.logout') }}">Log Out</a>                      
+                </li>
+            {% endif %}
+            <li class="twitter">
+                <a href="http://www.twitter.com/joinindies" target="_blank"><span class="fa fa-twitter"></span></a>
+            </li>
+        </ul>
+    </div>
+</div>

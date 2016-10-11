@@ -1,0 +1,59 @@
+{% macro render_horizontal_field(
+        field,
+        label_class='',
+        input_parent_class=None,
+        type=None,
+        placeholder=None) %}
+    <div class="form-group">
+        {{ field.label(class_='control-label ' + label_class) }}
+        <div {% if input_parent_class %}class="{{ input_parent_class }}"{% endif %}>
+            {% if type %}
+                {{ field(placeholder=placeholder or field.label.text,
+                        class_='form-control',
+                        type=type,
+                        **kwargs) | safe }}
+            {% else %}
+                {{ field(placeholder=placeholder or field.label.text,
+                        class_='form-control',
+                        **kwargs) | safe }}
+            {% endif %}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <label class="error">{{ error }}</label>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro render_csrf_token() %}
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+{% endmacro %}
+
+{% macro render_checkbox_list(field, field_name, label_class='', input_parent_class=None,
+    checked_values=[]) %}
+    <div class="form-group">
+        {{ field.label(class_='control-label ' + label_class) }}
+        <div {% if input_parent_class %}class="{{ input_parent_class }}"{% endif %}>
+            {% for choice in field.choices %}
+                <div class="checkbox">
+                    <label class="checkbox">
+                        <input name="{{ field_name }}" type="checkbox"
+                               {% set choices = request.form.getlist(field_name) %}
+                               {% if (choices and choice_id | string in choices) or
+                                    (checked_values and choice[0] in checked_values) %}
+                                   checked="checked"
+                               {% endif %}
+                               value="{{ choice[0] }}">
+                        <span>{{ choice[1] }}</span>
+                    </label>
+                </div>
+            {% endfor %}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <label class="error">{{ error }}</label>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}

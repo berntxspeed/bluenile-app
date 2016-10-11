@@ -14,6 +14,7 @@ class Config(object):
     LOGGER_NAME = 'simple_di_flask_app'
     PROPAGATE_EXCEPTIONS = True
     SECRET_KEY = os.getenv('SECRET_KEY')
+    DEBUG_TB_INTERCEPT_REDIRECTS = False
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
@@ -21,6 +22,12 @@ class Config(object):
 
     # Cache
     CACHE_TYPE = 'simple'
+
+    # Oauth2 Credentials
+    FACEBOOK_APP_ID = os.getenv('FACEBOOK_APP_ID')
+    FACEBOOK_APP_SECRET = os.getenv('FACEBOOK_APP_SECRET')
+    TWITTER_APP_ID = os.getenv('TWITTER_APP_ID')
+    TWITTER_APP_SECRET = os.getenv('TWITTER_APP_SECRET')
 
     @classmethod
     def init_app(cls, app):
@@ -32,8 +39,18 @@ class LocalConfig(Config):
 
     # Application
     PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(PROJECT_ROOT, '..', 'tmp', 'app.db')
     SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
+
+    # Database
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(PROJECT_ROOT, '..', 'tmp', 'app.db')
+    SQLALCHEMY_MIGRATE_REPO = os.path.join(PROJECT_ROOT, '..', 'db_repository')
+
+    # Oauth2 Credentials
+    FACEBOOK_APP_ID = '1414432525530848'
+    FACEBOOK_APP_SECRET = '82a49f002a8bf1bdcf34a5adfa083914'
+    TWITTER_APP_ID = 'MzZ2zXpjQxGSl6gAm6VwQrIv4'
+    TWITTER_APP_SECRET = 'adfuzYNtIoAkoBHKTnQGxGtyYBHbihgyf2qG3pr3o6QaqcWMyv'
+    # ***add google login
 
     @classmethod
     def init_app(cls, app):

@@ -1,0 +1,77 @@
+{% extends 'base_auth.html' %}
+
+{% from '_form_helpers.html' import render_csrf_token with context %}
+{% from '_form_helpers.html' import render_horizontal_field %}
+
+{% block title %}Log In{% endblock %}
+
+
+
+{% block body %}
+      <div class="row">
+          <div class="col-md-6 center-block">
+              <h1>&nbsp;</h1>
+              <h1>Log In</h1>
+          </div>
+      </div>
+     <div class="row">
+          <div class="col-md-6 center-block">
+               <form id="login-form" class="form-horizontal auth-form" method="post">
+                    <div class="well">
+                         {{ render_csrf_token() }}
+                         {{ render_horizontal_field(
+                              form.username,
+                              label_class='col-md-3',
+                              input_parent_class='col-md-9') }}
+                         {{ render_horizontal_field(
+                              form.password,
+                              label_class='col-md-3',
+                              input_parent_class='col-md-9') }}
+                         <div class="form-group">
+                              <div class="col-md-offset-3 col-sm-2 col-xs-2">
+                                   <button type="submit" class="btn btn-success login-btn">Log In</button>
+                              </div>
+                              <div class="col-md-5 col-sm-10 col-xs-10 forgot-password">
+                                  <!-- url_for('auth.forgot_password') -->
+                                   <a href="#">Forgot password?</a>
+                              </div>
+                         </div>
+                         <div class="form-group">
+                              <div class="col-md-offset-3 remember-me checkbox">
+                                   <label class="checkbox">
+                                        {{ form.remember_me(checked='checked') }}
+                                        <span>Remember me</span>
+                                   </label>
+                                   <div class="clearfix"></div>
+                              </div>
+                         </div>
+                         <div class="row">
+                             <h3 class="auth-or login-or text-center">or</h3>
+                         </div>
+                         <a href="{{ url_for('auth.twitter_login') }}" class="btn btn-info signup-btn twitter-signup-btn">
+                             <span class="fa fa-twitter"></span>
+                             <span class="social-label">Login with Twitter</span>
+                         </a>
+                         <a href="{{ url_for('auth.facebook_login') }}" class="btn btn-primary signup-btn facebook-signup-btn">
+                             <span class="fa fa-facebook"></span>
+                             <span class="social-label">Login with Facebook</span>
+                         </a>
+                    </div>
+               </form>
+          </div>
+          <div class="h4 col-md-6 center-block text-center">
+               <a href="{{ url_for('auth.signup') }}" class="signup-link">Sign Up</a>
+          </div>
+     </div>
+{% endblock %}
+
+{% block json_config %}
+    {{ super() }}
+    {{ macros.json_forms_tag(
+        {
+            'id': 'login-form',
+            'submit': True,
+            'data': form.json_data()
+        }
+    ) }}
+{% endblock %}

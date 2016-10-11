@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign up{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>Only logged in users can see this page</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-6 center-block">
+            <div class="well form-well signup-info">
+                <strong>Here are your user details</strong>
+            </div>
+            <div class="well form-well">
+                <p>code user deets here. </p>
+                {% if status %}
+                  <p>{{ status }}</p>
+                {% endif %}
+                {% if fb_id %}
+                  <p>Facebook Id: {{ fb_id }}</p>
+                {% endif %}
+                {% if email %}
+                  <p>Email: {{ email }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

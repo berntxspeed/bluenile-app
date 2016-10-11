@@ -1,0 +1,56 @@
+{% import '_macros.html' as macros with context %}
+
+{% set description = 'Watch the latest indie game videos, updated daily. Join the indie games community and promote your game on Join Indies!' %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% block title_container %}
+            <title>Join Indies - {% block title %}{% endblock %}</title>
+        {% endblock %}
+        <meta charset="utf-8">
+        <meta name="apple-mobile-web-app-title" content="Join Indies">
+        {% block meta %}
+            <meta name="description" content="{{ description }}">
+        {% endblock %}
+        <meta property="twitter:site" content="@JoinIndies">
+        {% block twitter_card %}{% endblock %}
+        <meta property="og:site_name" content="Join Indies">
+        <meta property="og:locale" content="en_US">
+        <meta property="og:type" content="website">
+        {% block og %}{% endblock %}
+        {% block og_description %}
+            <meta property="og:description" content="{{ description }}">
+        {% endblock %}
+        {% include 'favicons.html' %}
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    </head>
+    <body class="{% block body_class %}{% endblock %}">
+        {% include 'header.html' %}
+        <div id="content">
+            {% block banner %}{% endblock %}
+            {% block flash_messages %}
+                <div id="flash-messages" class="container">
+                    {% include 'flash_messages.html' %}
+                </div>
+            {% endblock %}
+            {% block body_container %}
+                <div class="wrapper">
+                    <div id="body-container" class="container">
+                        {% block body %}{% endblock %}
+                    </div>
+                    {% block footer %}{% endblock %}
+                </div>
+            {% endblock %}
+            {% block json_config %}
+                {{ macros.json_config_tag() }}
+            {% endblock %}
+            <div id="scotch-panel"></div>
+        </div>
+        {% include 'drawer_menu.html' %}
+        <!-- block scripts -->
+          <!-- include 'main_scripts.html' -->
+        <!-- endblock -->
+        <scipt type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" ></script
+    </body>
+</html>

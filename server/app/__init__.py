@@ -1,7 +1,9 @@
 from flask import Flask
 from flask_injector import FlaskInjector
+from flask_login import LoginManager
 from werkzeug import SharedDataMiddleware
 
+from .common.models import User
 from .module import blueprints
 from .module import modules
 from ..config import config
@@ -37,8 +39,18 @@ def create_injector(app=None):
         app = create_app()
     injector = FlaskInjector(app=app, modules=modules).injector
     init_db(app)
+    init_loginmanager(app)
     return injector
 
 def init_db(app):
     from .common.models import db
     db.init_app(app)
+
+def init_loginmanager(app):
+    login_manager = LoginManager()
+    login_manager.session_protection = 'strong'
+    login_manager.login_view = 'auth.login'
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    login_manager.init_app(app)

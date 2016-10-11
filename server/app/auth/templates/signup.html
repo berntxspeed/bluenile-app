@@ -1,0 +1,79 @@
+{% extends 'base_auth.html' %}
+
+{% from '_form_helpers.html' import render_csrf_token with context %}
+{% from '_form_helpers.html' import render_horizontal_field %}
+
+{% block title %}Sign up{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>Sign Up</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-6 center-block">
+            <div class="well form-well signup-info">
+                <strong>Create an account to vote, comment, and post your own videos.</strong>
+            </div>
+            <div class="well form-well">
+              <form id="signup-form" class="form-horizontal auth-form" method="post">
+                  {{ render_csrf_token() }}
+                  {{ render_horizontal_field(
+                          form.username,
+                          label_class='col-md-3',
+                          input_parent_class='col-md-9') }}
+                  {{ render_horizontal_field(
+                          form.email,
+                          type='email',
+                          label_class='col-md-3',
+                          input_parent_class='col-md-9') }}
+                  {{ render_horizontal_field(
+                          form.password,
+                          label_class='col-md-3',
+                          input_parent_class='col-md-9') }}
+                  {{ render_horizontal_field(
+                          form.confirm_password,
+                          label_class='col-md-3',
+                          input_parent_class='col-md-9',
+                          placeholder='Confirm Password') }}
+                  <div class="form-group">
+                      <div class="col-xs-12">
+                          <button type="submit" class="btn btn-success signup-btn">Sign Up</button>
+                      </div>
+                  </div>
+              </form>
+              <div class="row">
+                  <h3 class="auth-or text-center signup">or</h3>
+              </div>
+                <a href="{{ url_for('auth.twitter_login') }}" class="btn btn-info signup-btn twitter-signup-btn">
+                    <span class="fa fa-twitter"></span>
+                    <span class="social-label">Sign up with Twitter</span>
+                </a>
+                <a href="{{ url_for('auth.facebook_login') }}" class="btn btn-primary signup-btn facebook-signup-btn">
+                    <span class="fa fa-facebook"></span>
+                    <span class="social-label">Sign up with Facebook</span>
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block json_config %}
+    {{ super() }}
+    {{ macros.json_forms_tag(
+        {
+            'id': 'signup-form',
+            'submit': True,
+            'data': form.json_data()
+        }
+    ) }}
+{% endblock %}

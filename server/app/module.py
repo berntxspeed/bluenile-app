@@ -8,9 +8,11 @@ from injector import provides
 from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy
 
 # import other modules
+from .auth.module import AuthModule
 
 # import all blueprints
 from .main import main as main_blueprint
+from .auth import auth as auth_blueprint
 
 import logging
 import sys
@@ -50,9 +52,11 @@ class AppModule(Module):
 
 
 modules = [
-    AppModule()
+    AppModule(),
+    AuthModule()
 ]
 
 blueprints = [
-    main_blueprint
+    main_blueprint,
+    auth_blueprint
 ]

@@ -1,0 +1,19 @@
+<div id="drawer-menu" style="display: none">
+    <ul class="nav navbar-nav">
+        {% if not current_user.is_authenticated %}
+            <li>
+                <a href="{{ url_for('auth.login', next=request.url) }}">Log In</a>
+            </li>
+            <li>
+                <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+            </li>
+        {% else %}
+            <li>
+                <a href="{{ url_for('auth.logout') }}">
+                    Log Out
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+    <div class="clear"></div>
+</div>
