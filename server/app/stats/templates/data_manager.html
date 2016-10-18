@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Data Manager{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>Here you can take action to load outside data into the system</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-6 center-block">
+            <div class="well form-well signup-info">
+                <strong>You can take the following actions:</strong>
+            </div>
+            <div class="well form-well">
+                <ul>
+                  <li><a href="{{ url_for('stats.load_customers') }}">Load Customers</a></li>
+                  <li><a href="{{ url_for('stats.load_artists') }}">Load Artists</a></li>
+                  <li><a href="{{ url_for('stats.load_mc_email_data') }}">Load Marketing Cloud Email Data</a></li>
+                  <li><a href="{{ url_for('stats.load_mc_journeys') }}">Load Journeys</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

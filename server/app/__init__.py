@@ -1,9 +1,10 @@
 from flask import Flask
 from flask_injector import FlaskInjector
 from flask_login import LoginManager
+import flask_restless as Restless
+from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
 
-from .common.models import User
 from .module import blueprints
 from .module import modules
 from ..config import config
@@ -39,14 +40,31 @@ def create_injector(app=None):
         app = create_app()
     injector = FlaskInjector(app=app, modules=modules).injector
     init_db(app)
+    init_mongo(app)
     init_loginmanager(app)
+    init_assets(app)
     return injector
 
 def init_db(app):
-    from .common.models import db
+    from .common.models import db, SendJob, EmlOpen, EmlClick, Customer, Artist
     db.init_app(app)
 
+    # create the Flask-Restless API manager
+    manager = Restless.APIManager(app, flask_sqlalchemy_db=db)
+
+    # create the api endpoints, which will be available by /api/<tblname>
+    manager.create_api(SendJob, methods=['GET'])
+    manager.create_api(EmlOpen, methods=['GET'])
+    manager.create_api(EmlClick, methods=['GET'])
+    manager.create_api(Artist, methods=['GET'])
+    manager.create_api(Customer, methods=['GET'])
+
+def init_mongo(app):
+    from .common.mongo import mongo
+    mongo.init_app(app)
+
 def init_loginmanager(app):
+    from .common.models import User
     login_manager = LoginManager()
     login_manager.session_protection = 'strong'
     login_manager.login_view = 'auth.login'
@@ -54,3 +72,8 @@ def init_loginmanager(app):
     def load_user(user_id):
         return User.query.get(int(user_id))
     login_manager.init_app(app)
+
+def init_assets(app):
+    from .common.utils.assets import bundles
+    assets = Environment(app)
+    assets.register(bundles)

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    {{ super() }}
+    {% assets 'journey_view_css' %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
+    {% endassets %}
+{% endblock %}
+
+{% block title %}Journeys{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>View journeys and their performance data.</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-6 center-block">
+            <div class="well form-well signup-info">
+                <strong>Here is the data: </strong>
+            </div>
+            <div class="well form-well">
+                <select id="journey-select">
+                    {% for journey in journeys %}
+                        <option value="{{ journey._id }}">{{ journey.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="button" class="btn" id="btn-layout" value="build directed graph"/>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 center-block">
+            <div class="well" id="journey-well">
+                <div id="journey-paper" style="background-color: ghostwhite"></div>
+            </div>
+        </div>
+    </div>
+    {% assets "journey_view_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+{% endblock %}

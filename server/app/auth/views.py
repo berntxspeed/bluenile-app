@@ -84,10 +84,3 @@ def logout(auth_service):
 @templated('signup')
 def signup(auth_service):
     return auth_service.signup(request)
-
-@auth.route('/special-logged-in-page')
-@inject(auth_service=AuthServ)
-@login_required
-@templated('special_logged_in_page')
-def special_logged_in_page(auth_service):
-    return auth_service.special_logged_in_page(request=request, session=session)

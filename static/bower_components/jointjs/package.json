@@ -1,0 +1,82 @@
+{
+  "name": "jointjs",
+  "title": "JointJS",
+  "description": "JavaScript diagramming library",
+  "keywords": [
+    "diagram",
+    "flowchart",
+    "graph",
+    "visualization"
+  ],
+  "scripts": {
+    "test": "grunt test"
+  },
+  "version": "1.0.1",
+  "main": "./dist/joint.min.js",
+  "style": "./dist/joint.min.css",
+  "homepage": "http://jointjs.com",
+  "author": {
+    "name": "client IO",
+    "url": "http://client.io"
+  },
+  "contributors": [
+    "David Durman <daviddurman@gmail.com> (https://github.com/DavidDurman)",
+    "Roman Bruckner <bruckner.roman@gmail.com> (https://github.com/kumilingus)",
+    "Emanuele Palombo <emanuele@client.io> (https://github.com/elbowz)",
+    "Charles Hill <chill@degreesofzero.com> (https://github.com/chill117)",
+    "Daniel K. (https://github.com/FredyC)",
+    "Vladimir Talas (https://github.com/vtalas)",
+    "Petr Skala (https://github.com/pskala)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clientIO/joint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/clientIO/joint/issues"
+  },
+  "license": "MPL-2.0",
+  "dependencies": {
+    "backbone": "1.3.3",
+    "dagre": "0.7.4",
+    "graphlib": "1.0.7",
+    "jquery": "2.2.4",
+    "lodash": "3.10.1"
+  },
+  "devDependencies": {
+    "async": "2.0.1",
+    "chai": "3.5.0",
+    "cheerio": "0.20.0",
+    "express": "4.14.0",
+    "grunt": "1.0.1",
+    "grunt-browserify": "5.0.0",
+    "grunt-compile-docs": "1.2.0",
+    "grunt-contrib-clean": "1.0.0",
+    "grunt-contrib-concat": "1.0.1",
+    "grunt-contrib-copy": "1.0.0",
+    "grunt-contrib-csslint": "1.0.0",
+    "grunt-contrib-cssmin": "1.0.1",
+    "grunt-contrib-qunit": "1.2.0",
+    "grunt-contrib-uglify": "2.0.0",
+    "grunt-contrib-watch": "1.0.0",
+    "grunt-eslint": "19.0.0",
+    "grunt-mocha-test": "0.12.7",
+    "grunt-newer": "1.2.0",
+    "grunt-shell": "1.3.0",
+    "grunt-webpack": "1.0.14",
+    "handlebars": "4.0.5",
+    "load-grunt-tasks": "3.5.0",
+    "mocha": "2.5.3",
+    "open-sans-fontface": "https://github.com/clientIO/open-sans/archive/1.4.2.tar.gz",
+    "phantomjs-prebuilt": "2.1.7",
+    "prismjs": "1.5.1",
+    "selenium-standalone": "5.1.0",
+    "serve-static": "1.11.1",
+    "should": "11.0.0",
+    "sinon": "1.17.5",
+    "time-grunt": "1.4.0",
+    "webdriverio": "4.0.8",
+    "webpack": "1.13.1",
+    "webpack-dev-server": "1.14.1"
+  }
+}

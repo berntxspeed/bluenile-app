@@ -1,0 +1,17 @@
+{
+  "name": "simple_DI_flask_app",
+  "homepage": "https://github.com/berntxspeed/bluenile-app",
+  "authors": [
+    "Bernt Gudmestad <bernt@xspeed.co>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

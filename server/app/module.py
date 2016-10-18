@@ -5,14 +5,16 @@ from injector import singleton
 from injector import inject
 from injector import provides
 
-from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy
+from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB
 
 # import other modules
 from .auth.module import AuthModule
+from .stats.module import StatsModule
 
 # import all blueprints
 from .main import main as main_blueprint
 from .auth import auth as auth_blueprint
+from .stats import stats as stats_blueprint
 
 import logging
 import sys
@@ -31,6 +33,13 @@ class AppModule(Module):
     def provides_sqlalchemy(self, app):
         from .common.models import db
         return db
+
+    @singleton
+    @inject(app=Flask)
+    @provides(MongoDB)
+    def provides_mongodb(self, app):
+        from .common.mongo import mongo
+        return mongo
 
     @singleton
     @inject(app=Flask)
@@ -53,10 +62,12 @@ class AppModule(Module):
 
 modules = [
     AppModule(),
-    AuthModule()
+    AuthModule(),
+    StatsModule()
 ]
 
 blueprints = [
     main_blueprint,
-    auth_blueprint
+    auth_blueprint,
+    stats_blueprint
 ]

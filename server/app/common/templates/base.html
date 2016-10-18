@@ -23,7 +23,13 @@
             <meta property="og:description" content="{{ description }}">
         {% endblock %}
         {% include 'favicons.html' %}
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+        {% assets 'base_css' %}
+            <link rel="stylesheet" href="{{ ASSET_URL }}" />
+        {% endassets %}
+        {% assets 'base_js' %}
+        <script type="text/javascript" src="{{ ASSET_URL }}" ></script>
+        {% endassets %}
+        {% block head %}{% endblock %}
     </head>
     <body class="{% block body_class %}{% endblock %}">
         {% include 'header.html' %}
@@ -48,9 +54,5 @@
             <div id="scotch-panel"></div>
         </div>
         {% include 'drawer_menu.html' %}
-        <!-- block scripts -->
-          <!-- include 'main_scripts.html' -->
-        <!-- endblock -->
-        <scipt type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" ></script
     </body>
 </html>

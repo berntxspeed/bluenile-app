@@ -7,7 +7,7 @@ from injector import inject
 
 from server.app import create_injector
 from server.app.common import models
-from server.app.injector_keys import Config, SQLAlchemy
+from server.app.injector_keys import Config, SQLAlchemy, MongoDB
 
 import os.path
 import imp
@@ -16,6 +16,7 @@ injector = create_injector()
 app = injector.get(Flask)
 config = injector.get(Config)
 db = injector.get(SQLAlchemy)
+mongo = injector.get(MongoDB)
 manager = Manager(app)
 
 SQLALCHEMY_DATABASE_URI = config.get('SQLALCHEMY_DATABASE_URI')
@@ -26,6 +27,7 @@ def make_shell_context():
         'app': app,
         'config': app.config,
         'db': db,
+        'mongo': mongo,
         'injector': injector,
         'models': models
     }

@@ -88,7 +88,7 @@ class AuthService(DbService):
             if user is not None and user.password_hash is not None\
                 and check_password_hash(user.password_hash, form.password.data):
                 login_user(user, form.remember_me.data)
-                return redirect(request.args.get('next')) or url_for('special_logged_in_page')
+                return redirect(self.__next_url(request))
             else:
                 flash('Incorrect username or password.', 'error')
         return {
@@ -122,19 +122,6 @@ class AuthService(DbService):
             'form': form
         }
 
-    def special_logged_in_page(self, request, session):
-        facebook_id = session.get('facebook_id')
-        if facebook_id:
-            user = User.query.filter_by(facebook_id=facebook_id).first()
-        else:
-            return { 'status': 'no facebook_id found' }
-        if user is None:
-            return { 'status': 'no user found at that facebook_id' }
-        return {
-            'email': user.email,
-            'fb_id': facebook_id
-        }
-
     def __create_user(self,
                       username,
                       email,
@@ -164,12 +151,12 @@ class AuthService(DbService):
 
         # Login user
         login_user(user, remember_me)
-        return redirect(url_for('auth.special_logged_in_page'))
+        return redirect(url_for('stats.special_logged_in_page'))
 
     def __next_url(self, request):
         next_url = request.args.get('next')
         if next_url:
-            pass
+            next_url = url_for('stats.special_logged_in_page')
         else:
-            next_url = url_for('auth.special_logged_in_page')
+            next_url = url_for('stats.special_logged_in_page')
         return next_url

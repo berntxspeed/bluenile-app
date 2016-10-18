@@ -21,8 +21,14 @@
                     <a href="{{ url_for('auth.signup') }}">Sign Up</a>
                 </li>
             {% else %}
-                <li id="account-dropdown" class="dropdown">
-                    <a href="{{ url_for('auth.logout') }}">Log Out</a>                      
+                <li>
+                    <a href="{{ url_for('stats.journey_view') }}">Journeys</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('stats.data_manager') }}">Data Manager</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('auth.logout') }}">Log Out</a>
                 </li>
             {% endif %}
             <li class="twitter">

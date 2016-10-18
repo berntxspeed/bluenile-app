@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}DevPage JointJS{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    {% assets 'devpage_joint_css' %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
+    {% endassets %}
+{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>Use custom html inside of blocks</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-6 center-block">
+            <div class="well form-well">
+                <strong>Test Graph</strong>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 center-block">
+            <div class="well" id="test-well">
+                <div id="test-paper" style="background-color: ghostwhite"></div>
+            </div>
+        </div>
+    </div>
+    {% assets "devpage_joint_js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+{% endblock %}
