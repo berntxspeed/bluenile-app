@@ -54,7 +54,6 @@ class LocalConfig(Config):
     ENV = LOCAL
 
     # Application
-    PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
     SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
 
     # assets configuration (js/css files)
@@ -76,7 +75,6 @@ class StgConfig(Config):
     ENV = STG
 
     # Application
-    PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
     SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
 
     # assets configuration (js/css files)
