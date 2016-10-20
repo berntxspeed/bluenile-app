@@ -82,6 +82,13 @@ class TestConfig(Config):
 class StgConfig(Config):
     ENV = STG
 
+    # Application
+    PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
+    SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
+
+    # assets configuration (js/css files)
+    ASSETS_DEBUG = True  # forces flask to not merge asset files into one file
+
     @classmethod
     def init_app(cls, app):
         super(StgConfig, cls).init_app(app)
