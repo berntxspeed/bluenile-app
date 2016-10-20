@@ -10,10 +10,11 @@ from .module import modules
 from ..config import config
 
 import sys
+import os
 
 
 def create_app():
-    env = 'local'
+    env = os.getenv('APP_SETTINGS')
     config_obj = config.get(env)
     if not config_obj:
         sys.exit('Incorrect ENV: %s' % env)

@@ -21,7 +21,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     SQLALCHEMY_MIGRATE_REPO = os.path.join(PROJECT_ROOT, '..', 'db_repository')
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    MONGO_URI = os.getenv('MONGO_URI')
+    MONGO_URI = os.getenv('MONGODB_URI')
 
     # Cache
     CACHE_TYPE = 'simple'
@@ -81,6 +81,13 @@ class TestConfig(Config):
 
 class StgConfig(Config):
     ENV = STG
+
+    @classmethod
+    def init_app(cls, app):
+        super(LocalConfig, cls).init_app(app)
+        if app.debug:
+            from flask_debugtoolbar import DebugToolbarExtension
+            DebugToolbarExtension(app)
 
 
 class ProdConfig(Config):
