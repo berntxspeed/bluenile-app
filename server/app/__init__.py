@@ -46,7 +46,7 @@ def create_injector(app=None):
     return injector
 
 def init_db(app):
-    from .common.models import db, SendJob, EmlOpen, EmlClick, Customer, Artist
+    from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer, Artist
     db.init_app(app)
 
     # create the Flask-Restless API manager
@@ -54,6 +54,7 @@ def init_db(app):
 
     # create the api endpoints, which will be available by /api/<tblname>
     manager.create_api(SendJob, methods=['GET'])
+    manager.create_api(EmlSend, methods=['GET'])
     manager.create_api(EmlOpen, methods=['GET'])
     manager.create_api(EmlClick, methods=['GET'])
     manager.create_api(Artist, methods=['GET'])

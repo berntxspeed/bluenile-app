@@ -1,5 +1,44 @@
+// jointRichElement.js
+// depends on: static/app/common/js/pieChartEmlStats.js
+
+/*
+// this file creates a new type of custom Joint Element
+// - for use on the page.
+// this is how to use this new type of Element:
+// (make sure all fields are included)
+return new joint.shapes.html.Element({
+    id: label,
+    sendId: sendId,
+    activityType: activityType,
+    position: {x: 0, y: 0},
+    size: {width: 170, height: 100},
+    label: label
+});
+
+// note: sendId should be the triggeredSendId of the activity in the journey
+// note: activityType should be the configurationArguments/type field of the activity in the journey
+ */
 
 $(document).ready(function () {
+
+    // Configuration specific details
+    var journeyBlockImages = function (activityType){
+
+        var acceptedTypes = [
+            'EMAILV2',
+            'WAIT',
+            'RANDOMSPLIT',
+            'MULTICRITERIADECISION',
+            'ENGAGEMENTSPLIT',
+            'DATAEXTENSIONUPDATE'
+        ];
+
+        if(_.indexOf(acceptedTypes, activityType) >= 0) {
+            return 'img/journeyBuilder/' + activityType + '.png';
+        } else {
+            return 'img/journeyBuilder/DEFAULT.png';
+        }
+    };
 
     // Create a custom element.
     // ------------------------
@@ -9,7 +48,7 @@ $(document).ready(function () {
         defaults: joint.util.deepSupplement({
             type: 'html.Element',
             attrs: {
-                rect: {stroke: 'none', 'fill-opacity': 0}
+                rect: { stroke: 'none', 'fill-opacity': 0 }
             }
         }, joint.shapes.basic.Rect.prototype.defaults)
     });
@@ -21,32 +60,19 @@ $(document).ready(function () {
 
         template: [
             '<div class="html-element">',
-            '<button class="delete">x</button>',
-            '<label></label>',
-            '<span></span>', '<br/>',
-            '<select><option>--</option><option>one</option><option>two</option></select>',
-            '<input type="text" value="I\'m HTML input" />',
+            '<label class="title"></label>',
+            '<label class="sendCnt"></label>',
+            '<img src="#" />',
+            '<div class="chart"></div>',
             '</div>'
         ].join(''),
 
-        initialize: function () {
+        initialize: function() {
             _.bindAll(this, 'updateBox');
             joint.dia.ElementView.prototype.initialize.apply(this, arguments);
 
             this.$box = $(_.template(this.template)());
-            // Prevent paper from handling pointerdown.
-            this.$box.find('input,select').on('mousedown click', function (evt) {
-                evt.stopPropagation();
-            });
-            // This is an example of reacting on the input change and storing the input data in the cell model.
-            this.$box.find('input').on('change', _.bind(function (evt) {
-                this.model.set('input', $(evt.target).val());
-            }, this));
-            this.$box.find('select').on('change', _.bind(function (evt) {
-                this.model.set('select', $(evt.target).val());
-            }, this));
-            this.$box.find('select').val(this.model.get('select'));
-            this.$box.find('.delete').on('click', _.bind(this.model.remove, this.model));
+
             // Update the box position whenever the underlying model changes.
             this.model.on('change', this.updateBox, this);
             // Remove the box when the model gets removed from the graph.
@@ -54,18 +80,20 @@ $(document).ready(function () {
 
             this.updateBox();
         },
-        render: function () {
+        render: function() {
             joint.dia.ElementView.prototype.render.apply(this, arguments);
             this.paper.$el.prepend(this.$box);
             this.updateBox();
+            var blockImgSrc = journeyBlockImages(this.model.get('activityType'));
+            this.$box.find('img').attr('src', blockImgSrc);
+            this.$box.find('label.title').text(this.model.get('label'));
+            this.renderEmlStats();
             return this;
         },
-        updateBox: function () {
+        updateBox: function() {
             // Set the position and dimension of the box so that it covers the JointJS element.
             var bbox = this.model.getBBox();
             // Example of updating the HTML with a data stored in the cell model.
-            this.$box.find('label').text(this.model.get('label'));
-            this.$box.find('span').text(this.model.get('select'));
             this.$box.css({
                 width: bbox.width,
                 height: bbox.height,
@@ -74,8 +102,30 @@ $(document).ready(function () {
                 transform: 'rotate(' + (this.model.get('angle') || 0) + 'deg)'
             });
         },
-        removeBox: function (evt) {
-            this.$box.remove();
+        renderEmlStats: function() {
+            if(this.model.get('sendId')){
+                var bbox = this.model.getBBox();
+                var sendId = this.model.get('sendId');
+                var id = this.model.get('id');
+                this.$box.find('.chart').attr('id', id);
+                pieChartEmlStats.makeChart('#' + id,
+                                            bbox.width,
+                                            bbox.height,
+                                            sendId);
+                var obj = {
+                    sendId: sendId,
+                    counts: {},
+                    self: this
+                };
+                pieChartEmlStats._getSendCount(obj, function(err, obj){
+                    if(err){
+                        console.error('problem accessing send count for sendid: ' + obj.sendId + ' err: ' + JSON.stringify(err));
+                        return obj.self.$box.find('label.sendCnt').text('**error**');
+                    }
+                    obj.self.$box.find('label.sendCnt').text(obj.counts['send'] + ' SENT');
+                });
+            }
         }
     });
+
 });

@@ -13,7 +13,7 @@ base_bundles = {
         'bower_components/graphlib/dist/graphlib.core.js',
         'bower_components/dagre/dist/dagre.core.js',
         'bower_components/jointjs/dist/joint.layout.DirectedGraph.js',
-        'app/common/js/directedGraphLayout.js',
+        'app/common/js/journeyGrapher.js',
         'app/common/js/jointRichElement.js'
     ),
     'bootstrap_js': Bundle(
@@ -22,6 +22,13 @@ base_bundles = {
     ),
     'bootstrap_css': Bundle(
         'bower_components/bootstrap/dist/css/bootstrap.min.css'
+    ),
+    'graphing_js': Bundle(
+        'bower_components/d3/d3.js',
+        'bower_components/c3/c3.js'
+    ),
+    'graphing_css': Bundle(
+        'bower_components/c3/c3.css'
     )
 }
 
@@ -40,6 +47,8 @@ bundles = {
     'journey_view_js': Bundle(
         base_bundles['joint_js'],
         base_bundles['directed_graph_js'],
+        base_bundles['graphing_js'],
+        'app/common/js/pieChartEmlStats.js',
         'app/stats/js/journey_view.js',
         filters='jsmin',
         output='gen/journey_view.js'
@@ -52,12 +61,15 @@ bundles = {
     ),
     'devpage_joint_js': Bundle(
         base_bundles['joint_js'],
+        base_bundles['graphing_js'],
+        'app/common/js/pieChartEmlStats.js',
         'app/stats/js/devpage_joint.js',
         filters='jsmin',
         output='gen/devpage_joint.js'
     ),
     'devpage_joint_css': Bundle(
         base_bundles['joint_css'],
+        base_bundles['graphing_css'],
         'app/stats/css/devpage_joint.css',
         filters='cssmin',
         output='gen/devpage_joint.css'

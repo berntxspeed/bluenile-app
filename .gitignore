@@ -1,6 +1,7 @@
 # other files (relative to this project)
 tmp/
 db_repository/
+static/bower_components/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

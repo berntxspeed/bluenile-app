@@ -1,6 +1,7 @@
 $(function(){
     $(document).ready(function() {
 
+
         var graph = new joint.dia.Graph;
         var paper = new joint.dia.Paper({ el: $('#test-paper'), width: 650, height: 400, gridSize: 1, model: graph });
 
@@ -26,9 +27,7 @@ $(function(){
                 '<div class="html-element">',
                 '<button class="delete">x</button>',
                 '<label></label>',
-                '<span></span>', '<br/>',
-                '<select><option>--</option><option>one</option><option>two</option></select>',
-                '<input type="text" value="I\'m HTML input" />',
+                '<div class="chart"></div>',
                 '</div>'
             ].join(''),
 
@@ -37,18 +36,7 @@ $(function(){
                 joint.dia.ElementView.prototype.initialize.apply(this, arguments);
 
                 this.$box = $(_.template(this.template)());
-                // Prevent paper from handling pointerdown.
-                this.$box.find('input,select').on('mousedown click', function(evt) {
-                    evt.stopPropagation();
-                });
-                // This is an example of reacting on the input change and storing the input data in the cell model.
-                this.$box.find('input').on('change', _.bind(function(evt) {
-                    this.model.set('input', $(evt.target).val());
-                }, this));
-                this.$box.find('select').on('change', _.bind(function(evt) {
-                    this.model.set('select', $(evt.target).val());
-                }, this));
-                this.$box.find('select').val(this.model.get('select'));
+
                 this.$box.find('.delete').on('click', _.bind(this.model.remove, this.model));
                 // Update the box position whenever the underlying model changes.
                 this.model.on('change', this.updateBox, this);
@@ -61,6 +49,7 @@ $(function(){
                 joint.dia.ElementView.prototype.render.apply(this, arguments);
                 this.paper.$el.prepend(this.$box);
                 this.updateBox();
+                this.renderEmlStats();
                 return this;
             },
             updateBox: function() {
@@ -68,7 +57,6 @@ $(function(){
                 var bbox = this.model.getBBox();
                 // Example of updating the HTML with a data stored in the cell model.
                 this.$box.find('label').text(this.model.get('label'));
-                this.$box.find('span').text(this.model.get('select'));
                 this.$box.css({
                     width: bbox.width,
                     height: bbox.height,
@@ -79,6 +67,14 @@ $(function(){
             },
             removeBox: function(evt) {
                 this.$box.remove();
+            },
+            renderEmlStats: function() {
+                var bbox = this.model.getBBox();
+                this.$box.find('.chart').attr('id', this.model.get('id'));
+                pieChartEmlStats.makeChart('#' + this.model.get('id'),
+                                            bbox.width,
+                                            bbox.height,
+                                            this.model.get('sendId'));
             }
         });
 
@@ -86,12 +82,16 @@ $(function(){
     // -----------------------------------------------------------
 
         var el1 = new joint.shapes.html.Element({
+            id: 'box1',
+            sendId: '42377',
             position: { x: 80, y: 80 },
             size: { width: 170, height: 100 },
             label: 'I am HTML',
             select: 'one'
         });
         var el2 = new joint.shapes.html.Element({
+            id: 'box2',
+            sendId: '43910',
             position: { x: 370, y: 160 },
             size: { width: 170, height: 100 },
             label: 'Me too',
@@ -100,10 +100,17 @@ $(function(){
         var l = new joint.dia.Link({
             source: { id: el1.id },
             target: { id: el2.id },
-            attrs: { '.connection': { 'stroke-width': 5, stroke: '#34495E' } }
+            attrs: { '.connection': { 'stroke-width': 5, stroke: '#34495E' } },
+            router: { name: 'manhattan',
+                      args: {
+                          startDirections: ['right'],
+                          endDirections: ['left']
+                      }
+            }
         });
 
         graph.addCells([el1, el2, l]);
+
 
     });
 });

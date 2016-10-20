@@ -120,6 +120,17 @@ class SendJob(db.Model):
     def __repr__(self):
         return '<SendJob %r>' % self.SendID
 
+class EmlSend(db.Model):
+    __tablename__ = 'eml_send'
+    SendID = db.Column(db.Integer)
+    SubscriberKey = db.Column(db.String(255), primary_key=True)
+    EmailAddress = db.Column(db.String(255))
+    EventDate = db.Column(db.String(255), primary_key=True)
+    TriggeredSendExternalKey = db.Column(db.String(255))
+
+    def __repr__(self):
+        return '<EmlSend %r>' % self.SubscriberKey
+
 class EmlOpen(db.Model):
     __tablename__ = 'eml_open'
     SendID = db.Column(db.Integer)
@@ -151,7 +162,7 @@ class EmlOpen(db.Model):
             self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')"""
 
     def __repr__(self):
-        return '<EmlOpen %r>' % self.id
+        return '<EmlOpen %r>' % self.SubscriberKey
 
 class EmlClick(db.Model):
     __tablename__ = 'eml_click'
@@ -179,7 +190,7 @@ class EmlClick(db.Model):
     Device = db.Column(db.String(255))
 
     def __repr__(self):
-        return '<EmlClick %r>' % self.id
+        return '<EmlClick %r>' % self.SubscriberKey
 
 class Artist(db.Model):
     name = db.Column(db.String(128), primary_key=True)

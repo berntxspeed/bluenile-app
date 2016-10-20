@@ -7,7 +7,7 @@ from pprint import pprint as pp
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile
 from ...common.services import DbService
-from ...common.models import User, EmlOpen, EmlClick, SendJob, Artist, Customer
+from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Artist, Customer
 
 
 class DataLoadService(DbService):
@@ -96,6 +96,18 @@ class DataLoadService(DbService):
                          'SentTime': 'SentTime',
                          'Subject': 'Subject',
                          'PreviewURL': 'PreviewURL'
+                     })
+
+        zf.load_data(file='Sent.csv',
+                     db_session=self.db.session,
+                     db_model=EmlSend,
+                     primary_keys=['SubscriberKey', 'EventDate'],
+                     db_field_map={
+                         'SendID': 'SendID',
+                         'SubscriberKey': 'SubscriberKey',
+                         'EmailAddress': 'EmailAddress',
+                         'EventDate': 'EventDate',
+                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey'
                      })
 
         # load Opens data to db
