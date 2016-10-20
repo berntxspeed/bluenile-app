@@ -2,7 +2,7 @@ from flask import Flask
 from flask_script import Manager
 from flask_script import Server
 from flask_script import Shell
-from migrate.versioning import api
+from flask_migrate import Migrate, MigrateCommand
 from injector import inject
 
 from server.app import create_injector
@@ -19,8 +19,10 @@ db = injector.get(SQLAlchemy)
 mongo = injector.get(MongoDB)
 manager = Manager(app)
 
-SQLALCHEMY_DATABASE_URI = config.get('SQLALCHEMY_DATABASE_URI')
-SQLALCHEMY_MIGRATE_REPO = config.get('SQLALCHEMY_MIGRATE_REPO')
+#SQLALCHEMY_DATABASE_URI = config.get('SQLALCHEMY_DATABASE_URI')
+#SQLALCHEMY_MIGRATE_REPO = config.get('SQLALCHEMY_MIGRATE_REPO')
+
+migrate = Migrate(app, db)
 
 def make_shell_context():
     return {
@@ -33,7 +35,7 @@ def make_shell_context():
     }
 
 manager.add_command('shell', Shell(make_context=make_shell_context))
-# *** put db migrate command here
+manager.add_command('db', MigrateCommand)
 manager.add_command('runserver', Server(host='0.0.0.0', port=5000))
 
 @manager.command
@@ -42,7 +44,7 @@ def init_db():
 
     KeyValue.insert_keyvalues()
 
-@manager.command
+"""@manager.command
 def db_create():
     db.create_all()
     if not os.path.exists(SQLALCHEMY_MIGRATE_REPO):
@@ -76,7 +78,7 @@ def db_migrate():
 def db_upgrade():
     api.upgrade(SQLALCHEMY_DATABASE_URI, SQLALCHEMY_MIGRATE_REPO)
     v = api.db_version(SQLALCHEMY_DATABASE_URI, SQLALCHEMY_MIGRATE_REPO)
-    print('Current database version: ' + str(v))
+    print('Current database version: ' + str(v))"""
 
 
 if __name__ == '__main__':
