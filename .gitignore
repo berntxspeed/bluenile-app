@@ -1,6 +1,7 @@
 # other files (relative to this project)
 tmp/
 static/bower_components/
+migrations/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
