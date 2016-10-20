@@ -2,19 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="28efaf7d-bf38-4fff-b965-d4c7f09f0ee6" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Procfile" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/runtime.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/app/__init__.py" afterPath="$PROJECT_DIR$/server/app/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/app/common/models.py" afterPath="$PROJECT_DIR$/server/app/common/models.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/app/common/utils/assets.py" afterPath="$PROJECT_DIR$/server/app/common/utils/assets.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/app/stats/services/data_load.py" afterPath="$PROJECT_DIR$/server/app/stats/services/data_load.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/app/stats/templates/devpage_joint.html" afterPath="$PROJECT_DIR$/server/app/stats/templates/devpage_joint.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/app/common/js/jointRichElement.js" afterPath="$PROJECT_DIR$/static/app/common/js/jointRichElement.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/app/common/js/pieChartEmlStats.js" afterPath="$PROJECT_DIR$/static/app/common/js/pieChartEmlStats.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/app/stats/css/devpage_joint.css" afterPath="$PROJECT_DIR$/static/app/stats/css/devpage_joint.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/app/stats/css/journey_view.css" afterPath="$PROJECT_DIR$/static/app/stats/css/journey_view.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/app/stats/js/devpage_joint.js" afterPath="$PROJECT_DIR$/static/app/stats/js/devpage_joint.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/app/stats/js/journey_view.js" afterPath="$PROJECT_DIR$/static/app/stats/js/journey_view.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/requirements.txt" afterPath="$PROJECT_DIR$/requirements.txt" />
     </list>
     <ignored path="simple_DI_flask_app.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -72,6 +63,8 @@
         <option value="$PROJECT_DIR$/static/app/stats/css/journey_view.css" />
         <option value="$PROJECT_DIR$/static/app/stats/js/journey_view.js" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/Procfile" />
+        <option value="$PROJECT_DIR$/runtime.txt" />
       </list>
     </option>
   </component>
@@ -85,8 +78,8 @@
     <handled-path value="$PROJECT_DIR$/node_modules" />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="584" />
-    <option name="y" value="56" />
+    <option name="x" value="4" />
+    <option name="y" value="292" />
     <option name="width" value="1235" />
     <option name="height" value="777" />
   </component>
@@ -509,7 +502,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="584" y="56" width="1235" height="777" extended-state="0" />
+    <frame x="4" y="292" width="1235" height="777" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24979044" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -974,6 +967,22 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Procfile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="57" selection-start-line="0" selection-start-column="57" selection-end-line="0" selection-end-column="57" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/runtime.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="12" selection-start-line="0" selection-start-column="12" selection-end-line="0" selection-end-column="12" />
           <folding />
         </state>
       </provider>
