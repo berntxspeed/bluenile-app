@@ -57,13 +57,6 @@ class LocalConfig(Config):
     PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
     SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
 
-    # Oauth2 Credentials
-    FACEBOOK_APP_ID = '1414432525530848'
-    FACEBOOK_APP_SECRET = '82a49f002a8bf1bdcf34a5adfa083914'
-    TWITTER_APP_ID = 'MzZ2zXpjQxGSl6gAm6VwQrIv4'
-    TWITTER_APP_SECRET = 'adfuzYNtIoAkoBHKTnQGxGtyYBHbihgyf2qG3pr3o6QaqcWMyv'
-    # ***add google login
-
     # assets configuration (js/css files)
     ASSETS_DEBUG = True # forces flask to not merge asset files into one file
 
