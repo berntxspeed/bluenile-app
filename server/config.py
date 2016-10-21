@@ -50,8 +50,8 @@ class Config(object):
             'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
             'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
             'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
-            'filename': os.getenv('MARKETING_CLOUD_FILENAME'),
-            'filepath': os.getenv('MARKETING_CLOUD_FILEPATH')
+            'filename': os.getenv('MARKETING_CLOUD_FTP_FILENAME'),
+            'filepath': os.getenv('MARKETING_CLOUD_FTP_FILEPATH')
         }
     }
 
