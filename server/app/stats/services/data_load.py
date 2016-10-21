@@ -74,14 +74,17 @@ class DataLoadService(DbService):
         return redirect(url_for('stats.data_manager'))
 
     def load_mc_email_data(self):
-        filename = 'upsell_campaign_tracking_extract.zip'
+        config = self.config
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('EMAIL_DATA_SOURCE'))
         cfg = {
-            'host': 'ftp.s7.exacttarget.com',
-            'username': '7228769',
-            'password': 'Zx10@fxdl1997'
+            'host': mc_data_creds.get('ftp_url'),
+            'username': mc_data_creds.get('ftp_user'),
+            'password': mc_data_creds.get('ftp_pass')
         }
+        filename = mc_data_creds.get('filename')
+        filepath = mc_data_creds.get('filepath')
         zf = ZipFile(file=filename,
-                     ftp_path='/Export/',
+                     ftp_path=filepath,
                      ftp_cfg=cfg)
 
         # load Sendjobs data to db
