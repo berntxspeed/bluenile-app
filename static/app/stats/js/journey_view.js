@@ -17,7 +17,7 @@ $(function(){
 
         $("#btn-layout").click(function(){
             var journeyId = $('#journey-select').find(':selected').val();
-            $.getJSON("http://localhost:5000/journey-detail/" + journeyId, function(data){
+            $.getJSON("/journey-detail/" + journeyId, function(data){
                 var journey = data;
                 window.jgraph = journeyGrapher.layoutJourneyGraph(window.jgraph, journey);
             });

@@ -1,4 +1,4 @@
-from flask.ext.wtf import Form
+from flask_wtf import Form
 from werkzeug.datastructures import MultiDict
 from wtforms import SelectMultipleField
 from wtforms.widgets import CheckboxInput

@@ -75,7 +75,7 @@ var journeyGrapher = {
             return console.error('error building journey map schema routing');
         }
 
-        graph.removeCells(graph.getCells());
+        graph.clear();
         var cells = this._buildGraphFromAdjacencyList(jmap, activityDetails);
         graph.resetCells(cells);
         joint.layout.DirectedGraph.layout(graph, {

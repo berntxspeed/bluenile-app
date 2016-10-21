@@ -125,6 +125,9 @@ $(document).ready(function () {
                     obj.self.$box.find('label.sendCnt').text(obj.counts['send'] + ' SENT');
                 });
             }
+        },
+        removeBox: function(evt) {
+            this.$box.remove();
         }
     });
 
