@@ -36,6 +36,7 @@ class Config(object):
     CUSTOMER_DATA_SOURCE = os.getenv('CUSTOMER_DATA_SOURCE')
     ARTIST_DATA_SOURCE = os.getenv('ARTIST_DATA_SOURCE')
     EMAIL_DATA_SOURCE = os.getenv('EMAIL_DATA_SOURCE')
+    EMAIL_DATA_DEST = os.getenv('EMAIL_DATA_DEST')
 
     EXT_DATA_CREDS = {
         'shopify': {
@@ -46,12 +47,19 @@ class Config(object):
         'spotify': {
             'endpoint': os.getenv('SPOTIFY_API_ENDPOINT')
         },
-        'marketing_cloud': {
+        'marketingcloud_ftp': {
             'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
             'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
             'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
             'filename': os.getenv('MARKETING_CLOUD_FTP_FILENAME'),
             'filepath': os.getenv('MARKETING_CLOUD_FTP_FILEPATH')
+        },
+        'marketingcloud_api': {
+            'id': os.getenv('FUELSDK_CLIENT_ID'),
+            'secret': os.getenv('FUELSDK_CLIENT_SECRET'),
+            'app_sig': os.getenv('FUELSDK_APP_SIGNATURE'),
+            'wsdl': os.getenv('FUELSDK_DEFAULT_WSDL'),
+            'auth_url': os.getenv('FUELSDK_AUTH_URL')
         }
     }
 

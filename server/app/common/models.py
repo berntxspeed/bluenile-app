@@ -41,12 +41,21 @@ class KeyValue(db.Model):
     key = db.Column(db.String(64), primary_key=True)
     value = db.Column(db.String(255))
     created_at = db.Column(TIMESTAMP)
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
 
     def __init__(self, key, value, created_at=None):
         self.key = key
         self.value = value
         if created_at is None:
             self.created_at = datetime.datetime.utcnow()
+        self._last_updated = datetime.datetime.utcnow()
+
+    def refresh_last_updated(self):
+        self._last_updated = datetime.datetime.utcnow()
+
+    def refresh_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
 
     @staticmethod
     def insert_keyvalues():
@@ -66,6 +75,13 @@ class KeyValue(db.Model):
 
     def __repr__(self):
         return '<KeyValue %r>' % self.key
+
+@db.event.listens_for(KeyValue, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    print('record ' + target.__repr__() + ' was updated at: ' + str(datetime.datetime.utcnow()))
+    target._last_updated = datetime.datetime.utcnow()
+    return target
+
 
 class Customer(db.Model):
     __tablename__ = 'customer'

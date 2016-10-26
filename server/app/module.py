@@ -10,11 +10,13 @@ from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB
 # import other modules
 from .auth.module import AuthModule
 from .stats.module import StatsModule
+from .data.module import DataModule
 
 # import all blueprints
 from .main import main as main_blueprint
 from .auth import auth as auth_blueprint
 from .stats import stats as stats_blueprint
+from .data import data as data_blueprint
 
 import logging
 import sys
@@ -63,11 +65,13 @@ class AppModule(Module):
 modules = [
     AppModule(),
     AuthModule(),
-    StatsModule()
+    StatsModule(),
+    DataModule()
 ]
 
 blueprints = [
     main_blueprint,
     auth_blueprint,
-    stats_blueprint
+    stats_blueprint,
+    data_blueprint
 ]
