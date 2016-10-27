@@ -29,8 +29,8 @@ class Config(object):
     # Oauth2 Credentials
     FACEBOOK_APP_ID = os.getenv('FACEBOOK_APP_ID')
     FACEBOOK_APP_SECRET = os.getenv('FACEBOOK_APP_SECRET')
-    TWITTER_APP_ID = os.getenv('TWITTER_APP_ID')
-    TWITTER_APP_SECRET = os.getenv('TWITTER_APP_SECRET')
+    GOOGLE_APP_ID = os.getenv('GOOGLE_APP_ID')
+    GOOGLE_APP_SECRET = os.getenv('GOOGLE_APP_SECRET')
 
     # External Data Sources
     CUSTOMER_DATA_SOURCE = os.getenv('CUSTOMER_DATA_SOURCE')

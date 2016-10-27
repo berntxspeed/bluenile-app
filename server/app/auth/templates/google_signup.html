@@ -1,0 +1,61 @@
+{% extends 'base_auth.html' %}
+
+{% from '_form_helpers.html' import render_csrf_token with context %}
+{% from '_form_helpers.html' import render_horizontal_field %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>Sign Up</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-6 center-block">
+            <div class="well form-well">
+                <strong>Enter your desired username and your email address to continue.</strong>
+            </div>
+            <div class="well form-well">
+                <form id="google-signup-form" class="form-horizontal auth-form" method="post">
+                    {{ render_csrf_token() }}
+                    {{ render_horizontal_field(
+                            form.username,
+                            label_class='col-md-3',
+                            placeholder='Your Desired Username',
+                            input_parent_class='col-md-9') }}
+                    {{ render_horizontal_field(
+                            form.email,
+                            type='email',
+                            label_class='col-md-3',
+                            input_parent_class='col-md-9',
+                            placeholder='Your Email Address',
+                            value=form.email.data or session.google_email) }}
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <button type="submit" class="btn btn-success signup-btn">Sign Up</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block json_config %}
+    {{ super() }}
+    {{ macros.json_forms_tag(
+        {
+            'id': 'google-signup-form',
+            'submit': True,
+            'data': form.json_data()
+        }
+    ) }}
+{% endblock %}

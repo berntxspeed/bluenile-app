@@ -42,7 +42,7 @@ def json_config_processor(config):
         'CSRF_TOKEN': csrf_token(),
         'IS_AUTHENTICATED': is_authenticated,
         'FACEBOOK_APP_ID': config['FACEBOOK_APP_ID'],
-        'TWITTER_APP_ID': config['TWITTER_APP_ID']
+        'GOOGLE_APP_ID': config['GOOGLE_APP_ID']
     }
 
 

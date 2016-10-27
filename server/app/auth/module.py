@@ -5,7 +5,7 @@ from injector import inject
 from injector import provides
 from injector import singleton
 
-from .injector_keys import FacebookAuth, TwitterAuth, OAuthBase, AuthServ
+from .injector_keys import FacebookAuth, GoogleAuth, OAuthBase, AuthServ
 from ..injector_keys import Config, Logging, SQLAlchemy
 from .services import AuthService
 
@@ -33,15 +33,17 @@ class AuthModule(Module):
 
     @singleton
     @inject(oauth=OAuthBase, config=Config)
-    @provides(TwitterAuth)
-    def provide_twitter_auth(self, oauth, config):
-        return oauth.remote_app('twitter',
-                                base_url='https://api.twitter.com/1/',
-                                request_token_url='https://api.twitter.com/oauth/request_token',
-                                access_token_url='https://api.twitter.com/oauth/access_token',
-                                authorize_url='https://api.twitter.com/oauth/authenticate',
-                                consumer_key=config['TWITTER_APP_ID'],
-                                consumer_secret=config['TWITTER_APP_SECRET']
+    @provides(GoogleAuth)
+    def provide_google_auth(self, oauth, config):
+        return oauth.remote_app('google',
+                                base_url='https://www.google.com/accounts/',
+                                authorize_url='https://accounts.google.com/o/oauth2/auth',
+                                request_token_url=None,
+                                request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.email'},
+                                access_token_url='https://accounts.google.com/o/oauth2/token',
+                                access_token_method='POST',
+                                consumer_key=config['GOOGLE_APP_ID'],
+                                consumer_secret=config['GOOGLE_APP_SECRET']
                                 )
 
     @singleton
@@ -49,7 +51,7 @@ class AuthModule(Module):
             db=SQLAlchemy,
             logger=Logging,
             facebook_auth=FacebookAuth,
-            twitter_auth=TwitterAuth)
+            google_auth=GoogleAuth)
     @provides(AuthServ)
     def provide_auth_service(
         self,
@@ -57,11 +59,11 @@ class AuthModule(Module):
         db,
         logger,
         facebook_auth,
-        twitter_auth):
+        google_auth):
         return AuthService(
             config=config,
             db=db,
             logger=logger,
             facebook_auth=facebook_auth,
-            twitter_auth=twitter_auth,
+            google_auth=google_auth,
             session=session)
