@@ -2,6 +2,7 @@
   "name": "bluenile-app",
   "description": "",
   "scripts": {
+    "postdeploy": "python manage.py db init"
   },
   "env": {
     "APP_SETTINGS": {
