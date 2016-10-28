@@ -1,8 +1,9 @@
 {
   "name": "bluenile-app",
   "description": "",
+  "image": "heroku/python",
   "scripts": {
-    "postdeploy": "python manage.py db init"
+    "postdeploy": "python manage.py db init && python manage.py db migrate && python manage.py db upgrade"
   },
   "env": {
     "APP_SETTINGS": {
@@ -83,6 +84,5 @@
     "heroku-postgresql"
   ],
   "buildpacks": [
-
   ]
 }
