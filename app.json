@@ -83,6 +83,6 @@
     "heroku-postgresql"
   ],
   "buildpacks": [
-
+    "heroku/python"
   ]
 }
