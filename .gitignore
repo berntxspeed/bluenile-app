@@ -3,6 +3,7 @@ tmp/
 static/bower_components/
 migrations/
 .idea/
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

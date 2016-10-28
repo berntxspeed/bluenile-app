@@ -23,6 +23,14 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(64), nullable=True)
     #created_at = db.Column(db.DateTime())
 
+    def __init__(self, username=None, password=None, id=None):
+        if username:
+            self.username = username
+        if password:
+            self.password = password
+        if id:
+            self.id = id
+
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -33,6 +41,18 @@ class User(UserMixin, db.Model):
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    @staticmethod
+    def insert_users():
+        users = [
+            User(username='bernt', password='pass', id=1),
+            User(username='val', password='pass', id=2)
+        ]
+        for user in users:
+            usr = User.query.filter_by(id=user.id).first()
+            if usr is None:
+                db.session.add(user)
+        db.session.commit()
 
     def __repr__(self):
         return '<User %r>' % self.username
