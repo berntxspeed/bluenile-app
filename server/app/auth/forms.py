@@ -107,7 +107,7 @@ class SignupForm(BaseForm):
     def validate_username(self, field):
         validate_username(field)
 
-class TwitterSignupForm(BaseForm):
+class GoogleSignupForm(BaseForm):
     username = TextField('Username', validators=USERNAME_VALIDATORS)
     email = TextField('Email', validators=EMAIL_VALIDATORS)
 

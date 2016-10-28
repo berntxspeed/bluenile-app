@@ -17,6 +17,7 @@ class User(UserMixin, db.Model):
     facebook_id = db.Column(db.String(255), unique=True)
     twitter_id = db.Column(db.String(255), unique=True)
     twitter_name = db.Column(db.String(128))
+    google_id = db.Column(db.String(255), unique=True)
     username = db.Column(db.String(255), nullable=False, unique=True)
     nickname = db.Column(db.String(64), nullable=True)
     email = db.Column(db.String(64), nullable=True)

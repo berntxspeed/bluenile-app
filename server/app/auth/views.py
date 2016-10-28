@@ -46,23 +46,24 @@ def facebook_login(auth_service):
 def facebook_signup(auth_service):
     return auth_service.facebook_signup(request=request, session=session)
 
-@auth.route('/twitter-authorized')
+@auth.route('/google-authorized')
 @logout_required
 @inject(auth_service=AuthServ)
-def twitter_authorized(auth_service):
-    pass
+def google_authorized(auth_service):
+    return auth_service.google_authorized(request=request, session=session)
 
-@auth.route('/twitter-login')
+@auth.route('/google-login')
 @logout_required
 @inject(auth_service=AuthServ)
-def twitter_login(auth_service):
-    pass
+def google_login(auth_service):
+    return auth_service.google_login(request=request)
 
-@auth.route('/twitter-signup')
+@auth.route('/google-signup', methods=['GET', 'POST'])
 @logout_required
 @inject(auth_service=AuthServ)
-def twitter_signup(auth_service):
-    pass
+@templated('google_signup')
+def google_signup(auth_service):
+    return auth_service.google_signup(request=request, session=session)
 
 @auth.route('/login', methods=['GET', 'POST'])
 @logout_required
