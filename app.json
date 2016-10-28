@@ -1,0 +1,87 @@
+{
+  "name": "bluenile-app",
+  "description": "",
+  "scripts": {
+  },
+  "env": {
+    "APP_SETTINGS": {
+      "required": true
+    },
+    "ARTIST_DATA_SOURCE": {
+      "required": true
+    },
+    "CUSTOMER_DATA_SOURCE": {
+      "required": true
+    },
+    "EMAIL_DATA_DEST": {
+      "required": true
+    },
+    "EMAIL_DATA_SOURCE": {
+      "required": true
+    },
+    "FACEBOOK_APP_ID": {
+      "required": true
+    },
+    "FACEBOOK_APP_SECRET": {
+      "required": true
+    },
+    "FUELSDK_APP_SIGNATURE": {
+      "required": true
+    },
+    "FUELSDK_AUTH_URL": {
+      "required": true
+    },
+    "FUELSDK_CLIENT_ID": {
+      "required": true
+    },
+    "FUELSDK_CLIENT_SECRET": {
+      "required": true
+    },
+    "FUELSDK_DEFAULT_WSDL": {
+      "required": true
+    },
+    "GOOGLE_APP_ID": {
+      "required": true
+    },
+    "GOOGLE_APP_SECRET": {
+      "required": true
+    },
+    "MARKETING_CLOUD_FTP_FILENAME": {
+      "required": true
+    },
+    "MARKETING_CLOUD_FTP_FILEPATH": {
+      "required": true
+    },
+    "MARKETING_CLOUD_FTP_PASS": {
+      "required": true
+    },
+    "MARKETING_CLOUD_FTP_URL": {
+      "required": true
+    },
+    "MARKETING_CLOUD_FTP_USER": {
+      "required": true
+    },
+    "SHOPIFY_API_APP_ID": {
+      "required": true
+    },
+    "SHOPIFY_API_APP_SECRET": {
+      "required": true
+    },
+    "SHOPIFY_API_ENDPOINT": {
+      "required": true
+    },
+    "SPOTIFY_API_ENDPOINT": {
+      "required": true
+    }
+  },
+  "formation": {
+  },
+  "addons": [
+    "logdna",
+    "mongolab",
+    "heroku-postgresql"
+  ],
+  "buildpacks": [
+
+  ]
+}
