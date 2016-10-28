@@ -2,6 +2,7 @@
 tmp/
 static/bower_components/
 migrations/
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
