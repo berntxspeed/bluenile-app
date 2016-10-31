@@ -2,6 +2,7 @@ import os
 
 LOCAL = 'local'
 TEST = 'test'
+DEV = 'dev'
 STG = 'stg'
 PROD = 'prod'
 
@@ -88,15 +89,27 @@ class LocalConfig(Config):
 class TestConfig(Config):
     ENV = TEST
 
+class DevConfig(Config):
+    ENV = DEV
+
+    # Application
+    SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
+
+    # Assets configuration (js/css files)
+    ASSETS_DEBUG = True # Forces flask-assets to not merge/compress js files
+
+    @classmethod
+    def init_app(cls, app):
+        super(StgConfig, cls).init_app(app)
+        if app.debug:
+            from flask_debugtoolbar import DebugToolbarExtension
+            DebugToolbarExtension(app)
 
 class StgConfig(Config):
     ENV = STG
 
     # Application
     SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
-
-    # assets configuration (js/css files)
-    ASSETS_DEBUG = True  # forces flask to not merge asset files into one file
 
     @classmethod
     def init_app(cls, app):
@@ -117,6 +130,7 @@ class ProdConfig(Config):
 config = {
     LOCAL: LocalConfig,
     TEST: TestConfig,
+    DEV: DevConfig,
     STG: StgConfig,
     PROD: ProdConfig
 }
