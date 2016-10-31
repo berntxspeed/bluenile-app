@@ -63,6 +63,15 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+@db.event.listens_for(User, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    u = User.query.filter_by(id=target.id).first()
+    if u is None:
+        return target
+    u = User.query.order_by(User.id.desc()).first()
+    target.id = u.id + 1
+    return target
+
 class KeyValue(db.Model):
     __tablename__ = 'key_value'
     key = db.Column(db.String(64), primary_key=True)
