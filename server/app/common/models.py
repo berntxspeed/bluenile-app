@@ -23,9 +23,13 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(64), nullable=True)
     #created_at = db.Column(db.DateTime())
 
-    def __init__(self, username=None, password=None, id=None, email=None):
+    def __init__(self, username=None, password=None, id=None, email=None, nickname=None):
         if username:
             self.username = username
+            if not nickname:
+                self.nickname = username
+        if nickname:
+            self.nickname = nickname
         if password:
             self.password = password
         if id:
