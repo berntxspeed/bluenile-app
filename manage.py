@@ -33,9 +33,11 @@ manager.add_command('runserver', Server(host='0.0.0.0', port=5000))
 
 @manager.command
 def init_db():
-    from server.app.common.models import KeyValue
+    from server.app.common.models import KeyValue, User
 
     KeyValue.insert_keyvalues()
+
+    User.insert_users()
 
 
 

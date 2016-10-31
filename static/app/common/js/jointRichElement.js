@@ -117,7 +117,7 @@ $(document).ready(function () {
                     counts: {},
                     self: this
                 };
-                pieChartEmlStats._getSendCount(obj, function(err, obj){
+                pieChartEmlStats._getSendCount(obj, function(err){
                     if(err){
                         console.error('problem accessing send count for sendid: ' + obj.sendId + ' err: ' + JSON.stringify(err));
                         return obj.self.$box.find('label.sendCnt').text('**error**');
