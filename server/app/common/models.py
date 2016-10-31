@@ -23,13 +23,15 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(64), nullable=True)
     #created_at = db.Column(db.DateTime())
 
-    def __init__(self, username=None, password=None, id=None):
+    def __init__(self, username=None, password=None, id=None, email=None):
         if username:
             self.username = username
         if password:
             self.password = password
         if id:
             self.id = id
+        if email:
+            self.email = email
 
     @property
     def password(self):
