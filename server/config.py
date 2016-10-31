@@ -100,7 +100,7 @@ class DevConfig(Config):
 
     @classmethod
     def init_app(cls, app):
-        super(StgConfig, cls).init_app(app)
+        super(DevConfig, cls).init_app(app)
         if app.debug:
             from flask_debugtoolbar import DebugToolbarExtension
             DebugToolbarExtension(app)
