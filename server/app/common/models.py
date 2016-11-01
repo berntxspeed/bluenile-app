@@ -129,6 +129,8 @@ class Customer(db.Model):
     _created_at = db.Column(TIMESTAMP)
     purchase_count = db.Column(db.Integer)
     total_spent_so_far = db.Column(db.String(255))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
 
     @hybrid_property
     def created_at(self):
@@ -139,8 +141,21 @@ class Customer(db.Model):
         if isinstance(created_at, str):
             self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
 
+    def update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
     def __repr(self):
         return '<Customer %r>' % self.customer_id
+
+@db.event.listens_for(Customer, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target._created_at = datetime.datetime.utcnow()
+    return target
+
+@db.event.listens_for(Customer, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
 
 class SendJob(db.Model):
     __tablename__ = 'send_job'
@@ -150,6 +165,8 @@ class SendJob(db.Model):
     EmailName= db.Column(db.String(64))
     Subject = db.Column(db.String(1024))
     PreviewURL = db.Column(db.String(1024))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
 
     """"@hybrid_property
     def SchedTime(self):
@@ -169,8 +186,16 @@ class SendJob(db.Model):
         if isinstance(sent_time, str):
             self._SentTime = datetime.datetime.strptime(sent_time, '%m/%d/%Y %H:%M:%S %p')"""
 
+    def update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
     def __repr__(self):
         return '<SendJob %r>' % self.SendID
+
+@db.event.listens_for(SendJob, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
 
 class EmlSend(db.Model):
     __tablename__ = 'eml_send'
@@ -179,9 +204,19 @@ class EmlSend(db.Model):
     EmailAddress = db.Column(db.String(255))
     EventDate = db.Column(db.String(255), primary_key=True)
     TriggeredSendExternalKey = db.Column(db.String(255))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+
+    def update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
 
     def __repr__(self):
         return '<EmlSend %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlSend, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
 
 class EmlOpen(db.Model):
     __tablename__ = 'eml_open'
@@ -203,6 +238,8 @@ class EmlOpen(db.Model):
     EmailClient = db.Column(db.String(255))
     OperatingSystem = db.Column(db.String(255))
     Device = db.Column(db.String(255))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
 
     """"@hybrid_property
     def EventDate(self):
@@ -213,8 +250,16 @@ class EmlOpen(db.Model):
         if isinstance(event_date, str):
             self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')"""
 
+    def update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
     def __repr__(self):
         return '<EmlOpen %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlOpen, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
 
 class EmlClick(db.Model):
     __tablename__ = 'eml_click'
@@ -240,9 +285,19 @@ class EmlClick(db.Model):
     EmailClient = db.Column(db.String(255))
     OperatingSystem = db.Column(db.String(255))
     Device = db.Column(db.String(255))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+
+    def update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
 
     def __repr__(self):
         return '<EmlClick %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlClick, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
 
 class Artist(db.Model):
     name = db.Column(db.String(128), primary_key=True)
@@ -250,5 +305,13 @@ class Artist(db.Model):
     uri = db.Column(db.String(256))
     href = db.Column(db.String(256))
 
+    def update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
     def __repr__(self):
         return '<Artist %r>' % self.name
+
+@db.event.listens_for(Artist, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target

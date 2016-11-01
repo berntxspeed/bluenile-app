@@ -22,7 +22,6 @@ $(function(){
                 window.jgraph = journeyGrapher.layoutJourneyGraph(window.jgraph, journey);
             });
         });
-        var i = 0;
     });
 
 });
