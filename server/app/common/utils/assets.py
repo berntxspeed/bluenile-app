@@ -64,7 +64,7 @@ bundles = {
         base_bundles['graphing_js'],
         'app/common/js/pieChartEmlStats.js',
         'app/stats/js/devpage_joint.js',
-        filters='rjsmin',
+        filters='rjsmin, typescript',
         output='gen/devpage_joint.js'
     ),
     'devpage_joint_css': Bundle(
