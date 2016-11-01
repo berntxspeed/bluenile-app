@@ -41,7 +41,7 @@ bundles = {
     'base_js': Bundle(
         base_bundles['bootstrap_js'],
         'bower_components/knockout/dist/knockout.js',
-        filters='jsmin',
+        filters='rjsmin',
         output='gen/base.js'
     ),
     'journey_view_js': Bundle(
@@ -50,7 +50,7 @@ bundles = {
         base_bundles['graphing_js'],
         'app/common/js/pieChartEmlStats.js',
         'app/stats/js/journey_view.js',
-        filters='jsmin',
+        filters='rjsmin',
         output='gen/journey_view.js'
     ),
     'journey_view_css': Bundle(
@@ -64,7 +64,7 @@ bundles = {
         base_bundles['graphing_js'],
         'app/common/js/pieChartEmlStats.js',
         'app/stats/js/devpage_joint.js',
-        filters='jsmin',
+        filters='rjsmin, typescript',
         output='gen/devpage_joint.js'
     ),
     'devpage_joint_css': Bundle(
