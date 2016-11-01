@@ -17,6 +17,7 @@ class Config(object):
     PROPAGATE_EXCEPTIONS = True
     SECRET_KEY = os.getenv('SECRET_KEY')
     DEBUG_TB_INTERCEPT_REDIRECTS = False
+    SEND_FILE_MAX_AGE_DEFAULT = 31536000
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
