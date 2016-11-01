@@ -78,6 +78,4 @@ def init_loginmanager(app):
 def init_assets(app):
     from .common.utils.assets import bundles
     assets = Environment(app)
-    assets.url_expire = True
-    assets.versions = 'timestamp'
     assets.register(bundles)

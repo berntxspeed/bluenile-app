@@ -36,13 +36,13 @@ bundles = {
     'base_css': Bundle(
         base_bundles['bootstrap_css'],
         filters='cssmin',
-        output='gen/base.css'
+        output='gen/base.%(version)s.css'
     ),
     'base_js': Bundle(
         base_bundles['bootstrap_js'],
         'bower_components/knockout/dist/knockout.js',
         filters='rjsmin',
-        output='gen/base.js'
+        output='gen/base.%(version)s.js'
     ),
     'journey_view_js': Bundle(
         base_bundles['joint_js'],
@@ -51,13 +51,13 @@ bundles = {
         'app/common/js/pieChartEmlStats.js',
         'app/stats/js/journey_view.js',
         filters='rjsmin',
-        output='gen/journey_view.js'
+        output='gen/journey_view.%(version)s.js'
     ),
     'journey_view_css': Bundle(
         base_bundles['joint_css'],
         'app/stats/css/journey_view.css',
         filters='cssmin',
-        output='gen/journey_view.css'
+        output='gen/journey_view.%(version)s.css'
     ),
     'devpage_joint_js': Bundle(
         base_bundles['joint_js'],
@@ -65,13 +65,13 @@ bundles = {
         'app/common/js/pieChartEmlStats.js',
         'app/stats/js/devpage_joint.js',
         filters='rjsmin, typescript',
-        output='gen/devpage_joint.js'
+        output='gen/devpage_joint.%(version)s.js'
     ),
     'devpage_joint_css': Bundle(
         base_bundles['joint_css'],
         base_bundles['graphing_css'],
         'app/stats/css/devpage_joint.css',
         filters='cssmin',
-        output='gen/devpage_joint.css'
+        output='gen/devpage_joint.%(version)s.css'
     )
 }
