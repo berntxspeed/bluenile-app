@@ -8,13 +8,12 @@ from . import data
 from .injector_keys import DataPushServ
 from ..common.views.decorators import templated
 
-@data.route('/test-page')
-@templated('test_page')
-def test_page():
+@data.route('/data-pusher')
+@templated('data_pusher')
+def data_pusher():
     return {}
 
-
-@data.route('/test')
+@data.route('/sync-data-to-mc/<table>')
 @inject(data_push_service=DataPushServ)
-def test(data_push_service):
-    return data_push_service.test()
+def sync_data_to_mc(data_push_service, table):
+    return data_push_service.sync_data_to_mc(table)

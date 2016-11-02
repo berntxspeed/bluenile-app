@@ -85,12 +85,8 @@ class KeyValue(db.Model):
         self.value = value
         if created_at is None:
             self.created_at = datetime.datetime.utcnow()
-        self._last_updated = datetime.datetime.utcnow()
 
-    def refresh_last_updated(self):
-        self._last_updated = datetime.datetime.utcnow()
-
-    def refresh_last_ext_sync(self):
+    def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
     @staticmethod
@@ -141,7 +137,7 @@ class Customer(db.Model):
         if isinstance(created_at, str):
             self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
 
-    def update_last_ext_sync(self):
+    def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
     def __repr(self):
@@ -186,7 +182,7 @@ class SendJob(db.Model):
         if isinstance(sent_time, str):
             self._SentTime = datetime.datetime.strptime(sent_time, '%m/%d/%Y %H:%M:%S %p')"""
 
-    def update_last_ext_sync(self):
+    def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
     def __repr__(self):
@@ -207,7 +203,7 @@ class EmlSend(db.Model):
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
-    def update_last_ext_sync(self):
+    def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
     def __repr__(self):
@@ -250,7 +246,7 @@ class EmlOpen(db.Model):
         if isinstance(event_date, str):
             self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')"""
 
-    def update_last_ext_sync(self):
+    def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
     def __repr__(self):
@@ -288,7 +284,7 @@ class EmlClick(db.Model):
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
-    def update_last_ext_sync(self):
+    def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
     def __repr__(self):
@@ -304,8 +300,10 @@ class Artist(db.Model):
     popularity = db.Column(db.String(128))
     uri = db.Column(db.String(256))
     href = db.Column(db.String(256))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
 
-    def update_last_ext_sync(self):
+    def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
     def __repr__(self):

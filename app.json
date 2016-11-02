@@ -79,7 +79,7 @@
   "formation": {
   },
   "addons": [
-    "logdna",
+    "papertrail",
     "mongolab",
     "heroku-postgresql"
   ],

@@ -1,6 +1,8 @@
-from FuelSDK import ET_Client, ET_DataExtension
+from flask import flash
+from FuelSDK import ET_Client, ET_DataExtension, ET_DataExtension_Row
 from sqlalchemy import inspect
-
+import time
+import datetime
 
 
 class DataPusher(object):
@@ -12,16 +14,41 @@ class DataPusher(object):
 
         # Marketing Cloud Specific
         debug = False
-        self._stubObj = ET_Client(False, debug)
+        self._stub_obj = ET_Client(False, debug)
 
     def sync_table(self):
+        resp = 'no operation performed'
+
+        # table creation
         if not self._check_table_exists():
             resp = self._create_table()
+            if resp.code and resp.code != 200:
+                return resp
+
+        # table inserts
+        recs = self._find_recs_for_insert()
+        if recs.count() > 0:
+            resp = self._push_de_recs(recs, 'insert')
+            if resp.code and resp.code != 200:
+                return resp
+            msg = 'inserted ' + str(recs.count()) + ' records'
+            flash(msg)
+
+        # table updates
+        recs = self._find_recs_for_update()
+        if recs.count() > 0:
+            resp = self._push_de_recs(recs, 'update')
+            if resp.code and resp.code != 200:
+                return resp
+            msg = 'updated ' + str(recs.count()) + ' records'
+            flash(msg)
+
+        return resp
 
     def _check_table_exists(self):
         de = ET_DataExtension()
         de.props = ['CustomerKey', 'Name']
-        de.auth_stub = self._stubObj
+        de.auth_stub = self._stub_obj
         de.search_filter = {'Property': 'CustomerKey', 'SimpleOperator': 'equals', 'Value': self._tablename}
         resp = de.get()
         if resp.code != 200:
@@ -38,9 +65,9 @@ class DataPusher(object):
 
     def _create_table(self):
         de = ET_DataExtension()
-        de.auth_stub = self._stubObj
+        de.auth_stub = self._stub_obj
         de.props = {'Name': self._tablename, 'CustomerKey': self._tablename}
-        de.columns = []
+        columns = []
         for column, value in self._model.__dict__.items():
 
             if column[0] != '_':
@@ -51,25 +78,73 @@ class DataPusher(object):
 
                 if self.__check_primary_key(column):
                     new_column['IsPrimaryKey'] = 'true'
-                    new_column['IsRequired'] = 'false'
+                    new_column['IsRequired'] = 'true'
                 else:
                     new_column['IsPrimaryKey'] = 'false'
                     new_column['IsRequired'] = 'false'
 
                 if self.__check_date_type(column):
-                    new_column['FieldType'] = 'date'
+                    new_column['FieldType'] = 'Date'
                 else:
-                    new_column['FieldType'] = 'time'
+                    new_column['FieldType'] = 'Text'
                     new_column['MaxLength'] = '255'
 
-                de.columns.append(new_column)
+                columns.append(new_column)
 
+        de.columns = columns
         resp = de.post()
 
         if resp.code != 200:
-            raise ConnectionError('failed to receive response from Marketing Cloud when attempting to create data extension' + str(resp))
+            raise ConnectionError('failed to receive response from Marketing Cloud when attempting to create data extension' + str(resp.results))
         if resp.message != 'OK':
-            raise ValueError('error occured while created data extension' + resp.message + resp.status + resp.code)
+            raise ValueError('error occurred while created data extension' + resp.message + resp.status + resp.code)
+        return resp
+
+    def _find_recs_for_insert(self):
+        Model = self._model
+        recs = Model.query.filter(Model._last_ext_sync == None)
+        return recs
+
+    def _find_recs_for_update(self):
+        Model = self._model
+        recs = Model.query.filter(Model._last_ext_sync != None,
+                                  Model._last_ext_sync + datetime.timedelta(minutes=2)
+                                  < Model._last_updated)
+        return recs
+
+    def _push_de_recs(self, recs, update_or_insert):
+        if update_or_insert not in ['update', 'insert']:
+            raise ValueError('invalid operation selected: ' + update_or_insert)
+
+        resp = None
+
+        de = ET_DataExtension_Row()
+        de.auth_stub = self._stub_obj
+        de.CustomerKey = self._tablename
+        de.Name = self._tablename
+
+        for rec in recs:
+
+            de.props = {}
+            for column, value in self._model.__dict__.items():
+                if column[0] != '_':
+                    de.props[column] = getattr(rec, column)
+
+            if update_or_insert == 'insert':
+                resp = de.post()
+
+            if update_or_insert == 'update':
+                resp = de.patch()
+
+            # Early return in case of an errored api call
+            if resp.code != 200:
+                print('error making api call for record: ' + str(rec))
+                break
+
+            rec._update_last_ext_sync()
+            self._db.session.add(rec)
+
+        self._db.session.commit()
         return resp
 
     def __check_primary_key(self, column):
@@ -86,6 +161,3 @@ class DataPusher(object):
                 if str(ins_column.type) == 'TIMESTAMP WITHOUT TIME ZONE':
                     return True
         return False
-
-
-

@@ -19,12 +19,11 @@ Flask-Restless==0.17.0
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.1
 Flask-WTF==0.13.1
--e git+https://github.com/salesforce-marketingcloud/FuelSDK-Python.git@0115bdeb71daa979f61a02cfdfd1bce34d6e19cc#egg=FuelSDK
+-e git+https://github.com/berntxspeed/FuelSDK-Python.git@0edb18fc2ee62434030c11d2790d020e1cdb100f#egg=FuelSDK
 gunicorn==19.6.0
 httplib2==0.9.2
 idna==2.1
 injector==0.10.1
-ipython==5.1.0
 ipython-genutils==0.1.0
 itsdangerous==0.24
 Jinja2==2.8

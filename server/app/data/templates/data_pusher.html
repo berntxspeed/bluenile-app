@@ -23,9 +23,8 @@
             </div>
             <div class="well form-well">
                 <ul>
-                    <li><a href="{{ url_for('data.test') }}">test</a></li>
-                  <li><a href="#">Load Customers (not implemented yet)</a></li>
-                  <li><a href="#">Load Artists (not implemented yet)</a></li>
+                    <li><a href="{{ url_for('data.sync_data_to_mc', table='artist') }}">Load Artists</a></li>
+                    <li><a href="{{ url_for('data.sync_data_to_mc', table='customer') }}">Load Customers</a></li>
                 </ul>
             </div>
         </div>
