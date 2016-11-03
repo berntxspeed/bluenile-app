@@ -17,3 +17,8 @@ def data_pusher():
 @inject(data_push_service=DataPushServ)
 def sync_data_to_mc(data_push_service, table):
     return data_push_service.sync_data_to_mc(table)
+
+@data.route('/clear-sync-flags/<table>')
+@inject(data_push_service=DataPushServ)
+def clr_ext_sync_flags(data_push_service, table):
+    return data_push_service.clr_ext_sync_flags(table)

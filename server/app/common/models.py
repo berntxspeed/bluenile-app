@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import synonym
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
@@ -122,7 +123,7 @@ class Customer(db.Model):
     fname = db.Column(db.String(255))
     lname = db.Column(db.String(255))
     marketing_allowed = db.Column(db.String(255))
-    _created_at = db.Column(TIMESTAMP)
+    _created_at = db.Column('created_at', TIMESTAMP)
     purchase_count = db.Column(db.Integer)
     total_spent_so_far = db.Column(db.String(255))
     _last_updated = db.Column(TIMESTAMP)
@@ -136,6 +137,8 @@ class Customer(db.Model):
     def created_at(self, created_at):
         if isinstance(created_at, str):
             self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
+
+    created_at = synonym('_created_at', descriptor=created_at)
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()

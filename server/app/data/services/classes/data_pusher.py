@@ -108,7 +108,7 @@ class DataPusher(object):
     def _find_recs_for_update(self):
         Model = self._model
         recs = Model.query.filter(Model._last_ext_sync != None,
-                                  Model._last_ext_sync + datetime.timedelta(minutes=2)
+                                  Model._last_ext_sync + datetime.timedelta(minutes=1)
                                   < Model._last_updated)
         return recs
 
@@ -157,7 +157,7 @@ class DataPusher(object):
     def __check_date_type(self, column):
         ins = inspect(self._model)
         for ins_column in ins.columns:
-            if ins_column == column:
+            if str(ins_column.name) == str(column):
                 if str(ins_column.type) == 'TIMESTAMP WITHOUT TIME ZONE':
                     return True
         return False

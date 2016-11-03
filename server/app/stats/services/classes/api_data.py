@@ -78,7 +78,7 @@ class ApiDataToSql(ApiData, SqlDataLoader):
         for item in response:
             data_row = self._db_model()
             for db_field, api_field in self._db_field_map.items():
-                data_row.__setattr__(db_field, item[api_field])
+                data_row.__setattr__(db_field, str(item[api_field]))
             comp_key = ''
             for pk in self._primary_keys:
                 comp_key += str(getattr(data_row, pk))

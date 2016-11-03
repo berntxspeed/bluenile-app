@@ -47,7 +47,6 @@ class DataLoadService(DbService):
                       json_data_keys=json_data_keys)
 
         ad1.load_data()
-        pp(ad1._get_data().keys())
         return redirect(url_for('stats.data_manager'))
 
     def load_artists(self):
