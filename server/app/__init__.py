@@ -4,6 +4,7 @@ from flask_login import LoginManager
 import flask_restless as Restless
 from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
+from webassets.filter import register_filter
 
 from .module import blueprints
 from .module import modules
@@ -77,5 +78,8 @@ def init_loginmanager(app):
 
 def init_assets(app):
     from .common.utils.assets import bundles
+    from dukpy.webassets import BabelJS
+    register_filter(BabelJS)
+
     assets = Environment(app)
     assets.register(bundles)
