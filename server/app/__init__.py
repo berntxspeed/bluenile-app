@@ -1,3 +1,4 @@
+from celery import Celery
 from flask import Flask
 from flask_injector import FlaskInjector
 from flask_login import LoginManager
@@ -64,6 +65,12 @@ def init_db(app):
 def init_mongo(app):
     from .common.mongo import mongo
     mongo.init_app(app)
+
+def init_taskqueu(app):
+
+    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+
 
 def init_loginmanager(app):
     from .common.models import User
