@@ -6,13 +6,14 @@ from flask_migrate import Migrate, MigrateCommand
 
 from server.app import create_injector
 from server.app.common import models
-from server.app.injector_keys import Config, SQLAlchemy, MongoDB
+from server.app.injector_keys import Config, SQLAlchemy, MongoDB, Celery
 
 injector = create_injector()
 app = injector.get(Flask)
 config = injector.get(Config)
 db = injector.get(SQLAlchemy)
 mongo = injector.get(MongoDB)
+celery = injector.get(Celery)
 manager = Manager(app)
 
 migrate = Migrate(app, db)
@@ -38,7 +39,6 @@ def init_db():
     KeyValue.insert_keyvalues()
 
     User.insert_users()
-
 
 
 if __name__ == '__main__':

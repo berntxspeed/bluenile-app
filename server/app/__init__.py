@@ -6,6 +6,7 @@ import flask_restless as Restless
 from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
 
+from server.app.injector_keys import MongoDB
 from .module import blueprints
 from .module import modules
 from ..config import config
@@ -37,15 +38,17 @@ def create_app():
 
     return app
 
+
 def create_injector(app=None):
     if app is None:
         app = create_app()
     injector = FlaskInjector(app=app, modules=modules).injector
     init_db(app)
-    init_mongo(app)
+    init_mongo(app, injector.get(MongoDB))
     init_loginmanager(app)
     init_assets(app)
     return injector
+
 
 def init_db(app):
     from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer, Artist
@@ -62,14 +65,9 @@ def init_db(app):
     manager.create_api(Artist, methods=['GET'])
     manager.create_api(Customer, methods=['GET'])
 
-def init_mongo(app):
-    from .common.mongo import mongo
+
+def init_mongo(app, mongo):
     mongo.init_app(app)
-
-def init_taskqueu(app):
-
-    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-    celery.conf.update(app.config)
 
 
 def init_loginmanager(app):
@@ -77,10 +75,13 @@ def init_loginmanager(app):
     login_manager = LoginManager()
     login_manager.session_protection = 'strong'
     login_manager.login_view = 'auth.login'
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+
     login_manager.init_app(app)
+
 
 def init_assets(app):
     from .common.utils.assets import bundles
