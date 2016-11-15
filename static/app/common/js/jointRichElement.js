@@ -64,6 +64,7 @@ $(document).ready(function () {
             '<label class="sendCnt"></label>',
             '<img src="#" />',
             '<div class="chart"></div>',
+            '<input style="display: none;" class="checkbox" type="checkbox" value="">',
             '</div>'
         ].join(''),
 
@@ -107,6 +108,9 @@ $(document).ready(function () {
                 var bbox = this.model.getBBox();
                 var sendId = this.model.get('sendId');
                 var id = this.model.get('id');
+                this.$box.find('.checkbox')
+                    .attr('value', sendId)
+                    .attr('style', '');
                 this.$box.find('.chart').attr('id', id);
                 pieChartEmlStats.makeChart('#' + id,
                                             bbox.width,

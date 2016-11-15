@@ -32,11 +32,13 @@
 
 .html-element .chart,
 .html-element img,
-.html-element label {
+.html-element label,
+.html-element .checkbox {
     position: absolute !important;
 }
 
-.html-element .chart {
+.html-element .chart,
+.html-element .checkbox {
     /* Enable interacting with inputs only. */
     pointer-events: auto;
     top: 4px;
@@ -60,4 +62,9 @@
     font-style: italic;
     bottom: 0px;
     right: 2px;
+}
+
+.html-element .checkbox {
+    bottom: 0px;
+    left: 15px;
 }

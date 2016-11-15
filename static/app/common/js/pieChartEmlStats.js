@@ -70,7 +70,7 @@ var pieChartEmlStats = {
             filters.push({"name": "IsUnique", "op": "eq", "val": "True"});
         }
         $.ajax({
-            url: 'https://localhost:5000/api/' + tables[table],
+            url: 'http://localhost:5000/api/' + tables[table],
             data: {"q": JSON.stringify({"filters": filters})},
             dataType: "json",
             contentType: "application/json",

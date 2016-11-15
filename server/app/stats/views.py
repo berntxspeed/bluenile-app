@@ -3,10 +3,10 @@ from flask import session
 from flask import Response
 from flask_login import login_required
 from injector import inject
-from json import dumps
+from json import dumps, loads
 
 from . import stats
-from .injector_keys import JbStatsServ, DataLoadServ
+from .injector_keys import JbStatsServ, GetStatsServ, DataLoadServ
 from ..common.views.decorators import templated
 
 
@@ -44,6 +44,7 @@ def journey_detail(jb_stats_service, id):
 def devpage_joint():
     return {}
 
+# todo collapse into one endpoint, parametrize destination table
 @stats.route('/load/customers')
 @inject(data_load_service=DataLoadServ)
 @login_required
@@ -67,3 +68,21 @@ def load_mc_email_data(data_load_service):
 @login_required
 def load_mc_journeys(data_load_service):
     return data_load_service.load_mc_journeys()
+
+@stats.route('/get-columns/<tbl>')
+@inject(get_stats_service=GetStatsServ)
+@login_required
+def get_columns(get_stats_service, tbl):
+    return get_stats_service.get_columns(tbl)
+
+@stats.route('/metrics-grouped-by/<grp_by>/<tbl>')
+@inject(get_stats_service=GetStatsServ)
+@login_required
+def metrics_grouped_by(get_stats_service, grp_by, tbl):
+    filters = None
+    q = request.args.get('q')
+    if q:
+        q = loads(q)
+        filters = q.get('filters')
+        print(filters)
+    return get_stats_service.get_grouping_counts(tbl, grp_by, filters)
