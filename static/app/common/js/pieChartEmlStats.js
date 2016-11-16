@@ -70,7 +70,7 @@ class PieChartEmlStats {
               filters.push({"name": "IsUnique", "op": "eq", "val": "True"});
           }
           $.ajax({
-              url: 'https://localhost:5000/api/' + tables[table],
+              url: 'http://localhost:5000/api/' + tables[table],
               data: {"q": JSON.stringify({"filters": filters})},
               dataType: "json",
               contentType: "application/json",
@@ -87,8 +87,9 @@ class PieChartEmlStats {
   makeChart(chartSelector, sizeW, sizeH, sendId) {
 
           if(!sendId){ sendId = '42377'; }
-
+          var self = this;
           var obj = {
+              self: self,
               sendId: sendId,
               chartSelector: chartSelector,
               sizeW: sizeW,
@@ -99,13 +100,13 @@ class PieChartEmlStats {
                   click: 0
               }
           };
-          getSendCount(obj, function(err, obj){
+          obj.self.getSendCount(obj, function(err, obj){
               if(err) { return console.error('error getting send stats for sendid: '+obj.sendId+' err:'+ JSON.stringify(err)); }
-              this.getOpenCount(obj, function(err, obj){
+              obj.self.getOpenCount(obj, function(err, obj){
                   if(err) { return console.error('error getting open stats for sendid: '+obj.sendId+' err:'+ JSON.stringify(err)); }
-                  self._getClickCount(obj, function(err, obj){
+                  obj.self.getClickCount(obj, function(err, obj){
                       if(err) { return console.error('error getting click stats for sendid: '+obj.sendId+' err:'+JSON.stringify(err)); }
-                      self._renderChart(obj.chartSelector,
+                      obj.self.renderChart(obj.chartSelector,
                                        obj.sizeW,
                                        obj.sizeH,
                                        obj.counts.send,
