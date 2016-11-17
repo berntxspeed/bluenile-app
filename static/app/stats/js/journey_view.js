@@ -29,9 +29,10 @@ $(function(){
                     $(".html-element .checkbox").prop('checked', false);
                     $(this).prop('checked', true);
 
-                    sendId = $(this).val();
+                    var sendId = $(this).val();
                     //alert('drill down on: ' + sendId);
 
+                    var emlSendGrapher = new EmlSendGrapher();
                     emlSendGrapher.init('#drill-down-area', sendId);
                 });
             });
