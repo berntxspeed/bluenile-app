@@ -2,7 +2,7 @@
 
 {% block head %}
     {{ super() }}
-    {% assets 'journey_view_css' %}
+    {% assets 'journey-view-css' %}
         <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
     {% endassets %}
 {% endblock %}
@@ -53,7 +53,7 @@
             </div>
         </div>
     </div>
-    {% assets "journey_view_js" %}
+    {% assets "journey-view-js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 {% endblock %}

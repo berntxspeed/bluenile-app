@@ -2,19 +2,19 @@
 
 // Depends on pieChartEmlStats.js, jointRichElement
 
-var journeyGrapher = {
-
-    _buildGraphFromAdjacencyList: function (adjacencyList, activityDetails) {
+class JourneyGrapher{
+    constructor(){}
+    buildGraphFromAdjacencyList(adjacencyList, activityDetails) {
 
         var elements = [];
         var links = [];
 
         self = this;
         _.each(adjacencyList, function (edges, parentElementLabel) {
-            elements.push(self._makeElement(parentElementLabel, activityDetails));
+            elements.push(self.makeElement(parentElementLabel, activityDetails));
 
             _.each(edges, function (childElementLabel) {
-                links.push(self._makeLink(parentElementLabel, childElementLabel));
+                links.push(self.makeLink(parentElementLabel, childElementLabel));
             });
         });
 
@@ -22,8 +22,8 @@ var journeyGrapher = {
         // are added to the graph, link source/target
         // elements must be in the graph already.
         return elements.concat(links);
-    },
-    _makeLink: function (parentElementLabel, childElementLabel) {
+    }
+    makeLink(parentElementLabel, childElementLabel) {
 
         return new joint.dia.Link({
             source: {id: parentElementLabel},
@@ -39,8 +39,8 @@ var journeyGrapher = {
                 }
             }
         });
-    },
-    _makeElement: function (label, activityDetails) {
+    }
+    makeElement(label, activityDetails) {
 
         var sendId = activityDetails[label].trigSendId;
         var activityType = activityDetails[label].type;
@@ -52,8 +52,8 @@ var journeyGrapher = {
             size: {width: 160, height: 160},
             label: label
         });
-    },
-    layoutJourneyGraph: function (graph, journey) {
+    }
+    layoutJourneyGraph(graph, journey) {
 
         var jmap = {};
         var activityDetails = {};
@@ -76,7 +76,7 @@ var journeyGrapher = {
         }
 
         graph.clear();
-        var cells = this._buildGraphFromAdjacencyList(jmap, activityDetails);
+        var cells = this.buildGraphFromAdjacencyList(jmap, activityDetails);
         graph.resetCells(cells);
         joint.layout.DirectedGraph.layout(graph, {
             setLinkVertices: false,
@@ -85,4 +85,5 @@ var journeyGrapher = {
         });
         return graph;
     }
-};
+
+}

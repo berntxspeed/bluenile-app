@@ -1,11 +1,16 @@
 from sqlalchemy import func
+import datetime
 
 
 class StatsGetter(object):
 
     def __init__(self, db, tbl, acceptable_tbls, grp_by=None, filters=None):
         self._allowable_filter_ops = {
-            'eq': '=='
+            'eq': lambda q, col, val: q.filter(col == val),
+            'gt': lambda q, col, val: q.filter(col > val),
+            'lt': lambda q, col, val: q.filter(col < val),
+            'date_gt': lambda q, col, val: q.filter(col > datetime.datetime.strptime(val, '%Y-%m-%d')),
+            'date_lt': lambda q, col, val: q.filter(col < datetime.datetime.strptime(val, '%Y-%m-%d'))
         }
         self._db = db
         self._tbl = tbl
@@ -28,7 +33,7 @@ class StatsGetter(object):
                 if filter.get('op') in self._allowable_filter_ops.keys():
                     if filter.get('val') != None:
                         column = getattr(self._model, filter.get('name'))
-                        q = q.filter(column == filter.get('val')) #todo find a way to parametrize operation
+                        q = self._allowable_filter_ops.get(filter.get('op'))(q, column, filter.get('val'))
                         continue
                     raise ValueError('invalid data for filter definition: val')
                 raise ValueError('invalid data for filter definition: op')

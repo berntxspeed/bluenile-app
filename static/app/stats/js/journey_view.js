@@ -21,6 +21,7 @@ $(function(){
             var journeyId = $('#journey-select').find(':selected').val();
             $.getJSON("/journey-detail/" + journeyId, function(data){
                 var journey = data;
+                var journeyGrapher = new JourneyGrapher();
                 window.jgraph = journeyGrapher.layoutJourneyGraph(window.jgraph, journey);
 
                 // render drill down view for a specific email

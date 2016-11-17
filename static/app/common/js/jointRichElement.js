@@ -112,6 +112,7 @@ $(document).ready(function () {
                     .attr('value', sendId)
                     .attr('style', '');
                 this.$box.find('.chart').attr('id', id);
+                var pieChartEmlStats = new PieChartEmlStats();
                 pieChartEmlStats.makeChart('#' + id,
                                             bbox.width,
                                             bbox.height,
@@ -121,7 +122,7 @@ $(document).ready(function () {
                     counts: {},
                     self: this
                 };
-                pieChartEmlStats._getSendCount(obj, function(err){
+                pieChartEmlStats.getSendCount(obj, function(err){
                     if(err){
                         console.error('problem accessing send count for sendid: ' + obj.sendId + ' err: ' + JSON.stringify(err));
                         return obj.self.$box.find('label.sendCnt').text('**error**');

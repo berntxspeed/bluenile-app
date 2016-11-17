@@ -61,6 +61,6 @@ class GetStatsService(DbService):
                              filters=filters)
             results = st.get()
         except ValueError as exc:
-            return jsonify(error=exc)
+            return jsonify(error=str(exc)), 400
 
         return jsonify(results=results)
