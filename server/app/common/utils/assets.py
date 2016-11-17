@@ -44,7 +44,7 @@ bundles = {
         filters='rjsmin',
         output='gen/base.%(version)s.js'
     ),
-    'journey_view_js': Bundle(
+    'journey-view-js': Bundle(
         base_bundles['joint_js'],
         base_bundles['directed_graph_js'],
         base_bundles['graphing_js'],
