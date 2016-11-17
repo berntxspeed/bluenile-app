@@ -26,7 +26,6 @@ class Config(object):
     MONGO_URI = os.getenv('MONGODB_URI')
     REDIS_URI = os.getenv('REDIS_URI')
     CELERY_BROKER_URL = REDIS_URI
-
     # Cache
     CACHE_TYPE = 'simple'
 

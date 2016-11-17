@@ -1,3 +1,5 @@
+import logging
+
 from flask import Flask
 from flask_script import Manager
 from flask_script import Server
@@ -18,6 +20,7 @@ manager = Manager(app)
 
 migrate = Migrate(app, db)
 
+
 def make_shell_context():
     return {
         'app': app,
@@ -25,12 +28,15 @@ def make_shell_context():
         'db': db,
         'mongo': mongo,
         'injector': injector,
-        'models': models
+        'models': models,
+        'celery': celery
     }
+
 
 manager.add_command('shell', Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
 manager.add_command('runserver', Server(host='0.0.0.0', port=5000))
+
 
 @manager.command
 def init_db():

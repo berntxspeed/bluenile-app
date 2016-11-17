@@ -1,6 +1,3 @@
-from flask import url_for
-from flask import flash
-from flask import redirect
 import requests
 from pprint import pprint as pp 
 
@@ -47,7 +44,6 @@ class DataLoadService(DbService):
                       json_data_keys=json_data_keys)
 
         ad1.load_data()
-        return redirect(url_for('stats.data_manager'))
 
     def load_artists(self):
         artist_data_source = self.config.get('ARTIST_DATA_SOURCE')
@@ -70,7 +66,6 @@ class DataLoadService(DbService):
 
         ad.load_data()
         pp(ad._get_data().keys())
-        return redirect(url_for('stats.data_manager'))
 
     def load_mc_email_data(self):
         config = self.config
@@ -167,13 +162,11 @@ class DataLoadService(DbService):
                          'OperatingSystem': 'OperatingSystem',
                          'Device': 'Device'
                      })
-        return redirect(url_for('stats.data_manager'))
 
     def load_mc_journeys(self):
         token = self.__get_mc_auth()
         journeys = self.__get_mc_journeys(token)
         self.__load_mc_journeys_to_db(journeys, token)
-        return redirect(url_for('stats.data_manager'))
 
     def __get_mc_auth(self):
 

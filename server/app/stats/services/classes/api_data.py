@@ -4,9 +4,7 @@ from .db_data_loader import SqlDataLoader, MongoDataLoader
 
 
 class ApiData(object):
-
     def __init__(self, endpoint, auth, headers, params):
-
         self._endpoint = endpoint
         self._auth = auth
         self._headers = headers
@@ -20,8 +18,12 @@ class ApiData(object):
                                 auth=self._auth)
         self._response = response
         if response.status_code != 200:
-            raise ConnectionError('failed to retrieve data from api endpoint: ' + str(response.status_code))
+            raise ConnectionError(
+                'Failed to retrieve data with {0} from api endpoint: {1}\n{2}'.format(str(response.status_code),
+                                                                                      self._endpoint,
+                                                                                      response.request.headers))
         return response
+
 
 class ApiDataToSql(ApiData, SqlDataLoader):
     """Retrieves data from a 'GET' api endpoint and loads to db table
@@ -42,12 +44,13 @@ class ApiDataToSql(ApiData, SqlDataLoader):
         load_data(): pulls data down from endpoint, and loads into db
     """
 
-    def __init__(self, endpoint, auth, headers, params, db_session, db_model, primary_keys, db_field_map, json_data_keys=(None,)):
+    def __init__(self, endpoint, auth, headers, params, db_session, db_model, primary_keys, db_field_map,
+                 json_data_keys=(None,)):
 
         SqlDataLoader.__init__(self,
-                            db_session=db_session,
-                            db_model=db_model,
-                            primary_keys=primary_keys)
+                               db_session=db_session,
+                               db_model=db_model,
+                               primary_keys=primary_keys)
 
         ApiData.__init__(self, endpoint=endpoint,
                          auth=auth,
@@ -88,7 +91,6 @@ class ApiDataToSql(ApiData, SqlDataLoader):
 
 
 class ApiDataToMongo(ApiData, MongoDataLoader):
-
     def __init__(self, endpoint, auth, headers, params, collection, primary_keys, json_data_keys=None):
 
         ApiData.__init__(self, endpoint, auth, headers, params)

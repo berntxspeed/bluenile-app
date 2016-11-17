@@ -1,25 +1,29 @@
-# import injector
-
-# from celery import shared_task
-# from celery.task import task
-# from flask import Flask
-# from injector import Module, inject
-#
-# from manage import injector
-# from ...stats.injector_keys import DataLoadServ
-
-# app = injector.get(Flask)
-
-from manage import celery, injector
+from manage import celery, injector, app
 from ...stats.injector_keys import DataLoadServ
 
 
 @celery.task
-def load():
+def load_customers():
     service = injector.get(DataLoadServ)
     service.load_customers()
 
-# class CustomersTask(Task):
-#     def run(self, *args, **kwargs):
-#         service = injector.get(DataLoadServ)
-#         service.load_customers()
+
+@celery.task
+def load_mc_email_data():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_mc_email_data()
+
+
+@celery.task
+def load_artists():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_artists()
+
+
+@celery.task
+def load_mc_journeys():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_mc_journeys()
