@@ -67,7 +67,7 @@ class MongoDataLoader(object):
                 logger.info(str(r.raw_result))
         else:
             r = self._upsert_item(data)
-            logger.log(str(r.raw_result))
+            logger.info(str(r.raw_result))
 
     def _upsert_item(self, item):
         find_criteria = dict()

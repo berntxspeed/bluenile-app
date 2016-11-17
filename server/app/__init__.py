@@ -39,9 +39,23 @@ def create_app():
     return app
 
 
+def provide_celery(app):
+    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], include='server.app.common.workers.module')
+    print('Celery broker: ', app.config['CELERY_BROKER_URL'])
+    print('Celery name: ', app.name)
+    celery.conf.update(app.config)
+
+    print('App celery is initialized with: ', hex(id(app)))
+    import os
+    print('Process is: ', os.getpid())
+
+    return celery
+
+
 def create_injector(app=None):
     if app is None:
         app = create_app()
+
     injector = FlaskInjector(app=app, modules=modules).injector
     init_db(app)
     init_mongo(app, injector.get(MongoDB))

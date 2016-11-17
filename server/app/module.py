@@ -5,7 +5,7 @@ from injector import singleton
 from injector import inject
 from injector import provides
 
-from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB, Celery
+from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB
 
 # import other modules
 from .auth.module import AuthModule
@@ -42,12 +42,6 @@ class AppModule(Module):
         from .common.storage import provide_mongo
         return provide_mongo()
 
-    @singleton
-    @inject(app=Flask)
-    @provides(Celery)
-    def provides_celery(self, app):
-        from .common.storage import provide_celery
-        return provide_celery(app)
 
     @singleton
     @inject(app=Flask)
