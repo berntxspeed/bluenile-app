@@ -24,7 +24,7 @@ class Config(object):
     SQLALCHEMY_MIGRATE_REPO = os.path.join(PROJECT_ROOT, '..', 'db_repository')
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     MONGO_URI = os.getenv('MONGODB_URI')
-    REDIS_URI = os.getenv('REDIS_URI')
+    REDIS_URI = os.getenv('REDIS_URL')
     CELERY_BROKER_URL = REDIS_URI
     # Cache
     CACHE_TYPE = 'simple'
