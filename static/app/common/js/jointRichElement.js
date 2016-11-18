@@ -64,8 +64,8 @@ $(document).ready(function () {
             '<label class="sendCnt"></label>',
             '<img src="#" />',
             '<div class="chart"></div>',
-            '<input style="display: none;" class="checkboxA" type="checkbox" value="">',
-            '<input style="display: none;" class="checkboxB" type="checkbox" value="">',
+            '<input style="display: none;" class="drill-down-checkboxA" type="checkbox" value="">',
+            '<input style="display: none;" class="drill-down-checkboxB" type="checkbox" value="">',
             '</div>'
         ].join(''),
 
@@ -109,7 +109,7 @@ $(document).ready(function () {
                 var bbox = this.model.getBBox();
                 var sendId = this.model.get('sendId');
                 var id = this.model.get('id');
-                this.$box.find('.checkboxA, .checkboxB')
+                this.$box.find('.drill-down-checkboxA, .drill-down-checkboxB')
                     .attr('value', sendId)
                     .attr('style', '');
                 this.$box.find('.chart').attr('id', id);

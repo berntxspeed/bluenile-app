@@ -25,8 +25,12 @@ $(function(){
                 window.jgraph = journeyGrapher.layoutJourneyGraph(window.jgraph, journey);
 
                 // render drill down view A for a specific email
-                $(".html-element .checkboxA").click(function(){
-                    $(".html-element .checkboxA").prop('checked', false);
+                $(".html-element .drill-down-checkboxA").click(function(){
+                    // ***only want one box to be checked at any given time
+
+                    // clear any checked boxes
+                    $(".html-element .drill-down-checkboxA").prop('checked', false);
+                    // add check back to the currently selected box
                     $(this).prop('checked', true);
 
                     var sendId = $(this).val();
@@ -37,8 +41,12 @@ $(function(){
                 });
 
                 // render drill down view B for a specific email
-                $(".html-element .checkboxB").click(function(){
-                    $(".html-element .checkboxB").prop('checked', false);
+                $(".html-element .drill-down-checkboxB").click(function(){
+                    // ***only want one box to be checked at any given time
+
+                    // clear any checked boxes
+                    $(".html-element .drill-down-checkboxB").prop('checked', false);
+                    // add check back to the currently selected box
                     $(this).prop('checked', true);
 
                     var sendId = $(this).val();
