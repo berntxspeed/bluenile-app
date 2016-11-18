@@ -24,16 +24,28 @@ $(function(){
                 var journeyGrapher = new JourneyGrapher();
                 window.jgraph = journeyGrapher.layoutJourneyGraph(window.jgraph, journey);
 
-                // render drill down view for a specific email
-                $(".html-element .checkbox").click(function(){
-                    $(".html-element .checkbox").prop('checked', false);
+                // render drill down view A for a specific email
+                $(".html-element .checkboxA").click(function(){
+                    $(".html-element .checkboxA").prop('checked', false);
                     $(this).prop('checked', true);
 
                     var sendId = $(this).val();
                     //alert('drill down on: ' + sendId);
 
                     var emlSendGrapher = new EmlSendGrapher();
-                    emlSendGrapher.init('#drill-down-area', sendId);
+                    emlSendGrapher.init('#drill-down-areaA', sendId);
+                });
+
+                // render drill down view B for a specific email
+                $(".html-element .checkboxB").click(function(){
+                    $(".html-element .checkboxB").prop('checked', false);
+                    $(this).prop('checked', true);
+
+                    var sendId = $(this).val();
+                    //alert('drill down on: ' + sendId);
+
+                    var emlSendGrapher = new EmlSendGrapher();
+                    emlSendGrapher.init('#drill-down-areaB', sendId);
                 });
             });
         });
