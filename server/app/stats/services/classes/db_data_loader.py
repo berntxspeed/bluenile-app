@@ -48,7 +48,7 @@ class SqlDataLoader(object):
                 update_cnt += 1
 
         self._db_session.add_all(items.values())
-        ('updating existing records: ' + str(update_cnt))
+        logger.info('updating existing records: ' + str(update_cnt))
         logger.info('inserting new records: ' + str(len(items)))
         self._db_session.commit()
 
