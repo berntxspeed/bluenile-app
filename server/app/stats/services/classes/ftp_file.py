@@ -3,6 +3,7 @@ import zipfile as ZF
 from zipfile import BadZipFile
 import os
 import csv
+import shutil
 
 from .db_data_loader import SqlDataLoader
 
@@ -199,3 +200,13 @@ class ZipFile(FtpFile):
             cf.load_data()
         else:
             raise TypeError('requested file type is not supported yet.  current support: csv')
+
+    def clean_up(self):
+
+        try:
+            os.chdir(tmp_directory)
+
+            shutil.rmtree(self._extracted_files_dir)
+            os.remove(self._file)
+        finally:
+            os.chdir('..')
