@@ -56,6 +56,7 @@ journey-view-js:
         - graphing-js
         - contents:
             - app/common/js/pieChartEmlStats.js
+            - app/common/js/emlSendGrapher.js
             - app/stats/js/journey_view.js
           filters: babeljs
           output: gen/journey_view.babel.js

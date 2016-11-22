@@ -49,6 +49,7 @@ bundles = {
         base_bundles['directed_graph_js'],
         base_bundles['graphing_js'],
         'app/common/js/pieChartEmlStats.js',
+        'app/common/js/emlSendGrapher.js',
         'app/stats/js/journey_view.js',
         filters='rjsmin',
         output='gen/journey_view.%(version)s.js'

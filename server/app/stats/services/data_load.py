@@ -167,6 +167,8 @@ class DataLoadService(DbService):
                          'OperatingSystem': 'OperatingSystem',
                          'Device': 'Device'
                      })
+
+        zf.clean_up() # delete downloaded files
         return redirect(url_for('stats.data_manager'))
 
     def load_mc_journeys(self):

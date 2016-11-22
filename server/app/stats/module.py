@@ -3,9 +3,10 @@ from injector import inject
 from injector import provides
 from injector import singleton
 
-from .injector_keys import JbStatsServ, DataLoadServ
+from .injector_keys import JbStatsServ, GetStatsServ, DataLoadServ
 from ..injector_keys import Config, Logging, SQLAlchemy, MongoDB
 from .services.jb_stats import JbStatsService
+from .services.get_stats import GetStatsService
 from .services.data_load import DataLoadService
 
 
@@ -22,6 +23,16 @@ class StatsModule(Module):
                                   logger=logger,
                                   db=db,
                                   mongo=mongo)
+
+        @singleton
+        @inject(config=Config,
+                logger=Logging,
+                db=SQLAlchemy)
+        @provides(GetStatsServ)
+        def provide_get_stats_service(self, config, logger, db):
+            return GetStatsService(config=config,
+                                   logger=logger,
+                                   db=db)
 
         @singleton
         @inject(config=Config,

@@ -87,6 +87,7 @@ class PieChartEmlStats {
   makeChart(chartSelector, sizeW, sizeH, sendId) {
 
           if(!sendId){ sendId = '42377'; }
+
           var self = this;
           var obj = {
               self: self,
@@ -100,6 +101,7 @@ class PieChartEmlStats {
                   click: 0
               }
           };
+
           obj.self.getSendCount(obj, function(err, obj){
               if(err) { return console.error('error getting send stats for sendid: '+obj.sendId+' err:'+ JSON.stringify(err)); }
               obj.self.getOpenCount(obj, function(err, obj){
@@ -115,5 +117,6 @@ class PieChartEmlStats {
                   });
               });
           });
-      }
+  }
 }
+

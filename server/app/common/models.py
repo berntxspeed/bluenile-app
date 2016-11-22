@@ -201,10 +201,19 @@ class EmlSend(db.Model):
     SendID = db.Column(db.Integer)
     SubscriberKey = db.Column(db.String(255), primary_key=True)
     EmailAddress = db.Column(db.String(255))
-    EventDate = db.Column(db.String(255), primary_key=True)
+    _EventDate = db.Column(TIMESTAMP, primary_key=True)
     TriggeredSendExternalKey = db.Column(db.String(255))
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
+
+    @hybrid_property
+    def EventDate(self):
+        return self._EventDate
+
+    @EventDate.setter
+    def EventDate(self, event_date):
+        if isinstance(event_date, str):
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -222,7 +231,7 @@ class EmlOpen(db.Model):
     SendID = db.Column(db.Integer)
     SubscriberKey = db.Column(db.String(255), primary_key=True)
     EmailAddress = db.Column(db.String(255))
-    EventDate = db.Column(db.String(255), primary_key=True)
+    _EventDate = db.Column(TIMESTAMP, primary_key=True)
     TriggeredSendExternalKey = db.Column(db.String(255))
     IsUnique = db.Column(db.String(255))
     IpAddress = db.Column(db.String(255))
@@ -240,14 +249,14 @@ class EmlOpen(db.Model):
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
-    """"@hybrid_property
+    @hybrid_property
     def EventDate(self):
         return self._EventDate
 
     @EventDate.setter
     def EventDate(self, event_date):
         if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')"""
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -265,7 +274,7 @@ class EmlClick(db.Model):
     SendID = db.Column(db.Integer)
     SubscriberKey = db.Column(db.String(255), primary_key=True)
     EmailAddress = db.Column(db.String(255))
-    EventDate = db.Column(db.String(255), primary_key=True)
+    _EventDate = db.Column(TIMESTAMP, primary_key=True)
     SendURLID = db.Column(db.String(255))
     URLID = db.Column(db.String(255))
     URL = db.Column(db.String(1024))
@@ -286,6 +295,15 @@ class EmlClick(db.Model):
     Device = db.Column(db.String(255))
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
+
+    @hybrid_property
+    def EventDate(self):
+        return self._EventDate
+
+    @EventDate.setter
+    def EventDate(self, event_date):
+        if isinstance(event_date, str):
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
