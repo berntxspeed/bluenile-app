@@ -5,6 +5,7 @@ import flask_restless as Restless
 from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
 from webassets.filter import register_filter
+from celery import Celery
 
 from server.app.injector_keys import MongoDB
 from .module import blueprints
@@ -42,6 +43,13 @@ def create_app():
         app.register_blueprint(blueprint)
 
     return app
+
+
+def provide_celery(app):
+    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], include='server.app.common.workers.module')
+    celery.conf.update(app.config)
+
+    return celery
 
 
 def create_injector(app=None):

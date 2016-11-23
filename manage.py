@@ -15,8 +15,8 @@ app = injector.get(Flask)
 config = injector.get(Config)
 db = injector.get(SQLAlchemy)
 mongo = injector.get(MongoDB)
-celery = provide_celery(app)
 manager = Manager(app)
+celery = provide_celery(app)
 
 migrate = Migrate(app, db)
 
