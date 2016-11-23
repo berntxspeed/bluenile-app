@@ -34,8 +34,7 @@ class FtpFile(object):
             with pysftp.Connection(
                     host=self._ftp_cfg['host'],
                     username=self._ftp_cfg['username'],
-                    password=self._ftp_cfg['password']
-            ) as srv:
+                    password=self._ftp_cfg['password']) as srv:
                 with pysftp.cd(tmp_directory):
                     srv.get(self._path + self._file)
 
@@ -45,6 +44,7 @@ class FtpFile(object):
             raise FileNotFoundError(
                 'could not find file on server with directory: {} and filename: {}'
                     .format(self._file, self._path))
+        
 
 class CsvFile(SqlDataLoader, FtpFile):
 
