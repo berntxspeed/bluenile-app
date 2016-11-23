@@ -24,8 +24,11 @@ class Config(object):
     SQLALCHEMY_MIGRATE_REPO = os.path.join(PROJECT_ROOT, '..', 'db_repository')
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     MONGO_URI = os.getenv('MONGODB_URI')
+    ASSET_CONFIG_FILE = os.path.join(PROJECT_ROOT, 'asset-config.yaml')
+
     REDIS_URI = os.getenv('REDIS_URL')
     CELERY_BROKER_URL = REDIS_URI
+
     # Cache
     CACHE_TYPE = 'simple'
 
@@ -80,9 +83,11 @@ class LocalConfig(Config):
     # assets configuration (js/css files)
     ASSETS_DEBUG = True # forces flask to not merge asset files into one file
 
+
     @classmethod
     def init_app(cls, app):
         super(LocalConfig, cls).init_app(app)
+
         if app.debug:
             from flask_debugtoolbar import DebugToolbarExtension
             DebugToolbarExtension(app)
@@ -91,6 +96,7 @@ class LocalConfig(Config):
 class TestConfig(Config):
     ENV = TEST
 
+
 class DevConfig(Config):
     ENV = DEV
 
@@ -98,14 +104,16 @@ class DevConfig(Config):
     SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
 
     # Assets configuration (js/css files)
-    ASSETS_DEBUG = True # Forces flask-assets to not merge/compress js files
+    ASSETS_DEBUG = True  # Forces flask-assets to not merge/compress js files
 
     @classmethod
     def init_app(cls, app):
         super(DevConfig, cls).init_app(app)
+
         if app.debug:
             from flask_debugtoolbar import DebugToolbarExtension
             DebugToolbarExtension(app)
+
 
 class StgConfig(Config):
     ENV = STG

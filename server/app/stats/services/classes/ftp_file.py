@@ -3,6 +3,7 @@ import zipfile as ZF
 from zipfile import BadZipFile
 import os
 import csv
+import shutil
 
 from .db_data_loader import SqlDataLoader
 
@@ -123,7 +124,7 @@ class CsvFile(SqlDataLoader, FtpFile):
                         # use a composite key to reference the records on the dict
                         composite_key = ''
                         for pk in self._primary_keys:
-                            composite_key += getattr(item, pk)
+                            composite_key += str(getattr(item, pk))
                         # place item on dict, w key reference to composite key, and value of dbModel instance
                         import_items[composite_key] = item
             except FileNotFoundError as exc:
@@ -199,3 +200,13 @@ class ZipFile(FtpFile):
             cf.load_data()
         else:
             raise TypeError('requested file type is not supported yet.  current support: csv')
+
+    def clean_up(self):
+
+        try:
+            os.chdir(tmp_directory)
+
+            shutil.rmtree(self._extracted_files_dir)
+            os.remove(self._file)
+        finally:
+            os.chdir('..')

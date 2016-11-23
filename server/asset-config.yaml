@@ -1,0 +1,88 @@
+joint-js:
+    contents:
+        - bower_components/lodash/lodash.js
+        - bower_components/backbone/backbone.js
+        - bower_components/jointjs/dist/joint.js
+    
+joint-css:
+    contents:
+        - bower_components/jointjs/dist/joint.css
+
+directed-graph-js:
+    contents:
+        - bower_components/graphlib/dist/graphlib.core.js
+        - bower_components/dagre/dist/dagre.core.js
+        - bower_components/jointjs/dist/joint.layout.DirectedGraph.js
+        - contents:
+            - app/common/js/journeyGrapher.js
+            - app/common/js/jointRichElement.js
+          filters: babeljs, rjsmin
+          output: gen/journey_elements.%(version)s.js
+
+bootstrap-js:
+    contents:
+        - bower_components/jquery/jquery.js
+        - bower_components/bootstrap/dist/js/bootstrap.js
+
+bootstrap-css:
+    contents:
+        - bower_components/bootstrap/dist/css/bootstrap.min.css
+
+graphing-js:
+    contents:
+        - bower_components/d3/d3.js
+        - bower_components/c3/c3.js
+graphing-css:
+    contents:
+      - bower_components/c3/c3.css
+
+base-css:
+    contents:
+        - bootstrap-css
+    filters: cssmin
+    output: gen/base.%(version)s.css
+
+base-js:
+    contents:
+        - bootstrap-js
+        - bower_components/knockout/dist/knockout.js
+    filters: rjsmin
+    output: gen/base.%(version)s.js
+
+journey-view-js:
+    contents:
+        - joint-js
+        - directed-graph-js
+        - graphing-js
+        - contents:
+            - app/common/js/pieChartEmlStats.js
+            - app/common/js/emlSendGrapher.js
+            - app/stats/js/journey_view.js
+          filters: babeljs
+          output: gen/journey_view.babel.js
+    filters: rjsmin
+    output: gen/journey_view.%(version)s.js
+
+journey-view-css:
+    contents:
+        - joint-css
+        - app/stats/css/journey_view.css
+    filters: cssmin
+    output: gen/journey_view.%(version)s.css
+
+devpage-joint-js:
+    contents:
+        - joint-js
+        - graphing-js
+        - app/common/js/pieChartEmlStats.js
+        - app/stats/js/devpage_joint.js
+    filters: rjsmin
+    output: gen/devpage_joint.%(version)s.js
+
+devpage-joint-css:
+    contents:
+        - joint-css
+        - graphing-css
+        - app/stats/css/devpage_joint.css
+    filters: cssmin
+    output: gen/devpage_joint.%(version)s.css

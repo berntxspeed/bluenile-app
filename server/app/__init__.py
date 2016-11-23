@@ -1,10 +1,10 @@
-from celery import Celery
 from flask import Flask
 from flask_injector import FlaskInjector
 from flask_login import LoginManager
 import flask_restless as Restless
 from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
+from webassets.filter import register_filter
 
 from server.app.injector_keys import MongoDB
 from .module import blueprints
@@ -15,11 +15,16 @@ import sys
 import os
 
 
-def create_app():
+def get_config():
     env = os.getenv('APP_SETTINGS')
     config_obj = config.get(env)
     if not config_obj:
         sys.exit('Incorrect ENV: %s' % env)
+    return config_obj
+
+
+def create_app():
+    config_obj = get_config()
 
     app = Flask(__name__,
                 static_folder=config_obj.STATIC_FOLDER,
@@ -39,19 +44,6 @@ def create_app():
     return app
 
 
-def provide_celery(app):
-    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], include='server.app.common.workers.module')
-    print('Celery broker: ', app.config['CELERY_BROKER_URL'])
-    print('Celery name: ', app.name)
-    celery.conf.update(app.config)
-
-    print('App celery is initialized with: ', hex(id(app)))
-    import os
-    print('Process is: ', os.getpid())
-
-    return celery
-
-
 def create_injector(app=None):
     if app is None:
         app = create_app()
@@ -59,7 +51,7 @@ def create_injector(app=None):
     injector = FlaskInjector(app=app, modules=modules).injector
     init_db(app)
     init_mongo(app, injector.get(MongoDB))
-    init_loginmanager(app)
+    init_login_manager(app)
     init_assets(app)
     return injector
 
@@ -84,7 +76,7 @@ def init_mongo(app, mongo):
     mongo.init_app(app)
 
 
-def init_loginmanager(app):
+def init_login_manager(app):
     from .common.models import User
     login_manager = LoginManager()
     login_manager.session_protection = 'strong'
@@ -99,5 +91,9 @@ def init_loginmanager(app):
 
 def init_assets(app):
     from .common.utils.assets import bundles
+    from dukpy.webassets import BabelJS
+
+    register_filter(BabelJS)
+
     assets = Environment(app)
-    assets.register(bundles)
+    assets.from_yaml(get_config().ASSET_CONFIG_FILE)

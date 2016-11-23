@@ -162,6 +162,7 @@ class DataLoadService(DbService):
                          'OperatingSystem': 'OperatingSystem',
                          'Device': 'Device'
                      })
+        zf.clean_up() # delete downloaded files
 
     def load_mc_journeys(self):
         token = self.__get_mc_auth()

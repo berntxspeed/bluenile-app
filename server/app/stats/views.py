@@ -1,17 +1,17 @@
-import celery
 from flask import request
 from flask import session
 from flask import Response
 from flask import url_for
 from flask_login import login_required
 from injector import inject
-from json import dumps
+from json import dumps, loads
 
 from werkzeug.utils import redirect
 
 from . import stats
-from .injector_keys import JbStatsServ, DataLoadServ
+from .injector_keys import JbStatsServ, GetStatsServ, DataLoadServ
 from ..common.views.decorators import templated
+
 
 # Pass this function to require login for every request
 @stats.before_request
@@ -55,6 +55,7 @@ def devpage_joint():
     return {}
 
 
+# todo collapse into one endpoint, parametrize destination table
 @stats.route('/load/customers')
 def load_customers():
     from ..common.workers.module import load_customers
@@ -81,3 +82,21 @@ def load_mc_journeys():
     from ..common.workers.module import load_mc_journeys
     load_mc_journeys.delay()
     return redirect(url_for('stats.data_manager'))
+
+
+@stats.route('/get-columns/<tbl>')
+@inject(get_stats_service=GetStatsServ)
+def get_columns(get_stats_service, tbl):
+    return get_stats_service.get_columns(tbl)
+
+
+@stats.route('/metrics-grouped-by/<grp_by>/<tbl>')
+@inject(get_stats_service=GetStatsServ)
+def metrics_grouped_by(get_stats_service, grp_by, tbl):
+    filters = None
+    q = request.args.get('q')
+    if q:
+        q = loads(q)
+        filters = q.get('filters')
+        print(filters)
+    return get_stats_service.get_grouping_counts(tbl, grp_by, filters)

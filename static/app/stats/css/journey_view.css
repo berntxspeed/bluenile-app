@@ -32,14 +32,26 @@
 
 .html-element .chart,
 .html-element img,
-.html-element label {
+.html-element label,
+.html-element .drill-down-checkboxA,
+.html-element .drill-down-checkboxB {
     position: absolute !important;
 }
 
-.html-element .chart {
+.html-element .chart,
+.html-element .drill-down-checkboxA,
+.html-element .drill-down-checkboxB {
     /* Enable interacting with inputs only. */
     pointer-events: auto;
     top: 4px;
+}
+
+.html-element .drill-down-checkboxA {
+    left: 5px;
+}
+
+.html-element .drill-down-checkboxB {
+    right: 5px;
 }
 
 .html-element img {

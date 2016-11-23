@@ -2,7 +2,7 @@
 
 {% block head %}
     {{ super() }}
-    {% assets 'journey_view_css' %}
+    {% assets 'journey-view-css' %}
         <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
     {% endassets %}
 {% endblock %}
@@ -39,13 +39,27 @@
         </div>
     </div>
     <div class="row">
+        <div class="col-md-6 center-block">
+            <strong>Drill Down into One Email (A SIDE)</strong>
+            <div class="well" id="drill-down-well">
+                <div id="drill-down-areaA" style="background-color: ghostwhite"></div>
+            </div>
+        </div>
+        <div class="col-md-6 center-block">
+            <strong>Drill Down into One Email (B SIDE)</strong>
+            <div class="well" id="drill-down-well">
+                <div id="drill-down-areaB" style="background-color: ghostwhite"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
         <div class="col-md-10 center-block">
             <div class="well" id="journey-well">
                 <div id="journey-paper" style="background-color: ghostwhite"></div>
             </div>
         </div>
     </div>
-    {% assets "journey_view_js" %}
+    {% assets "journey-view-js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 {% endblock %}
