@@ -1,3 +1,6 @@
+import os
+
+import sys
 from flask import Flask
 from flask_injector import FlaskInjector
 from flask_login import LoginManager
@@ -5,16 +8,9 @@ import flask_restless as Restless
 from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
 from webassets.filter import register_filter
-from celery import Celery
 
 from server.app.injector_keys import MongoDB
-from .module import blueprints
-from .module import modules
 from ..config import config
-
-import sys
-import os
-
 
 def get_config():
     env = os.getenv('APP_SETTINGS')
@@ -39,24 +35,19 @@ def create_app():
     # Enables static file serving on heroku
     app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {'/': config_obj.STATIC_FOLDER})
 
-    for blueprint in blueprints:
-        app.register_blueprint(blueprint)
-
     return app
 
-
-def provide_celery(app):
-    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], include='server.app.common.workers.module')
-    celery.conf.update(app.config)
-
-    return celery
-
+def configure(app):
+    from .module import get_blueprints
+    for blueprint in get_blueprints():
+        app.register_blueprint(blueprint)
 
 def create_injector(app=None):
-    if app is None:
-        app = create_app()
+    from .module import get_modules
 
-    injector = FlaskInjector(app=app, modules=modules).injector
+    configure(app)
+
+    injector = FlaskInjector(app=app, modules=get_modules()).injector
     init_db(app)
     init_mongo(app, injector.get(MongoDB))
     init_login_manager(app)

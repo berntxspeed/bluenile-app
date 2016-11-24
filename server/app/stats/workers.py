@@ -1,5 +1,5 @@
 from manage import celery, injector, app
-from ...stats.injector_keys import DataLoadServ
+from .injector_keys import DataLoadServ
 
 
 @celery.task

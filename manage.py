@@ -1,4 +1,4 @@
-import logging
+import os
 
 from flask import Flask
 from flask_script import Manager
@@ -6,18 +6,18 @@ from flask_script import Server
 from flask_script import Shell
 from flask_migrate import Migrate, MigrateCommand
 
-from server.app import create_injector, provide_celery
+from server.app import create_injector, create_app
+from celery_source import provide_celery
 from server.app.common import models
 from server.app.injector_keys import Config, SQLAlchemy, MongoDB
 
-injector = create_injector()
-app = injector.get(Flask)
+app = create_app()
+injector = create_injector(app)
 config = injector.get(Config)
 db = injector.get(SQLAlchemy)
 mongo = injector.get(MongoDB)
 manager = Manager(app)
 celery = provide_celery(app)
-
 migrate = Migrate(app, db)
 
 
