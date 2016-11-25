@@ -32,13 +32,15 @@ def create_app():
     app.config.from_object(config_obj)
     config_obj.init_app(app)
 
-    # Enables static file serving on heroku
-    app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {'/': config_obj.STATIC_FOLDER})
 
     return app
 
 def configure(app):
     from .module import get_blueprints
+
+    # Enables static file serving on heroku
+    app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {'/': app.config.get('STATIC_FOLDER')})
+
     for blueprint in get_blueprints():
         app.register_blueprint(blueprint)
 

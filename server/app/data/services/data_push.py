@@ -13,19 +13,19 @@ class DataPushService(DbService):
 
     def sync_data_to_mc(self, table):
         if table not in self._models.keys():
-            self.logger('error, selected table is not available for mc sync')
+            self.logger.warn('error, selected table is not available for mc sync')
 
         dp = DataPusher(self.db, self._models[table])
         resp = dp.sync_table()
         if resp and hasattr(resp, 'code'):
-            self.logger('sync result:' + str(resp.code))
+            self.logger.info('sync result:' + str(resp.code))
         else:
-            self.logger('error with sync, see logs')
-            self.logger(str(resp))
+            self.logger.error('error with sync, see logs')
+            self.logger.error(str(resp))
 
     def clr_ext_sync_flags(self, table):
         if table not in self._models.keys():
-            self.logger('error, selected table is not available for this operation')
+            self.logger.warn('error, selected table is not available for this operation')
 
         try:
             model = self._models[table]
@@ -33,6 +33,6 @@ class DataPushService(DbService):
                 rec._last_ext_sync = None
                 self.db.session.add(rec)
             self.db.session.commit()
-            self.logger('successfully cleared ext sync flags on all records')
+            self.logger.info('successfully cleared ext sync flags on all records')
         except:
-            self.logger('failure in resetting ext_sync_flags')
+            self.logger.warn('failure in resetting ext_sync_flags')
