@@ -4,8 +4,16 @@ from .injector_keys import DataLoadServ
 
 @celery.task
 def load_customers():
-    service = injector.get(DataLoadServ)
-    service.load_customers()
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_customers()
+
+
+@celery.task
+def load_purchases():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_purchases()
 
 
 @celery.task

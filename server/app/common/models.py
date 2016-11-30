@@ -4,7 +4,7 @@ from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym
+from sqlalchemy.orm import synonym, relationship, backref
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
@@ -155,6 +155,47 @@ def on_update(mapper, connection, target):
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
+
+class Purchase(db.Model):
+    __tablename__ = 'purchase'
+    purchase_id = db.Column(db.String(255), primary_key=True)
+    customer_id = db.Column(db.String(255), db.ForeignKey('customer.customer_id'))
+    _created_at = db.Column(TIMESTAMP)
+    price = db.Column(db.String(255))
+    is_paid = db.Column(db.String(255))
+    referring_site = db.Column(db.String(255))
+    landing_site = db.Column(db.String(255))
+    browser_ip = db.Column(db.String(255))
+    user_agent = db.Column(db.String(255))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+    customer = relationship(Customer, backref=backref('orders', uselist=True))
+
+    @hybrid_property
+    def created_at(self):
+        return self._created_at
+
+    @created_at.setter
+    def created_at(self, created_at):
+        if isinstance(created_at, str):
+            self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
+
+    #created_at = synonym('_created_at', descriptor=created_at)
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+@db.event.listens_for(Purchase, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target._created_at = datetime.datetime.utcnow()
+    return target
+
+@db.event.listens_for(Purchase, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
+
 
 class SendJob(db.Model):
     __tablename__ = 'send_job'

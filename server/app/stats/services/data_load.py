@@ -4,7 +4,7 @@ from pprint import pprint as pp
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile
 from ...common.services import DbService
-from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Artist, Customer
+from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Artist, Customer, Purchase
 
 
 class DataLoadService(DbService):
@@ -43,6 +43,37 @@ class DataLoadService(DbService):
                       db_field_map=db_field_map,
                       json_data_keys=json_data_keys)
 
+        ad1.load_data()
+
+    def load_purchases(self):
+        config = self.config
+        data_source = config.get('PURCHASE_DATA_SOURCE')
+        apicreds = config.get('EXT_DATA_CREDS')[data_source]
+        auth = (apicreds['id'], apicreds['secret'])
+        endpoint = apicreds['endpoint']
+        headers = {'Content-Type': 'application/json'}
+        params = None  # dict(ids='3211139395,3372597187')
+        db_field_map = dict(purchase_id='id',
+                            customer_id='customer.id',
+                            created_at='created_at',
+                            price='total_price',
+                            is_paid='financial_status',
+                            referring_site='referring_site',
+                            landing_site='landing_site',
+                            browser_ip='browser_ip',
+                            user_agent='client_details.user_agent')
+        primary_keys = ['purchase_id']
+        json_data_keys = ('orders',)
+
+        ad1 = ApiDataToSql(endpoint=endpoint,
+                           auth=auth,
+                           headers=headers,
+                           params=params,
+                           db_session=self.db.session,
+                           db_model=Purchase,
+                           primary_keys=primary_keys,
+                           db_field_map=db_field_map,
+                           json_data_keys=json_data_keys)
         ad1.load_data()
 
     def load_artists(self):

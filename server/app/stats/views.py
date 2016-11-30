@@ -63,6 +63,13 @@ def load_customers():
     return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
 
 
+@stats.route('/load/purchases')
+def load_purchases():
+    from .workers import load_purchases
+    result = load_purchases.delay()
+    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
+
+
 @stats.route('/load/artists')
 def load_artists():
     from .workers import load_artists
