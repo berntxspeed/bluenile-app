@@ -1,3 +1,6 @@
+import os
+
+import sys
 from flask import Flask
 from flask_injector import FlaskInjector
 from flask_login import LoginManager
@@ -6,13 +9,8 @@ from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
 from webassets.filter import register_filter
 
-from .module import blueprints
-from .module import modules
+from server.app.injector_keys import MongoDB
 from ..config import config
-
-import sys
-import os
-
 
 def get_config():
     env = os.getenv('APP_SETTINGS')
@@ -34,21 +32,26 @@ def create_app():
     app.config.from_object(config_obj)
     config_obj.init_app(app)
 
-    # Enables static file serving on heroku
-    app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {'/': config_obj.STATIC_FOLDER})
-
-    for blueprint in blueprints:
-        app.register_blueprint(blueprint)
 
     return app
 
+def configure(app):
+    from .module import get_blueprints
+
+    # Enables static file serving on heroku
+    app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {'/': app.config.get('STATIC_FOLDER')})
+
+    for blueprint in get_blueprints():
+        app.register_blueprint(blueprint)
 
 def create_injector(app=None):
-    if app is None:
-        app = create_app()
-    injector = FlaskInjector(app=app, modules=modules).injector
+    from .module import get_modules
+
+    configure(app)
+
+    injector = FlaskInjector(app=app, modules=get_modules()).injector
     init_db(app)
-    init_mongo(app)
+    init_mongo(app, injector.get(MongoDB))
     init_login_manager(app)
     init_assets(app)
     return injector
@@ -70,8 +73,7 @@ def init_db(app):
     manager.create_api(Customer, methods=['GET'])
 
 
-def init_mongo(app):
-    from .common.mongo import mongo
+def init_mongo(app, mongo):
     mongo.init_app(app)
 
 

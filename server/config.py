@@ -26,6 +26,9 @@ class Config(object):
     MONGO_URI = os.getenv('MONGODB_URI')
     ASSET_CONFIG_FILE = os.path.join(PROJECT_ROOT, 'asset-config.yaml')
 
+    REDIS_URI = os.getenv('REDIS_URL')
+    CELERY_BROKER_URL = REDIS_URI
+
     # Cache
     CACHE_TYPE = 'simple'
 
@@ -78,7 +81,7 @@ class LocalConfig(Config):
     SECRET_KEY = 'Wju4$47388fjdfierhiue0945374539'
 
     # assets configuration (js/css files)
-    ASSETS_DEBUG = True  # forces flask to not merge asset files into one file
+    ASSETS_DEBUG = True # forces flask to not merge asset files into one file
 
 
     @classmethod
