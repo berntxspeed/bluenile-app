@@ -58,28 +58,28 @@ def devpage_joint():
 # todo collapse into one endpoint, parametrize destination table
 @stats.route('/load/customers')
 def load_customers():
-    from ..common.workers.module import load_customers
+    from .workers import load_customers
     load_customers.delay()
     return redirect(url_for('stats.data_manager'))
 
 
 @stats.route('/load/artists')
 def load_artists():
-    from ..common.workers.module import load_artists
+    from .workers import load_artists
     load_artists.delay()
     return redirect(url_for('stats.data_manager'))
 
 
 @stats.route('/load/mc-email-data')
 def load_mc_email_data():
-    from ..common.workers.module import load_mc_email_data
+    from .workers import load_mc_email_data
     load_mc_email_data.delay()
     return redirect(url_for('stats.data_manager'))
 
 
 @stats.route('/load/mc-journeys')
 def load_mc_journeys():
-    from ..common.workers.module import load_mc_journeys
+    from .workers import load_mc_journeys
     load_mc_journeys.delay()
     return redirect(url_for('stats.data_manager'))
 
