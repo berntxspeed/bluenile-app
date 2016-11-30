@@ -66,8 +66,8 @@ def load_customers():
 @stats.route('/load/artists')
 def load_artists():
     from .workers import load_artists
-    load_artists.delay()
-    return redirect(url_for('stats.data_manager'))
+    result = load_artists.delay()
+    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
 
 
 @stats.route('/load/mc-email-data')
@@ -75,7 +75,7 @@ def load_mc_email_data():
     from .workers import load_mc_email_data
     result = load_mc_email_data.delay()
     print('worker task: load_mc_email_data: id: ' + result.id)
-    return redirect(url_for('stats.data_manager'))
+    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
 
 
 @stats.route('/load/mc-journeys')
