@@ -59,8 +59,8 @@ def devpage_joint():
 @stats.route('/load/customers')
 def load_customers():
     from .workers import load_customers
-    load_customers.delay()
-    return redirect(url_for('stats.data_manager'))
+    result = load_customers.delay()
+    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
 
 
 @stats.route('/load/artists')
@@ -81,8 +81,8 @@ def load_mc_email_data():
 @stats.route('/load/mc-journeys')
 def load_mc_journeys():
     from .workers import load_mc_journeys
-    load_mc_journeys.delay()
-    return redirect(url_for('stats.data_manager'))
+    result = load_mc_journeys.delay()
+    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
 
 
 @stats.route('/get-columns/<tbl>')
