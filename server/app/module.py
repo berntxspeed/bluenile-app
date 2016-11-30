@@ -7,23 +7,11 @@ from injector import provides
 
 from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB
 
-# import other modules
-from .auth.module import AuthModule
-from .stats.module import StatsModule
-from .data.module import DataModule
-
-# import all blueprints
-from .main import main as main_blueprint
-from .auth import auth as auth_blueprint
-from .stats import stats as stats_blueprint
-from .data import data as data_blueprint
-
 import logging
 import sys
 
 
 class AppModule(Module):
-
     @singleton
     @inject(app=Flask)
     @provides(Config)
@@ -40,8 +28,8 @@ class AppModule(Module):
     @inject(app=Flask)
     @provides(MongoDB)
     def provides_mongodb(self, app):
-        from .common.mongo import mongo
-        return mongo
+        from .common.storage import provide_mongo
+        return provide_mongo()
 
     @singleton
     @inject(app=Flask)
@@ -62,16 +50,29 @@ class AppModule(Module):
         return logger
 
 
-modules = [
-    AppModule(),
-    AuthModule(),
-    StatsModule(),
-    DataModule()
-]
+def get_modules():
+    # import other modules
+    from .auth.module import AuthModule
+    from .stats.module import StatsModule
+    from .data.module import DataModule
 
-blueprints = [
-    main_blueprint,
-    auth_blueprint,
-    stats_blueprint,
-    data_blueprint
-]
+    return [
+        AppModule(),
+        AuthModule(),
+        StatsModule(),
+        DataModule()
+    ]
+
+
+def get_blueprints():
+    # import all blueprints
+    from .main import main as main_blueprint
+    from .auth import auth as auth_blueprint
+    from .stats import stats as stats_blueprint
+    from .data import data as data_blueprint
+    return [
+        main_blueprint,
+        auth_blueprint,
+        stats_blueprint,
+        data_blueprint
+    ]

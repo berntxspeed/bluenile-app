@@ -81,7 +81,8 @@
   "addons": [
     "papertrail",
     "mongolab",
-    "heroku-postgresql"
+    "heroku-postgresql",
+    "heroku-redis"
   ],
   "buildpacks": [
   ]

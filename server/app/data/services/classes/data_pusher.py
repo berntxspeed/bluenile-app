@@ -1,4 +1,4 @@
-from flask import flash
+import logging
 from FuelSDK import ET_Client, ET_DataExtension, ET_DataExtension_Row
 from sqlalchemy import inspect
 import time
@@ -32,7 +32,7 @@ class DataPusher(object):
             if resp.code and resp.code != 200:
                 return resp
             msg = 'inserted ' + str(recs.count()) + ' records'
-            flash(msg)
+            logging.info(msg)
 
         # table updates
         recs = self._find_recs_for_update()
@@ -41,7 +41,7 @@ class DataPusher(object):
             if resp.code and resp.code != 200:
                 return resp
             msg = 'updated ' + str(recs.count()) + ' records'
-            flash(msg)
+            logging.info(msg)
 
         return resp
 

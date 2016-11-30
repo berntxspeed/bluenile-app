@@ -9,7 +9,6 @@ from .services.data_push import DataPushService
 
 
 class DataModule(Module):
-
     @singleton
     @inject(config=Config,
             db=SQLAlchemy,

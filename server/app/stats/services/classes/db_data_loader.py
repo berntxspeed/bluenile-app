@@ -1,8 +1,9 @@
-from flask import flash
+from flask import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SqlDataLoader(object):
-
     def __init__(self, db_session, db_model, primary_keys, db_processing_chunk_size=500):
 
         self._db_session = db_session
@@ -21,7 +22,7 @@ class SqlDataLoader(object):
             items should be a dict where key=str(primary key) value and value is the model instance
         """
 
-        update_cnt = 0 # keep track of updated records
+        update_cnt = 0  # keep track of updated records
 
         # build sqlalchemy composite key expression for use in finding pre-existing records
         model_composite_key = getattr(self._db_model, self._primary_keys[0])
@@ -30,13 +31,14 @@ class SqlDataLoader(object):
 
         composite_key_list = list(items.keys())
         chunk_size = self._db_processing_chunk_size
-        for chunk in range(1, int(len(composite_key_list)/chunk_size) + 2):
+        for chunk in range(1, int(len(composite_key_list) / chunk_size) + 2):
 
-            start_index = int((chunk-1)*chunk_size)
-            end_index = int((chunk*chunk_size))
+            start_index = int((chunk - 1) * chunk_size)
+            end_index = int((chunk * chunk_size))
             if end_index > len(composite_key_list):
                 end_index = len(composite_key_list)
-            print('processing chunk ' + str(chunk) + ' with start index ' + str(start_index) + ' and end index ' + str(end_index))
+            print('processing chunk ' + str(chunk) + ' with start index ' + str(start_index) + ' and end index ' + str(
+                end_index))
             for each in self._db_model.query.filter(model_composite_key.in_(composite_key_list[start_index:end_index])):
                 # use composite key to reference records on the items dict
                 composite_key = ''
@@ -46,13 +48,12 @@ class SqlDataLoader(object):
                 update_cnt += 1
 
         self._db_session.add_all(items.values())
-        flash('updating existing records: ' + str(update_cnt))
-        flash('inserting new records: ' + str(len(items)))
+        logger.info('updating existing records: ' + str(update_cnt))
+        logger.info('inserting new records: ' + str(len(items)))
         self._db_session.commit()
 
 
 class MongoDataLoader(object):
-
     def __init__(self, collection, primary_keys):
 
         self._collection = collection
@@ -63,10 +64,10 @@ class MongoDataLoader(object):
         if isinstance(data, list):
             for item in data:
                 r = self._upsert_item(item)
-                flash(str(r.raw_result))
+                logger.info(str(r.raw_result))
         else:
             r = self._upsert_item(data)
-            flash(str(r.raw_result))
+            logger.info(str(r.raw_result))
 
     def _upsert_item(self, item):
         find_criteria = dict()
