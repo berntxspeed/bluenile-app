@@ -116,51 +116,10 @@ def on_update(mapper, connection, target):
     return target
 
 
-class Customer(db.Model):
-    __tablename__ = 'customer'
-    customer_id = db.Column(db.String(255), primary_key=True)
-    email_address = db.Column(db.String(255))
-    fname = db.Column(db.String(255))
-    lname = db.Column(db.String(255))
-    marketing_allowed = db.Column(db.String(255))
-    _created_at = db.Column('created_at', TIMESTAMP)
-    purchase_count = db.Column(db.Integer)
-    total_spent_so_far = db.Column(db.String(255))
-    _last_updated = db.Column(TIMESTAMP)
-    _last_ext_sync = db.Column(TIMESTAMP)
-
-    @hybrid_property
-    def created_at(self):
-        return self._created_at
-
-    @created_at.setter
-    def created_at(self, created_at):
-        if isinstance(created_at, str):
-            self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
-
-    created_at = synonym('_created_at', descriptor=created_at)
-
-    def _update_last_ext_sync(self):
-        self._last_ext_sync = datetime.datetime.utcnow()
-
-    def __repr(self):
-        return '<Customer %r>' % self.customer_id
-
-@db.event.listens_for(Customer, 'before_insert', retval=True)
-def on_update(mapper, connection, target):
-    target._created_at = datetime.datetime.utcnow()
-    return target
-
-@db.event.listens_for(Customer, 'before_update', retval=True)
-def on_update(mapper, connection, target):
-    target._last_updated = datetime.datetime.utcnow()
-    return target
-
-
 class Purchase(db.Model):
     __tablename__ = 'purchase'
     purchase_id = db.Column(db.String(255), primary_key=True)
-    customer_id = db.Column(db.String(255), db.ForeignKey('customer.customer_id'))
+    customer_id = db.Column(db.String(255))
     _created_at = db.Column(TIMESTAMP)
     price = db.Column(db.String(255))
     is_paid = db.Column(db.String(255))
@@ -170,7 +129,6 @@ class Purchase(db.Model):
     user_agent = db.Column(db.String(255))
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
-    customer = relationship(Customer, backref=backref('orders', uselist=True))
 
     @hybrid_property
     def created_at(self):
@@ -372,6 +330,63 @@ class Artist(db.Model):
         return '<Artist %r>' % self.name
 
 @db.event.listens_for(Artist, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
+
+
+class Customer(db.Model):
+    __tablename__ = 'customer'
+    customer_id = db.Column(db.String(255), primary_key=True)
+    email_address = db.Column(db.String(255))
+    fname = db.Column(db.String(255))
+    lname = db.Column(db.String(255))
+    marketing_allowed = db.Column(db.String(255))
+    _created_at = db.Column('created_at', TIMESTAMP)
+    purchase_count = db.Column(db.Integer)
+    total_spent_so_far = db.Column(db.String(255))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+    purchases = relationship(Purchase, backref='customer',
+                             primaryjoin='Customer.customer_id==Purchase.customer_id',
+                             foreign_keys=[Purchase.customer_id],
+                             passive_deletes='all')
+    eml_sends = relationship(EmlSend, backref='customer',
+                             primaryjoin='Customer.email_address==EmlSend.EmailAddress',
+                             foreign_keys=[EmlSend.EmailAddress],
+                             passive_deletes='all')
+    eml_opens = relationship(EmlOpen, backref='customer',
+                             primaryjoin='Customer.email_address==EmlOpen.EmailAddress',
+                             foreign_keys=[EmlOpen.EmailAddress],
+                             passive_deletes='all')
+    eml_clicks = relationship(EmlClick, backref='customer',
+                             primaryjoin='Customer.email_address==EmlClick.EmailAddress',
+                             foreign_keys=[EmlClick.EmailAddress],
+                             passive_deletes='all')
+
+    @hybrid_property
+    def created_at(self):
+        return self._created_at
+
+    @created_at.setter
+    def created_at(self, created_at):
+        if isinstance(created_at, str):
+            self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
+
+    created_at = synonym('_created_at', descriptor=created_at)
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+    def __repr(self):
+        return '<Customer %r>' % self.customer_id
+
+@db.event.listens_for(Customer, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target._created_at = datetime.datetime.utcnow()
+    return target
+
+@db.event.listens_for(Customer, 'before_update', retval=True)
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
