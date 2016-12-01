@@ -37,7 +37,7 @@ def load_mc_journeys():
         service.load_mc_journeys()
 
 
-NUM_OBJ_TO_CREATE = 100;
+NUM_OBJ_TO_CREATE = 30;
 
 
 @celery.task(bind=True)

@@ -74,6 +74,7 @@ devpage-joint-js:
     contents:
         - joint-js
         - graphing-js
+        - bower_components/jquery/jquery.js
         - app/common/js/pieChartEmlStats.js
         - app/stats/js/devpage_joint.js
     filters: rjsmin

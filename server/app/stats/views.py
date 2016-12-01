@@ -53,6 +53,7 @@ def journey_detail(jb_stats_service, id):
 def sample_long_task():
     from server.app.stats.workers import long_task
     task = long_task.delay()
+    print(task.backend)
     return dict(task_id=task.id)
 
 @stats.route('/task_update')
@@ -62,8 +63,7 @@ def check_tasks_status():
     print('--'*80)
     print(task_id)
     task = long_task.AsyncResult(task_id)
-    print(dumps(task))
-    data = task.state
+    data = task.result or task.state
     return Response(dumps(data), mimetype='application/json')
 
 
