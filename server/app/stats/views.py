@@ -48,6 +48,24 @@ def journey_detail(jb_stats_service, id):
     result = jb_stats_service.journey_detail(id)
     return Response(dumps(result), mimetype='application/json')
 
+@stats.route('/celery-task-test')
+@templated('celery_updater')
+def sample_long_task():
+    from server.app.stats.workers import long_task
+    task = long_task.delay()
+    return dict(task_id=task.id)
+
+@stats.route('/task_update')
+def check_tasks_status():
+    from server.app.stats.workers import long_task
+    task_id = request.args.get('task_id')
+    print('--'*80)
+    print(task_id)
+    task = long_task.AsyncResult(task_id)
+    print(dumps(task))
+    data = task.state
+    return Response(dumps(data), mimetype='application/json')
+
 
 @stats.route('/devpage-joint')
 @templated('devpage_joint')
