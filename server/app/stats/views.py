@@ -48,6 +48,7 @@ def journey_detail(jb_stats_service, id):
     result = jb_stats_service.journey_detail(id)
     return Response(dumps(result), mimetype='application/json')
 
+
 @stats.route('/celery-task-test')
 @templated('celery_updater')
 def sample_long_task():
@@ -56,14 +57,18 @@ def sample_long_task():
     print(task.backend)
     return dict(task_id=task.id)
 
+
 @stats.route('/task_update')
 def check_tasks_status():
-    from server.app.stats.workers import long_task
+    # from server.app.stats.workers import long_task
+    from manage import celery
+
     task_id = request.args.get('task_id')
-    print('--'*80)
-    print(task_id)
-    task = long_task.AsyncResult(task_id)
-    data = task.result or task.state
+    task = celery.AsyncResult(task_id)
+    if task.state == 'PROGRESS':
+        data = task.result
+    else:
+        data = task.state
     return Response(dumps(data), mimetype='application/json')
 
 
@@ -73,41 +78,20 @@ def devpage_joint():
     return {}
 
 
-# todo collapse into one endpoint, parametrize destination table
-@stats.route('/load/customers')
-def load_customers():
-    from .workers import load_customers
-    result = load_customers.delay()
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
-
-
-@stats.route('/load/purchases')
-def load_purchases():
-    from .workers import load_purchases
-    result = load_purchases.delay()
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
-
-
-@stats.route('/load/artists')
-def load_artists():
-    from .workers import load_artists
-    result = load_artists.delay()
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
-
-
-@stats.route('/load/mc-email-data')
-def load_mc_email_data():
-    from .workers import load_mc_email_data
-    result = load_mc_email_data.delay()
-    print('worker task: load_mc_email_data: id: ' + result.id)
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
-
-
-@stats.route('/load/mc-journeys')
-def load_mc_journeys():
-    from .workers import load_mc_journeys
-    result = load_mc_journeys.delay()
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
+@stats.route('/load/<action>')
+@templated('data_manager')
+def load(action):
+    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases
+    load_map = {'customers': load_customers,
+                'purchases': load_purchases,
+                'artists': load_artists,
+                'mc-email-data': load_mc_email_data,
+                'mc-journeys': load_mc_journeys}
+    task = load_map.get(action, None)
+    if task is None:
+        return Exception('No such action is available')
+    result = task.delay()
+    return dict(task_id=result.id)
 
 
 @stats.route('/get-columns/<tbl>')
