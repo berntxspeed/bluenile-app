@@ -22,34 +22,62 @@ class DataPusher(object):
         # table creation
         if not self._check_table_exists():
             resp = self._create_table()
-            if resp.code and resp.code != 200:
+            if resp.code is not None and resp.code != 200:
                 return resp
 
         # table inserts
         recs = self._find_recs_for_insert()
-        if recs.count() > 0:
+        if len(recs) > 0:
             resp = self._push_de_recs(recs, 'insert')
             if resp.code and resp.code != 200:
                 return resp
-            msg = 'inserted ' + str(recs.count()) + ' records'
+            msg = 'inserted ' + str(len(recs)) + ' records'
             logging.info(msg)
 
         # table updates
         recs = self._find_recs_for_update()
-        if recs.count() > 0:
+        if len(recs) > 0:
             resp = self._push_de_recs(recs, 'update')
             if resp.code and resp.code != 200:
                 return resp
-            msg = 'updated ' + str(recs.count()) + ' records'
+            msg = 'updated ' + str(len(recs)) + ' records'
             logging.info(msg)
 
         return resp
 
-    def _check_table_exists(self):
+    def sync_query(self, name, query):
+        # ***check that query returned model = self._model
+
+        # table creation
+        if not self._check_table_exists(name):
+            resp = self._create_table(name)
+            if resp.code is not None and resp.code != 200:
+                return resp
+
+        # table inserts
+        recs = query.all()
+        if len(recs) > 0:
+            resp = self._push_de_recs(recs,
+                                      name,
+                                      update_or_insert='insert',
+                                      options=['no_timestamp'])
+            if resp.code is not None and resp.code != 200:
+                return resp
+            msg = 'inserted ' + str(len(recs)) + ' records'
+            logging.info(msg)
+
+        return resp
+
+    def _check_table_exists(self, name=None):
+        # checks if the table exists in Marketing Cloud
+        # returns: False if no table, True if table exists
+
+        name = name or self._tablename
+
         de = ET_DataExtension()
         de.props = ['CustomerKey', 'Name']
         de.auth_stub = self._stub_obj
-        de.search_filter = {'Property': 'CustomerKey', 'SimpleOperator': 'equals', 'Value': self._tablename}
+        de.search_filter = {'Property': 'CustomerKey', 'SimpleOperator': 'equals', 'Value': name}
         resp = de.get()
         if resp.code != 200:
             raise ConnectionError('failed to receive response from Marketing Cloud when accessing data extensions')
@@ -57,16 +85,20 @@ class DataPusher(object):
             raise ValueError('there should only be one data extension with that particular customer key value: ' + self._tablename)
         if len(resp.results) == 0:
             return False # to indicate that 'no' the table does not exist in Marketing Cloud at the moment
-        if resp.results[0].CustomerKey == self._tablename:
+        if resp.results[0].CustomerKey == name:
             return True # to indicate that 'yes' the table does exist in Marketing Cloud at the moment
         # if no return conditions were meant something went off the rails,
         # - so raise an exception
         raise ValueError('none of the conditions were met in attempting to determine if table exists in marketing cloud')
 
-    def _create_table(self):
+    def _create_table(self, name=None):
+
+        if name is None:
+            name = self._tablename
+
         de = ET_DataExtension()
         de.auth_stub = self._stub_obj
-        de.props = {'Name': self._tablename, 'CustomerKey': self._tablename}
+        de.props = {'Name': name, 'CustomerKey': name}
         columns = []
         for column, value in self._model.__dict__.items():
 
@@ -112,16 +144,26 @@ class DataPusher(object):
                                   < Model._last_updated)
         return recs
 
-    def _push_de_recs(self, recs, update_or_insert):
-        if update_or_insert not in ['update', 'insert']:
-            raise ValueError('invalid operation selected: ' + update_or_insert)
+    def _push_de_recs(self, recs, name, update_or_insert, options=None):
+
+        name = name or self._tablename
+
+        ALLOWABLE_OPERATIONS = ['update', 'insert']
+        ALLOWABLE_OPTIONS = ['no_timestamp']
+
+        if update_or_insert not in ALLOWABLE_OPERATIONS:
+            raise ValueError('invalid operation selected: ' + str(update_or_insert))
+        if options is not None and isinstance(options, list):
+            for option in options:
+                if option not in ALLOWABLE_OPTIONS:
+                    raise ValueError('invalid option selected: ' + str(option))
 
         resp = None
 
         de = ET_DataExtension_Row()
         de.auth_stub = self._stub_obj
-        de.CustomerKey = self._tablename
-        de.Name = self._tablename
+        de.CustomerKey = name
+        de.Name = name
 
         for rec in recs:
 
@@ -141,8 +183,9 @@ class DataPusher(object):
                 print('error making api call for record: ' + str(rec))
                 break
 
-            rec._update_last_ext_sync()
-            self._db.session.add(rec)
+            if 'no_timestamp' in options:
+                rec._update_last_ext_sync()
+                self._db.session.add(rec)
 
         self._db.session.commit()
         return resp
