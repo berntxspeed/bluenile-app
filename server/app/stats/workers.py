@@ -2,7 +2,16 @@ from manage import celery, injector, app
 from .injector_keys import DataLoadServ
 
 
-@celery.task
+class BaseTask(celery.Task):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        """Log the exceptions to sentry."""
+
+        super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
+
+
+@celery.task(base=BaseTask)
 def load_customers():
     with app.app_context():
         service = injector.get(DataLoadServ)

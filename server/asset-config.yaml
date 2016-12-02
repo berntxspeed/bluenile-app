@@ -39,6 +39,7 @@ graphing-css:
 base-css:
     contents:
         - bootstrap-css
+        - app/common/css/base.css
     filters: cssmin
     output: gen/base.%(version)s.css
 
@@ -46,6 +47,7 @@ base-js:
     contents:
         - bootstrap-js
         - bower_components/knockout/dist/knockout.js
+        - app/common/js/polling.js
     filters: rjsmin
     output: gen/base.%(version)s.js
 
