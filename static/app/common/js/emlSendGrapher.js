@@ -28,7 +28,7 @@ class EmlSendGrapher {
             if(toDate){ filters.push({"name": "EventDate", "op": "date_lt", "val": toDate}); }
 
             $.ajax({
-              url: 'https://localhost:5000/metrics-grouped-by/'+dataGrouping+'/'+dataSelect,
+              url: 'http://localhost:5000/metrics-grouped-by/'+dataGrouping+'/'+dataSelect,
               data: {"q": JSON.stringify({'filters': filters})},
               dataType: "json",
               contentType: "application/json",
