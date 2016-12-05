@@ -6,8 +6,10 @@ class BaseTask(celery.Task):
     abstract = True
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
+        from celery import states
         """Log the exceptions to sentry."""
-
+        self.update_state(state='FAILURE',
+                          meta={'The task failed. Please contact customer support for more information'})
         super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
 

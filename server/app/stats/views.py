@@ -65,10 +65,8 @@ def check_tasks_status():
 
     task_id = request.args.get('task_id')
     task = celery.AsyncResult(task_id)
-    if task.state == 'PROGRESS':
-        data = task.result
-    else:
-        data = task.state
+    data = {'state': task.state,
+            'result': task.result if task.result is Exception else str(task.result)}
     return Response(dumps(data), mimetype='application/json')
 
 
