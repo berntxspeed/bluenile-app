@@ -82,6 +82,21 @@ devpage-joint-js:
     filters: rjsmin
     output: gen/devpage_joint.%(version)s.js
 
+map-graph-js:
+    contents:
+        - app/common/js/d3.v4.min.js
+        - app/common/js/d3-scale-chromatic.v1.min.js
+        - app/common/js/topojson.v2.min.js
+        - app/stats/js/map_graph.js
+    filters: rjsmin
+    output: gen/map_graph.%(version)s.js
+
+map-graph-css:
+    contents:
+        - app/stats/css/map_graph.css
+    filters: cssmin
+    output: gen/map_graph.%(version)s.css
+
 devpage-joint-css:
     contents:
         - joint-css

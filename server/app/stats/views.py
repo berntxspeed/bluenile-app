@@ -108,3 +108,8 @@ def metrics_grouped_by(get_stats_service, grp_by, tbl):
         filters = q.get('filters')
         print(filters)
     return get_stats_service.get_grouping_counts(tbl, grp_by, filters)
+
+@stats.route('/map-graph')
+@templated('map_graph')
+def map_graph():
+    return {}

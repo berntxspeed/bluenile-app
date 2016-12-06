@@ -2,6 +2,7 @@
 tmp/
 static/bower_components/
 static/gen/
+static/data
 migrations/
 .idea/
 .DS_Store

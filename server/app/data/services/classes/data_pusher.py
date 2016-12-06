@@ -183,7 +183,7 @@ class DataPusher(object):
                 print('error making api call for record: ' + str(rec))
                 break
 
-            if 'no_timestamp' in options:
+            if 'no_timestamp' not in options:
                 rec._update_last_ext_sync()
                 self._db.session.add(rec)
 

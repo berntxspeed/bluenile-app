@@ -7,7 +7,7 @@ var updateBar = function(percent){
 // poll state of the current task
 var PollState = function(task_id) {
 $.ajax({
-              url: 'http://localhost:5000/task_update' ,
+              url: '/task_update' ,
               data: {"task_id": task_id},
               dataType: "json",
               contentType: "application/json",

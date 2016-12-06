@@ -1,4 +1,5 @@
 from flask import Response
+from json import dumps
 
 from . import data
 from ..common.views.decorators import templated
