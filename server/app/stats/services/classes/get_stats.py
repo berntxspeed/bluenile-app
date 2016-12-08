@@ -28,16 +28,17 @@ class StatsGetter(object):
         pass
 
     def _apply_filters_to_query(self, q):
-        for filter in self._filters:
-            if filter.get('name') in self.get_columns():
-                if filter.get('op') in self._allowable_filter_ops.keys():
-                    if filter.get('val') != None:
-                        column = getattr(self._model, filter.get('name'))
-                        q = self._allowable_filter_ops.get(filter.get('op'))(q, column, filter.get('val'))
-                        continue
-                    raise ValueError('invalid data for filter definition: val')
-                raise ValueError('invalid data for filter definition: op')
-            raise ValueError('invalid data for filter definition: name')
+        if self._filters is not None:
+            for filter in self._filters:
+                if filter.get('name') in self.get_columns():
+                    if filter.get('op') in self._allowable_filter_ops.keys():
+                        if filter.get('val') != None:
+                            column = getattr(self._model, filter.get('name'))
+                            q = self._allowable_filter_ops.get(filter.get('op'))(q, column, filter.get('val'))
+                            continue
+                        raise ValueError('invalid data for filter definition: val')
+                    raise ValueError('invalid data for filter definition: op')
+                raise ValueError('invalid data for filter definition: name')
         return q
 
     def get(self):

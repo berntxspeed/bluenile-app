@@ -2,7 +2,7 @@ var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
 
-var unemployment = d3.map();
+//var unemployment = d3.map();
 
 var path = d3.geoPath();
 
@@ -42,31 +42,56 @@ g.append("text")
 
 g.call(d3.axisBottom(x)
     .tickSize(13)
-    .tickFormat(function(x, i) { return i ? x : x + "%"; })
+    .tickFormat(function(x, i) { return i ? x : x; })
     .tickValues(color.domain()))
   .select(".domain")
     .remove();
 
-d3.queue()
+/*d3.queue()
     .defer(d3.json, "static/data/us-10m.v1.json")
-    .defer(d3.tsv, "static/data/unemployment.tsv", function(d) { unemployment.set(d.id, +d.rate); })
+    //.defer(d3.tsv, "static/data/unemployment.tsv", function(d) { unemployment.set(d.id, +d.rate); })
     .await(ready);
+*/
+
+d3.json("static/data/us-10m.v1.json", function(err, us) {
+//d3.json("static/data/us-10m.json", function(err, us) {
+//d3.json("https://d3js.org/us-10m.v1.json", function(err, us) {
+    ready(null, us);
+});
 
 function ready(error, us) {
   if (error) throw error;
 
-  svg.append("g")
-      .attr("class", "counties")
-    .selectAll("path")
-    .data(topojson.feature(us, us.objects.counties).features)
-    .enter().append("path")
-      .attr("fill", function(d) { return color(d.rate = unemployment.get(d.id)); })
-      .attr("d", path)
-    .append("title")
-      .text(function(d) { return d.rate + "%"; });
+    d3.json("metrics-grouped-by/AreaCode/EmlClick", function(err, data) {
 
-  svg.append("path")
-      .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-      .attr("class", "states")
-      .attr("d", path);
+      var countyCounts = data.results;
+
+      var findCounty = function (id){
+        el = countyCounts.find(function(el){
+            return parseInt(el[0]) == parseInt(id);
+        });
+        if (el) {
+            console.log(el + ' : ' + id);
+            return el[1];
+        } else {
+            return 0;
+        }
+      };
+
+      svg.append("g")
+        .attr("class", "counties")
+        .selectAll("path")
+        .data(topojson.feature(us, us.objects.counties).features)
+        .enter().append("path")
+          .attr("fill", function(d) { return color(d.rate = findCounty(d.id)); })
+          //.attr("fill", function(d) { return color(d.rate = unemployment.get(d.id)); })
+          .attr("d", path)
+        .append("title")
+          .text(function(d) { return d.rate; });
+
+      svg.append("path")
+          .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+          .attr("class", "states")
+          .attr("d", path);
+    });
 }
