@@ -135,14 +135,14 @@ class DataPusher(object):
     def _find_recs_for_insert(self):
         Model = self._model
         recs = Model.query.filter(Model._last_ext_sync == None)
-        return recs
+        return recs.all()
 
     def _find_recs_for_update(self):
         Model = self._model
         recs = Model.query.filter(Model._last_ext_sync != None,
                                   Model._last_ext_sync + datetime.timedelta(minutes=1)
                                   < Model._last_updated)
-        return recs
+        return recs.all()
 
     def _push_de_recs(self, recs, name, update_or_insert, options=None):
 
