@@ -28,7 +28,7 @@ class DataPusher(object):
         # table inserts
         recs = self._find_recs_for_insert()
         if len(recs) > 0:
-            resp = self._push_de_recs(recs, 'insert')
+            resp = self._push_de_recs(recs, update_or_insert='insert')
             if resp.code and resp.code != 200:
                 return resp
             msg = 'inserted ' + str(len(recs)) + ' records'
@@ -37,7 +37,7 @@ class DataPusher(object):
         # table updates
         recs = self._find_recs_for_update()
         if len(recs) > 0:
-            resp = self._push_de_recs(recs, 'update')
+            resp = self._push_de_recs(recs, update_or_insert='update')
             if resp.code and resp.code != 200:
                 return resp
             msg = 'updated ' + str(len(recs)) + ' records'
@@ -58,8 +58,8 @@ class DataPusher(object):
         recs = query.all()
         if len(recs) > 0:
             resp = self._push_de_recs(recs,
-                                      name,
                                       update_or_insert='insert',
+                                      name=name,
                                       options=['no_timestamp'])
             if resp.code is not None and resp.code != 200:
                 return resp
@@ -144,9 +144,10 @@ class DataPusher(object):
                                   < Model._last_updated)
         return recs.all()
 
-    def _push_de_recs(self, recs, name, update_or_insert, options=None):
+    def _push_de_recs(self, recs, update_or_insert, name=None, options=None):
 
         name = name or self._tablename
+        options = options or []
 
         ALLOWABLE_OPERATIONS = ['update', 'insert']
         ALLOWABLE_OPTIONS = ['no_timestamp']
