@@ -334,11 +334,84 @@ def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
 
+class WebTrackingEvent(db.Model):
+    __tablename__ = 'web_tracking_event'
+    browser_id = db.Column(db.String(255), primary_key=True)
+    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    hashed_email = db.Column(db.String(255))
+    event_category = db.Column(db.String(255))
+    event_action = db.Column(db.String(255))
+    event_label = db.Column(db.String(255))
+    event_value = db.Column(db.Float)
+    sessions_with_event = db.Column(db.Integer)
+
+    browser = db.Column(db.String(255))
+    browser_size = db.Column(db.String(255))
+    operating_system = db.Column(db.String(255))
+    device_category = db.Column(db.String(255))
+    mobile_device_branding = db.Column(db.String(255))
+    mobile_device_model = db.Column(db.String(255))
+
+    country = db.column(db.String(255))
+    region = db.Column(db.String(255))
+    metro = db.Column(db.String(255))
+    city = db.Column(db.String(255))
+    latitude = db.Column(db.String(255))
+    longitude = db.Column(db.String(255))
+
+class WebTrackingPageView(db.Model):
+    __tablename__ = 'web_tracking_page_view'
+    browser_id = db.Column(db.String(255), primary_key=True)
+    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    hashed_email = db.Column(db.String(255))
+    page_path = db.Column(db.String(500))
+    page_views = db.Column(db.Integer)
+    page_value = db.Column(db.Float)
+    sessions = db.Column(db.Integer)
+
+    browser = db.Column(db.String(255))
+    browser_size = db.Column(db.String(255))
+    operating_system = db.Column(db.String(255))
+    device_category = db.Column(db.String(255))
+    mobile_device_branding = db.Column(db.String(255))
+    mobile_device_model = db.Column(db.String(255))
+
+    country = db.column(db.String(255))
+    region = db.Column(db.String(255))
+    metro = db.Column(db.String(255))
+    city = db.Column(db.String(255))
+    latitude = db.Column(db.String(255))
+    longitude = db.Column(db.String(255))
+
+class WebTrackingEcomm(db.Model):
+    __tablename__ = 'web_tracking_ecomm'
+    browser_id = db.Column(db.String(255), primary_key=True)
+    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    hashed_email = db.Column(db.String(255))
+    total_value = db.Column(db.Float)
+    item_quantity = db.Column(db.Integer)
+    product_detail_views = db.Column(db.Integer)
+
+    browser = db.Column(db.String(255))
+    browser_size = db.Column(db.String(255))
+    operating_system = db.Column(db.String(255))
+    device_category = db.Column(db.String(255))
+    mobile_device_branding = db.Column(db.String(255))
+    mobile_device_model = db.Column(db.String(255))
+
+    country = db.column(db.String(255))
+    region = db.Column(db.String(255))
+    metro = db.Column(db.String(255))
+    city = db.Column(db.String(255))
+    latitude = db.Column(db.String(255))
+    longitude = db.Column(db.String(255))
+
 
 class Customer(db.Model):
     __tablename__ = 'customer'
     customer_id = db.Column(db.String(255), primary_key=True)
     email_address = db.Column(db.String(255))
+    hashed_email = db.Column(db.String(255))
     fname = db.Column(db.String(255))
     lname = db.Column(db.String(255))
     marketing_allowed = db.Column(db.String(255))
@@ -363,6 +436,20 @@ class Customer(db.Model):
                              primaryjoin='Customer.email_address==EmlClick.EmailAddress',
                              foreign_keys=[EmlClick.EmailAddress],
                              passive_deletes='all')
+    web_tracking_events = relationship(WebTrackingEvent, backref='customer',
+                                       primaryjoin='Customer.hashed_email==WebTrackingEvent.hashed_email',
+                                       foreign_keys=[WebTrackingEvent.hashed_email],
+                                       passive_deletes='all')
+
+    web_tracking_page_views = relationship(WebTrackingPageView, backref='customer',
+                                       primaryjoin='Customer.hashed_email==WebTrackingPageView.hashed_email',
+                                       foreign_keys=[WebTrackingPageView.hashed_email],
+                                       passive_deletes='all')
+
+    web_tracking_ecomms = relationship(WebTrackingEcomm, backref='customer',
+                                       primaryjoin='Customer.hashed_email==WebTrackingEcomm.hashed_email',
+                                       foreign_keys=[WebTrackingEcomm.hashed_email],
+                                       passive_deletes='all')
 
     @hybrid_property
     def created_at(self):

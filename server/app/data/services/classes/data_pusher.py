@@ -117,6 +117,10 @@ class DataPusher(object):
 
                 if self.__check_date_type(column):
                     new_column['FieldType'] = 'Date'
+                elif column == 'email_address':
+                    new_column['FieldType'] = 'EmailAddress'
+                    #de.props['IsSendable'] = True
+                    #still need send relationship definition
                 else:
                     new_column['FieldType'] = 'Text'
                     new_column['MaxLength'] = '255'

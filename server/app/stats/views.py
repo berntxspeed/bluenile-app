@@ -79,12 +79,13 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases
+    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, load_web_tracking
     load_map = {'customers': load_customers,
                 'purchases': load_purchases,
                 'artists': load_artists,
                 'mc-email-data': load_mc_email_data,
-                'mc-journeys': load_mc_journeys}
+                'mc-journeys': load_mc_journeys,
+                'web-tracking': load_web_tracking}
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')

@@ -6,6 +6,8 @@ static/data
 migrations/
 .idea/
 .DS_Store
+bluenilesw-app-f937c2e51267.p12
+bluenilesw-app-f937c2e51267.pem
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

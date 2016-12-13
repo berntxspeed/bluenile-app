@@ -48,6 +48,13 @@ def load_mc_journeys():
         service.load_mc_journeys()
 
 
+@celery.task
+def load_web_tracking():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_web_tracking()
+
+
 NUM_OBJ_TO_CREATE = 30;
 
 

@@ -3,6 +3,24 @@ import requests
 from .db_data_loader import SqlDataLoader, MongoDataLoader
 
 
+def json_select(json, selector):
+    retval = None
+    index = None
+
+    field = selector.split('[')[0]
+    if len(selector.split('[')) > 1:
+        index = selector.split('[')[1][:-1]
+
+    retval = json[field]
+
+    if index is not None:
+        retval = retval[int(index)]
+
+    return retval
+
+
+
+
 class ApiData(object):
     def __init__(self, endpoint, auth, headers, params):
         self._endpoint = endpoint
@@ -44,35 +62,41 @@ class ApiDataToSql(ApiData, SqlDataLoader):
         load_data(): pulls data down from endpoint, and loads into db
     """
 
-    def __init__(self, endpoint, auth, headers, params, db_session, db_model, primary_keys, db_field_map,
-                 json_data_keys=(None,)):
+    def __init__(self, db_session, db_model, primary_keys, db_field_map,
+                 endpoint=None, auth=None, headers=None, params=None,
+                 json_data_keys=None):
 
         SqlDataLoader.__init__(self,
                                db_session=db_session,
                                db_model=db_model,
                                primary_keys=primary_keys)
 
-        ApiData.__init__(self, endpoint=endpoint,
-                         auth=auth,
-                         headers=headers,
-                         params=params)
+        if endpoint is not None and auth is not None and headers is not None and params is not None:
+            ApiData.__init__(self, endpoint=endpoint,
+                            auth=auth,
+                            headers=headers,
+                            params=params)
 
         self._json_data_keys = json_data_keys
         self._db_field_map = db_field_map
 
-    def load_data(self):
+    def load_data(self, preload_data=None):
 
-        data = self._get_data()
+        data = self._get_data(preload_data=preload_data)
         SqlDataLoader.load_to_db(self, data)
 
-    def _get_data(self):
+    def _get_data(self, preload_data=None):
 
-        response = ApiData.get_data(self)
-        response = response.json()
+        if preload_data is None:
+            response = ApiData.get_data(self)
+            response = response.json()
+        else:
+            response = preload_data
 
         # access the desired data from the full response
-        for jdk in self._json_data_keys:
-            response = response[jdk]
+        for jdk in self._json_data_keys.split('.'):
+            response = json_select(response, jdk)
+            # response = response[jdk]
 
         # create a dict of items for loading to db,
         # - key = composite(primarykeys)
@@ -92,7 +116,8 @@ class ApiDataToSql(ApiData, SqlDataLoader):
     @staticmethod
     def _get_json_field(item, api_field):
         for field in api_field.split('.'):
-            item = item[field]
+            item = json_select(item, field)
+            # item = item[field]
         return item
 
 
@@ -116,7 +141,10 @@ class ApiDataToMongo(ApiData, MongoDataLoader):
 
         # access the desired data from the full response
         if self._json_data_keys:
-            for jdk in self._json_data_keys:
-                response = response[jdk]
+            for jdk in self._json_data_keys.split('.'):
+                response = json_select(response, jdk)
 
         return response
+
+
+
