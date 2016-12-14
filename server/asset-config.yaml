@@ -32,9 +32,19 @@ graphing-js:
     contents:
         - bower_components/d3/d3.js
         - bower_components/c3/c3.js
+
 graphing-css:
     contents:
       - bower_components/c3/c3.css
+
+query-builder-js:
+    contents:
+        - bower_components/moment/moment.js
+        - bower_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js
+
+query-builder-css:
+    contents:
+        - bower_components/jQuery-QueryBuilder/dist/css/query-builder.default.min.css
 
 base-css:
     contents:
@@ -50,6 +60,19 @@ base-js:
         - app/common/js/polling.js
     filters: rjsmin
     output: gen/base.%(version)s.js
+
+journey-view-js:
+    contents:
+        -
+    filters: rjsmin
+    output: gen/journey_view.%(version)s.js
+
+journey-view-css:
+    contents:
+        - joint-css
+        - app/stats/css/journey_view.css
+    filters: cssmin
+    output: gen/journey_view.%(version)s.css
 
 journey-view-js:
     contents:
@@ -77,12 +100,21 @@ devpage-joint-js:
         - bootstrap-js
         - joint-js
         - graphing-js
+        - query-builder-js
         - app/common/js/pieChartEmlStats.js
         - app/stats/js/devpage_joint.js
-        - bower_components/moment/moment.js
-        - bower_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js
     filters: rjsmin
     output: gen/devpage_joint.%(version)s.js
+
+devpage-joint-css:
+    contents:
+        - joint-css
+        - graphing-css
+        - bootstrap-css
+        - query-builder-css
+        #        - app/stats/css/devpage_joint.css
+    filters: cssmin
+    output: gen/devpage_joint.%(version)s.css
 
 map-graph-js:
     contents:
@@ -98,13 +130,3 @@ map-graph-css:
         - app/stats/css/map_graph.css
     filters: cssmin
     output: gen/map_graph.%(version)s.css
-
-devpage-joint-css:
-    contents:
-        - joint-css
-        - graphing-css
-        - bootstrap-css
-        - bower_components/jQuery-QueryBuilder/dist/css/query-builder.default.min.css
-        #        - app/stats/css/devpage_joint.css
-    filters: cssmin
-    output: gen/devpage_joint.%(version)s.css
