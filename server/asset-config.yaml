@@ -74,11 +74,13 @@ journey-view-css:
 
 devpage-joint-js:
     contents:
+        - bootstrap-js
         - joint-js
         - graphing-js
-        - bower_components/jquery/jquery.js
         - app/common/js/pieChartEmlStats.js
         - app/stats/js/devpage_joint.js
+        - bower_components/moment/moment.js
+        - bower_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js
     filters: rjsmin
     output: gen/devpage_joint.%(version)s.js
 
@@ -101,6 +103,8 @@ devpage-joint-css:
     contents:
         - joint-css
         - graphing-css
-        - app/stats/css/devpage_joint.css
+        - bootstrap-css
+        - bower_components/jQuery-QueryBuilder/dist/css/query-builder.default.min.css
+        #        - app/stats/css/devpage_joint.css
     filters: cssmin
     output: gen/devpage_joint.%(version)s.css
