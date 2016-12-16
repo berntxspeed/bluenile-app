@@ -71,7 +71,7 @@ class ApiDataToSql(ApiData, SqlDataLoader):
                                db_model=db_model,
                                primary_keys=primary_keys)
 
-        if endpoint is not None and auth is not None and headers is not None and params is not None:
+        if endpoint is not None:
             ApiData.__init__(self, endpoint=endpoint,
                             auth=auth,
                             headers=headers,

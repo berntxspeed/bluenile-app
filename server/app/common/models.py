@@ -1,5 +1,10 @@
 import datetime
 
+import hmac
+import base64
+import hashlib
+HASH_SECRET = b'33jjfSFTW43FE2992222FD'
+
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import TIMESTAMP
@@ -471,6 +476,9 @@ class Customer(db.Model):
 @db.event.listens_for(Customer, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
     target._created_at = datetime.datetime.utcnow()
+    target.hashed_email = base64.b64encode(hmac.new(HASH_SECRET,
+                                                    msg=target.email_address.encode('utf-8'),
+                                                    digestmod=hashlib.sha256).digest()).hex()
     return target
 
 @db.event.listens_for(Customer, 'before_update', retval=True)

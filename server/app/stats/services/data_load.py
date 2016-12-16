@@ -292,156 +292,202 @@ class DataLoadService(DbService):
 
             ad.load_data(preload_data=response)
 
-        load_web_tracking_data(WebTrackingPageView,
-                               dims=('ga:pagePath', 'ga:browser', 'ga:browserSize', 'ga:operatingSystem'),
-                               metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                utc_millisecs='dimensions[2]',
-                                                hashed_email='dimensions[1]',
-                                                page_path='dimensions[3]',
-                                                browser='dimensions[4]',
-                                                browser_size='dimensions[5]',
-                                                operating_system='dimensions[6]',
-                                                sessions='metrics[0].values[0]',
-                                                page_value='metrics[0].values[1]',
-                                                page_views='metrics[0].values[2]'))
-        load_web_tracking_data(WebTrackingPageView,
-                               dims=('ga:pagePath', 'ga:deviceCategory', 'ga:mobileDeviceBranding', 'ga:mobileDeviceModel'),
-                               metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 page_path='dimensions[3]',
-                                                 device_category='dimensions[4]',
-                                                 mobile_device_branding='dimensions[5]',
-                                                 mobile_device_model='dimensions[6]',
-                                                 sessions='metrics[0].values[0]',
-                                                 page_value='metrics[0].values[1]',
-                                                 page_views='metrics[0].values[2]'))
-        load_web_tracking_data(WebTrackingPageView,
-                               dims=('ga:pagePath', 'ga:country', 'ga:region', 'ga:metro'),
-                               metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 page_path='dimensions[3]',
-                                                 country='dimensions[4]',
-                                                 region='dimensions[5]',
-                                                 metro='dimensions[6]',
-                                                 sessions='metrics[0].values[0]',
-                                                 page_value='metrics[0].values[1]',
-                                                 page_views='metrics[0].values[2]'))
-        load_web_tracking_data(WebTrackingPageView,
-                               dims=('ga:pagePath', 'ga:city', 'ga:latitude', 'ga:longitude'),
-                               metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 page_path='dimensions[3]',
-                                                 country='dimensions[4]',
-                                                 region='dimensions[5]',
-                                                 metro='dimensions[6]',
-                                                 sessions='metrics[0].values[0]',
-                                                 page_value='metrics[0].values[1]',
-                                                 page_views='metrics[0].values[2]'))
-
-        load_web_tracking_data(WebTrackingEvent,
-                               dims=('ga:eventAction', 'ga:eventLabel', 'ga:eventCategory', 'ga:browser'),
-                               metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 event_action='dimensions[3]',
-                                                 event_label='dimensions[4]',
-                                                 event_category='dimensions[5]',
-                                                 browser='dimensions[6]',
-                                                 event_value='metrics[0].values[0]',
-                                                 sessions_with_event='metrics[0].values[1]'))
-        load_web_tracking_data(WebTrackingEvent,
-                               dims=('ga:eventAction', 'ga:browser', 'ga:browserSize', 'ga:operatingSystem'),
-                               metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 event_action='dimensions[3]',
-                                                 browser='dimensions[4]',
-                                                 browser_size='dimensions[5]',
-                                                 operating_system='dimensions[6]',
-                                                 event_value='metrics[0].values[0]',
-                                                 sessions_with_event='metrics[0].values[1]'))
-        load_web_tracking_data(WebTrackingEvent,
-                               dims=('ga:eventAction', 'ga:deviceCategory', 'ga:mobileDeviceBranding', 'ga:mobileDeviceModel'),
-                               metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 event_action='dimensions[3]',
-                                                 device_category='dimensions[4]',
-                                                 mobile_device_branding='dimensions[5]',
-                                                 mobile_device_model='dimensions[6]',
-                                                 event_value='metrics[0].values[0]',
-                                                 sessions_with_event='metrics[0].values[1]'))
-        load_web_tracking_data(WebTrackingEvent,
-                               dims=('ga:eventAction', 'ga:country', 'ga:region', 'ga:metro'),
-                               metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 event_action='dimensions[3]',
-                                                 country='dimensions[4]',
-                                                 region='dimensions[5]',
-                                                 metro='dimensions[6]',
-                                                 event_value='metrics[0].values[0]',
-                                                 sessions_with_event='metrics[0].values[1]'))
-        load_web_tracking_data(WebTrackingEvent,
-                               dims=('ga:eventAction', 'ga:city', 'ga:latitude', 'ga:longitude'),
-                               metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 event_action='dimensions[3]',
-                                                 city='dimensions[4]',
-                                                 latitude='dimensions[5]',
-                                                 longitude='dimensions[6]',
-                                                 event_value='metrics[0].values[0]',
-                                                 sessions_with_event='metrics[0].values[1]'))
-
-        load_web_tracking_data(WebTrackingEcomm,
-                               dims=('ga:browser', 'ga:browserSize', 'ga:operatingSystem', 'ga:deviceCategory'),
-                               metrics=('ga:totalValue', 'ga:itemQuantity', 'ga:productDetailViews'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 browser='dimensions[3]',
-                                                 browser_size='dimensions[4]',
-                                                 operating_system='dimensions[5]',
-                                                 device_category='dimensions[6]',
-                                                 total_value='metrics[0].values[0]',
-                                                 item_quantity='metrics[0].values[1]',
-                                                 product_detail_views='metrics[0].values[2]'))
-        load_web_tracking_data(WebTrackingEcomm,
-                               dims=('ga:mobileDeviceBranding', 'ga:mobileDeviceModel', 'ga:country', 'ga:region'),
-                               metrics=('ga:totalValue', 'ga:itemQuantity', 'ga:productDetailViews'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 mobile_device_branding='dimensions[3]',
-                                                 mobile_device_model='dimensions[4]',
-                                                 country='dimensions[5]',
-                                                 region='dimensions[6]',
-                                                 total_value='metrics[0].values[0]',
-                                                 item_quantity='metrics[0].values[1]',
-                                                 product_detail_views='metrics[0].values[2]'))
-        load_web_tracking_data(WebTrackingEcomm,
-                               dims=('ga:metro', 'ga:city', 'ga:latitude', 'ga:longitude'),
-                               metrics=('ga:totalValue', 'ga:itemQuantity', 'ga:productDetailViews'),
-                               db_field_map=dict(browser_id='dimensions[0]',
-                                                 utc_millisecs='dimensions[2]',
-                                                 hashed_email='dimensions[1]',
-                                                 metro='dimensions[3]',
-                                                 city='dimensions[4]',
-                                                 latitude='dimensions[5]',
-                                                 longitude='dimensions[6]',
-                                                 total_value='metrics[0].values[0]',
-                                                 item_quantity='metrics[0].values[1]',
-                                                 product_detail_views='metrics[0].values[2]'))
+        try:
+            load_web_tracking_data(WebTrackingPageView,
+                                   dims=('ga:pagePath', 'ga:browser', 'ga:browserSize', 'ga:operatingSystem'),
+                                   metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                    utc_millisecs='dimensions[2]',
+                                                    hashed_email='dimensions[1]',
+                                                    page_path='dimensions[3]',
+                                                    browser='dimensions[4]',
+                                                    browser_size='dimensions[5]',
+                                                    operating_system='dimensions[6]',
+                                                    sessions='metrics[0].values[0]',
+                                                    page_value='metrics[0].values[1]',
+                                                    page_views='metrics[0].values[2]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingPageView,
+                                   dims=('ga:pagePath', 'ga:deviceCategory', 'ga:mobileDeviceBranding', 'ga:mobileDeviceModel'),
+                                   metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     page_path='dimensions[3]',
+                                                     device_category='dimensions[4]',
+                                                     mobile_device_branding='dimensions[5]',
+                                                     mobile_device_model='dimensions[6]',
+                                                     sessions='metrics[0].values[0]',
+                                                     page_value='metrics[0].values[1]',
+                                                     page_views='metrics[0].values[2]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingPageView,
+                                   dims=('ga:pagePath', 'ga:country', 'ga:region', 'ga:metro'),
+                                   metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     page_path='dimensions[3]',
+                                                     country='dimensions[4]',
+                                                     region='dimensions[5]',
+                                                     metro='dimensions[6]',
+                                                     sessions='metrics[0].values[0]',
+                                                     page_value='metrics[0].values[1]',
+                                                     page_views='metrics[0].values[2]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingPageView,
+                                   dims=('ga:pagePath', 'ga:city', 'ga:latitude', 'ga:longitude'),
+                                   metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     page_path='dimensions[3]',
+                                                     country='dimensions[4]',
+                                                     region='dimensions[5]',
+                                                     metro='dimensions[6]',
+                                                     sessions='metrics[0].values[0]',
+                                                     page_value='metrics[0].values[1]',
+                                                     page_views='metrics[0].values[2]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingEvent,
+                                   dims=('ga:eventAction', 'ga:eventLabel', 'ga:eventCategory', 'ga:browser'),
+                                   metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     event_action='dimensions[3]',
+                                                     event_label='dimensions[4]',
+                                                     event_category='dimensions[5]',
+                                                     browser='dimensions[6]',
+                                                     event_value='metrics[0].values[0]',
+                                                     sessions_with_event='metrics[0].values[1]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingEvent,
+                                   dims=('ga:eventAction', 'ga:browser', 'ga:browserSize', 'ga:operatingSystem'),
+                                   metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     event_action='dimensions[3]',
+                                                     browser='dimensions[4]',
+                                                     browser_size='dimensions[5]',
+                                                     operating_system='dimensions[6]',
+                                                     event_value='metrics[0].values[0]',
+                                                     sessions_with_event='metrics[0].values[1]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingEvent,
+                                   dims=('ga:eventAction', 'ga:deviceCategory', 'ga:mobileDeviceBranding', 'ga:mobileDeviceModel'),
+                                   metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     event_action='dimensions[3]',
+                                                     device_category='dimensions[4]',
+                                                     mobile_device_branding='dimensions[5]',
+                                                     mobile_device_model='dimensions[6]',
+                                                     event_value='metrics[0].values[0]',
+                                                     sessions_with_event='metrics[0].values[1]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingEvent,
+                                   dims=('ga:eventAction', 'ga:country', 'ga:region', 'ga:metro'),
+                                   metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     event_action='dimensions[3]',
+                                                     country='dimensions[4]',
+                                                     region='dimensions[5]',
+                                                     metro='dimensions[6]',
+                                                     event_value='metrics[0].values[0]',
+                                                     sessions_with_event='metrics[0].values[1]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingEvent,
+                                   dims=('ga:eventAction', 'ga:city', 'ga:latitude', 'ga:longitude'),
+                                   metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     event_action='dimensions[3]',
+                                                     city='dimensions[4]',
+                                                     latitude='dimensions[5]',
+                                                     longitude='dimensions[6]',
+                                                     event_value='metrics[0].values[0]',
+                                                     sessions_with_event='metrics[0].values[1]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingEcomm,
+                                   dims=('ga:browser', 'ga:browserSize', 'ga:operatingSystem', 'ga:deviceCategory'),
+                                   metrics=('ga:totalValue', 'ga:itemQuantity', 'ga:productDetailViews'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     browser='dimensions[3]',
+                                                     browser_size='dimensions[4]',
+                                                     operating_system='dimensions[5]',
+                                                     device_category='dimensions[6]',
+                                                     total_value='metrics[0].values[0]',
+                                                     item_quantity='metrics[0].values[1]',
+                                                     product_detail_views='metrics[0].values[2]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingEcomm,
+                                   dims=('ga:mobileDeviceBranding', 'ga:mobileDeviceModel', 'ga:country', 'ga:region'),
+                                   metrics=('ga:totalValue', 'ga:itemQuantity', 'ga:productDetailViews'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     mobile_device_branding='dimensions[3]',
+                                                     mobile_device_model='dimensions[4]',
+                                                     country='dimensions[5]',
+                                                     region='dimensions[6]',
+                                                     total_value='metrics[0].values[0]',
+                                                     item_quantity='metrics[0].values[1]',
+                                                     product_detail_views='metrics[0].values[2]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
+        try:
+            load_web_tracking_data(WebTrackingEcomm,
+                                   dims=('ga:metro', 'ga:city', 'ga:latitude', 'ga:longitude'),
+                                   metrics=('ga:totalValue', 'ga:itemQuantity', 'ga:productDetailViews'),
+                                   db_field_map=dict(browser_id='dimensions[0]',
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     metro='dimensions[3]',
+                                                     city='dimensions[4]',
+                                                     latitude='dimensions[5]',
+                                                     longitude='dimensions[6]',
+                                                     total_value='metrics[0].values[0]',
+                                                     item_quantity='metrics[0].values[1]',
+                                                     product_detail_views='metrics[0].values[2]'))
+            print('successfully loaded part of web tracking data')
+        except Exception as exc:
+            print('failed one of the web tracking lookups')
