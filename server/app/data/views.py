@@ -1,3 +1,5 @@
+from json import dumps
+
 from flask import Response
 from json import dumps
 
@@ -12,14 +14,16 @@ def data_pusher():
 
 
 @data.route('/sync-data-to-mc/<table>')
+@templated('data_pusher')
 def sync_data_to_mc(table):
     from .workers import sync_data_to_mc
     result = sync_data_to_mc.delay(table)
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
+    return dict(task_id=result.id)
 
 
 @data.route('/clear-sync-flags/<table>')
+@templated('data_pusher')
 def clr_ext_sync_flags(table):
     from .workers import clean_sync_flags
     result = clean_sync_flags.delay(table)
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
+    return dict(task_id=result.id)

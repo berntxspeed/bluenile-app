@@ -8,6 +8,7 @@ from json import dumps, loads
 
 from werkzeug.utils import redirect
 
+from server.app.injector_keys import SQLAlchemy
 from . import stats
 from .injector_keys import JbStatsServ, GetStatsServ, DataLoadServ
 from ..common.views.decorators import templated
@@ -32,6 +33,11 @@ def special_logged_in_page(jb_stats_service):
 def data_manager():
     return {}
 
+@stats.route('/data-builder')
+@inject(db=SQLAlchemy)
+@templated('data_builder')
+def data_builder(db):
+    return {'tables': list(db.metadata.tables.keys())}
 
 @stats.route('/journey-view')
 @inject(jb_stats_service=JbStatsServ)
