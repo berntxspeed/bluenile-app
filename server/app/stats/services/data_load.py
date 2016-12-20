@@ -239,7 +239,12 @@ class DataLoadService(DbService):
                 primary_keys=['id'])
             adm.load_data()
 
-    def load_web_tracking(self):
+    def load_web_tracking(self, startDate=None, endDate=None):
+
+        if startDate is None:
+            startDate = '1daysAgo'
+        if endDate is None:
+            endDate = 'today'
 
         from apiclient.discovery import build
         from oauth2client.service_account import ServiceAccountCredentials
