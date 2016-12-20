@@ -247,7 +247,7 @@ class DataLoadService(DbService):
 
         SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
         DISCOVERY_URI = ('https://analyticsreporting.googleapis.com/$discovery/rest')
-        KEY_FILE_LOCATION = 'tmp/bluenilesw-app-f937c2e51267.p12'
+        KEY_FILE_LOCATION = 'bluenilesw-app-f937c2e51267.p12'
         SERVICE_ACCOUNT_EMAIL = 'bluenile-sw-google-analytics@bluenilesw-app.iam.gserviceaccount.com'
         VIEW_ID = '122242971'
 
