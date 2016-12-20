@@ -55,7 +55,7 @@ class DataPushService(DbService):
         query3 = self.db.session.query(Customer) \
             .join(EmlClick, Customer.eml_clicks) \
             .group_by(Customer.customer_id) \
-            .having(func.count(Customer.eml_sends) >= 1)
+            .having(func.count(Customer.eml_clicks) >= 1)
 
         queries = {'query1': {'name': 'customers with 2 or more purchases', 'q': query1},
                    'query2': {'name': 'customers who viewed widget2 page on website', 'q': query2},
