@@ -1,5 +1,7 @@
-from flask import url_for
-from werkzeug.utils import redirect
+from json import dumps
+
+from flask import Response
+from json import dumps
 
 from . import data
 from ..common.views.decorators import templated
@@ -12,15 +14,16 @@ def data_pusher():
 
 
 @data.route('/sync-data-to-mc/<table>')
+@templated('data_pusher')
 def sync_data_to_mc(table):
-    from .workers import sync_mc_data
-    sync_mc_data.delay(table)
-    # data_push_service.sync_data_to_mc(table)
-    return redirect(url_for('data.data_pusher'))
+    from .workers import sync_data_to_mc
+    result = sync_data_to_mc.delay(table)
+    return dict(task_id=result.id)
 
 
 @data.route('/clear-sync-flags/<table>')
+@templated('data_pusher')
 def clr_ext_sync_flags(table):
     from .workers import clean_sync_flags
-    clean_sync_flags.delay(table)
-    return redirect(url_for('data.data_pusher'))
+    result = clean_sync_flags.delay(table)
+    return dict(task_id=result.id)

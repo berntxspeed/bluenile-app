@@ -91,7 +91,6 @@ def init_login_manager(app):
 
 
 def init_assets(app):
-    from .common.utils.assets import bundles
     from dukpy.webassets import BabelJS
 
     register_filter(BabelJS)

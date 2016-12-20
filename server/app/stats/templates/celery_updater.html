@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}DevPage JointJS{% endblock %}
+
+{% block head %}
+{{ super() }}
+{% assets 'devpage_joint-css' %}
+<link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+{% endassets %}
+{% endblock %}
+
+{% block banner %}
+<div class="banner banner-jumbotron banner-gray">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 center-block">
+                <h1>&nbsp;</h1>
+                <h1>Use custom html inside of blocks</h1>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+
+{% endblock %}

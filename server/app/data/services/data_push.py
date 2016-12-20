@@ -23,7 +23,7 @@ class DataPushService(DbService):
             self.logger.error('error with sync, see logs')
             self.logger.error(str(resp))
 
-    def clr_ext_sync_flags(self, table):
+    def clean_sync_flags(self, table):
         if table not in self._models.keys():
             self.logger.warn('error, selected table is not available for this operation')
 

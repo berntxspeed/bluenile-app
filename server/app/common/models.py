@@ -1,10 +1,15 @@
 import datetime
 
+import hmac
+import base64
+import hashlib
+HASH_SECRET = b'33jjfSFTW43FE2992222FD'
+
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym
+from sqlalchemy.orm import synonym, relationship, backref
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
@@ -116,16 +121,17 @@ def on_update(mapper, connection, target):
     return target
 
 
-class Customer(db.Model):
-    __tablename__ = 'customer'
-    customer_id = db.Column(db.String(255), primary_key=True)
-    email_address = db.Column(db.String(255))
-    fname = db.Column(db.String(255))
-    lname = db.Column(db.String(255))
-    marketing_allowed = db.Column(db.String(255))
-    _created_at = db.Column('created_at', TIMESTAMP)
-    purchase_count = db.Column(db.Integer)
-    total_spent_so_far = db.Column(db.String(255))
+class Purchase(db.Model):
+    __tablename__ = 'purchase'
+    purchase_id = db.Column(db.String(255), primary_key=True)
+    customer_id = db.Column(db.String(255))
+    _created_at = db.Column(TIMESTAMP)
+    price = db.Column(db.String(255))
+    is_paid = db.Column(db.String(255))
+    referring_site = db.Column(db.String(255))
+    landing_site = db.Column(db.String(255))
+    browser_ip = db.Column(db.String(255))
+    user_agent = db.Column(db.String(255))
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
@@ -138,23 +144,21 @@ class Customer(db.Model):
         if isinstance(created_at, str):
             self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
 
-    created_at = synonym('_created_at', descriptor=created_at)
+    #created_at = synonym('_created_at', descriptor=created_at)
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
-    def __repr(self):
-        return '<Customer %r>' % self.customer_id
-
-@db.event.listens_for(Customer, 'before_insert', retval=True)
+@db.event.listens_for(Purchase, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
     target._created_at = datetime.datetime.utcnow()
     return target
 
-@db.event.listens_for(Customer, 'before_update', retval=True)
+@db.event.listens_for(Purchase, 'before_update', retval=True)
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
 
 class SendJob(db.Model):
     __tablename__ = 'send_job'
@@ -203,6 +207,8 @@ class EmlSend(db.Model):
     EmailAddress = db.Column(db.String(255))
     _EventDate = db.Column(TIMESTAMP, primary_key=True)
     TriggeredSendExternalKey = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
@@ -220,6 +226,13 @@ class EmlSend(db.Model):
 
     def __repr__(self):
         return '<EmlSend %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlSend, 'before_insert', retval=True)
+def on_insert(mapper, connection, target):
+    if target.EventDate is not None:
+        target._day = target.EventDate.weekday()
+        target._hour = target.EventDate.hour
+    return target
 
 @db.event.listens_for(EmlSend, 'before_update', retval=True)
 def on_update(mapper, connection, target):
@@ -246,6 +259,8 @@ class EmlOpen(db.Model):
     EmailClient = db.Column(db.String(255))
     OperatingSystem = db.Column(db.String(255))
     Device = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
@@ -263,6 +278,13 @@ class EmlOpen(db.Model):
 
     def __repr__(self):
         return '<EmlOpen %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlOpen, 'before_insert', retval=True)
+def on_insert(mapper, connection, target):
+    if target.EventDate is not None:
+        target._day = target.EventDate.weekday()
+        target._hour = target.EventDate.hour
+    return target
 
 @db.event.listens_for(EmlOpen, 'before_update', retval=True)
 def on_update(mapper, connection, target):
@@ -293,6 +315,8 @@ class EmlClick(db.Model):
     EmailClient = db.Column(db.String(255))
     OperatingSystem = db.Column(db.String(255))
     Device = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
@@ -310,6 +334,13 @@ class EmlClick(db.Model):
 
     def __repr__(self):
         return '<EmlClick %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlClick, 'before_insert', retval=True)
+def on_insert(mapper, connection, target):
+    if target.EventDate is not None:
+        target._day = target.EventDate.weekday()
+        target._hour = target.EventDate.hour
+    return target
 
 @db.event.listens_for(EmlClick, 'before_update', retval=True)
 def on_update(mapper, connection, target):
@@ -331,6 +362,153 @@ class Artist(db.Model):
         return '<Artist %r>' % self.name
 
 @db.event.listens_for(Artist, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
+
+class WebTrackingEvent(db.Model):
+    __tablename__ = 'web_tracking_event'
+    browser_id = db.Column(db.String(255), primary_key=True)
+    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    hashed_email = db.Column(db.String(255))
+    event_category = db.Column(db.String(255))
+    event_action = db.Column(db.String(255))
+    event_label = db.Column(db.String(255))
+    event_value = db.Column(db.Float)
+    sessions_with_event = db.Column(db.Integer)
+
+    browser = db.Column(db.String(255))
+    browser_size = db.Column(db.String(255))
+    operating_system = db.Column(db.String(255))
+    device_category = db.Column(db.String(255))
+    mobile_device_branding = db.Column(db.String(255))
+    mobile_device_model = db.Column(db.String(255))
+
+    country = db.column(db.String(255))
+    region = db.Column(db.String(255))
+    metro = db.Column(db.String(255))
+    city = db.Column(db.String(255))
+    latitude = db.Column(db.String(255))
+    longitude = db.Column(db.String(255))
+
+class WebTrackingPageView(db.Model):
+    __tablename__ = 'web_tracking_page_view'
+    browser_id = db.Column(db.String(255), primary_key=True)
+    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    hashed_email = db.Column(db.String(255))
+    page_path = db.Column(db.String(500))
+    page_views = db.Column(db.Integer)
+    page_value = db.Column(db.Float)
+    sessions = db.Column(db.Integer)
+
+    browser = db.Column(db.String(255))
+    browser_size = db.Column(db.String(255))
+    operating_system = db.Column(db.String(255))
+    device_category = db.Column(db.String(255))
+    mobile_device_branding = db.Column(db.String(255))
+    mobile_device_model = db.Column(db.String(255))
+
+    country = db.column(db.String(255))
+    region = db.Column(db.String(255))
+    metro = db.Column(db.String(255))
+    city = db.Column(db.String(255))
+    latitude = db.Column(db.String(255))
+    longitude = db.Column(db.String(255))
+
+class WebTrackingEcomm(db.Model):
+    __tablename__ = 'web_tracking_ecomm'
+    browser_id = db.Column(db.String(255), primary_key=True)
+    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    hashed_email = db.Column(db.String(255))
+    total_value = db.Column(db.Float)
+    item_quantity = db.Column(db.Integer)
+    product_detail_views = db.Column(db.Integer)
+
+    browser = db.Column(db.String(255))
+    browser_size = db.Column(db.String(255))
+    operating_system = db.Column(db.String(255))
+    device_category = db.Column(db.String(255))
+    mobile_device_branding = db.Column(db.String(255))
+    mobile_device_model = db.Column(db.String(255))
+
+    country = db.column(db.String(255))
+    region = db.Column(db.String(255))
+    metro = db.Column(db.String(255))
+    city = db.Column(db.String(255))
+    latitude = db.Column(db.String(255))
+    longitude = db.Column(db.String(255))
+
+
+class Customer(db.Model):
+    __tablename__ = 'customer'
+    customer_id = db.Column(db.String(255), primary_key=True)
+    email_address = db.Column(db.String(255))
+    hashed_email = db.Column(db.String(255))
+    fname = db.Column(db.String(255))
+    lname = db.Column(db.String(255))
+    marketing_allowed = db.Column(db.String(255))
+    _created_at = db.Column('created_at', TIMESTAMP)
+    purchase_count = db.Column(db.Integer)
+    total_spent_so_far = db.Column(db.String(255))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+    purchases = relationship(Purchase, backref='customer',
+                             primaryjoin='Customer.customer_id==Purchase.customer_id',
+                             foreign_keys=[Purchase.customer_id],
+                             passive_deletes='all')
+    eml_sends = relationship(EmlSend, backref='customer',
+                             primaryjoin='Customer.email_address==EmlSend.EmailAddress',
+                             foreign_keys=[EmlSend.EmailAddress],
+                             passive_deletes='all')
+    eml_opens = relationship(EmlOpen, backref='customer',
+                             primaryjoin='Customer.email_address==EmlOpen.EmailAddress',
+                             foreign_keys=[EmlOpen.EmailAddress],
+                             passive_deletes='all')
+    eml_clicks = relationship(EmlClick, backref='customer',
+                             primaryjoin='Customer.email_address==EmlClick.EmailAddress',
+                             foreign_keys=[EmlClick.EmailAddress],
+                             passive_deletes='all')
+    web_tracking_events = relationship(WebTrackingEvent, backref='customer',
+                                       primaryjoin='Customer.hashed_email==WebTrackingEvent.hashed_email',
+                                       foreign_keys=[WebTrackingEvent.hashed_email],
+                                       passive_deletes='all')
+
+    web_tracking_page_views = relationship(WebTrackingPageView, backref='customer',
+                                       primaryjoin='Customer.hashed_email==WebTrackingPageView.hashed_email',
+                                       foreign_keys=[WebTrackingPageView.hashed_email],
+                                       passive_deletes='all')
+
+    web_tracking_ecomms = relationship(WebTrackingEcomm, backref='customer',
+                                       primaryjoin='Customer.hashed_email==WebTrackingEcomm.hashed_email',
+                                       foreign_keys=[WebTrackingEcomm.hashed_email],
+                                       passive_deletes='all')
+
+    @hybrid_property
+    def created_at(self):
+        return self._created_at
+
+    @created_at.setter
+    def created_at(self, created_at):
+        if isinstance(created_at, str):
+            self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
+
+    created_at = synonym('_created_at', descriptor=created_at)
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+    def __repr(self):
+        return '<Customer %r>' % self.customer_id
+
+@db.event.listens_for(Customer, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target._created_at = datetime.datetime.utcnow()
+    target.hashed_email = base64.b64encode(hmac.new(HASH_SECRET,
+                                                    msg=target.email_address.encode('utf-8'),
+                                                    digestmod=hashlib.sha256).digest()).hex()
+    return target
+
+@db.event.listens_for(Customer, 'before_update', retval=True)
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target

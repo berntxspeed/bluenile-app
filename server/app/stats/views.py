@@ -8,6 +8,7 @@ from json import dumps, loads
 
 from werkzeug.utils import redirect
 
+from server.app.injector_keys import SQLAlchemy
 from . import stats
 from .injector_keys import JbStatsServ, GetStatsServ, DataLoadServ
 from ..common.views.decorators import templated
@@ -32,6 +33,11 @@ def special_logged_in_page(jb_stats_service):
 def data_manager():
     return {}
 
+@stats.route('/data-builder')
+@inject(db=SQLAlchemy)
+@templated('data_builder')
+def data_builder(db):
+    return {'tables': list(db.metadata.tables.keys())}
 
 @stats.route('/journey-view')
 @inject(jb_stats_service=JbStatsServ)
@@ -49,40 +55,51 @@ def journey_detail(jb_stats_service, id):
     return Response(dumps(result), mimetype='application/json')
 
 
+@stats.route('/celery-task-test')
+@templated('celery_updater')
+def sample_long_task():
+    from server.app.stats.workers import long_task
+    task = long_task.delay()
+    print(task.backend)
+    return dict(task_id=task.id)
+
+
+@stats.route('/task_update')
+def check_tasks_status():
+    # from server.app.stats.workers import long_task
+    from manage import celery
+
+    task_id = request.args.get('task_id')
+    task = celery.AsyncResult(task_id)
+    data = {'state': task.state,
+            'result': task.result if task.result is Exception else str(task.result)}
+    return Response(dumps(data), mimetype='application/json')
+
+
 @stats.route('/devpage-joint')
 @templated('devpage_joint')
 def devpage_joint():
     return {}
 
 
-# todo collapse into one endpoint, parametrize destination table
-@stats.route('/load/customers')
-def load_customers():
-    from .workers import load_customers
-    load_customers.delay()
-    return redirect(url_for('stats.data_manager'))
-
-
-@stats.route('/load/artists')
-def load_artists():
-    from .workers import load_artists
-    result = load_artists.delay()
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
-
-
-@stats.route('/load/mc-email-data')
-def load_mc_email_data():
-    from .workers import load_mc_email_data
-    result = load_mc_email_data.delay()
-    print('worker task: load_mc_email_data: id: ' + result.id)
-    return Response(dumps(dict(taskId=result.id)), mimetype='application/json')
-
-
-@stats.route('/load/mc-journeys')
-def load_mc_journeys():
-    from .workers import load_mc_journeys
-    load_mc_journeys.delay()
-    return redirect(url_for('stats.data_manager'))
+@stats.route('/load/<action>')
+@templated('data_manager')
+def load(action):
+    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, load_web_tracking
+    from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+    load_map = {'customers': load_customers,
+                'purchases': load_purchases,
+                'artists': load_artists,
+                'mc-email-data': load_mc_email_data,
+                'mc-journeys': load_mc_journeys,
+                'web-tracking': load_web_tracking,
+                'add-fips-location-emlopen': add_fips_location_emlopen,
+                'add-fips-location-emlclick': add_fips_location_emlclick}
+    task = load_map.get(action, None)
+    if task is None:
+        return Exception('No such action is available')
+    result = task.delay()
+    return dict(task_id=result.id)
 
 
 @stats.route('/get-columns/<tbl>')
@@ -101,3 +118,8 @@ def metrics_grouped_by(get_stats_service, grp_by, tbl):
         filters = q.get('filters')
         print(filters)
     return get_stats_service.get_grouping_counts(tbl, grp_by, filters)
+
+@stats.route('/map-graph')
+@templated('map_graph')
+def map_graph():
+    return {}
