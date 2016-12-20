@@ -270,7 +270,7 @@ class DataLoadService(DbService):
                 'reportRequests': [
                 {
                   'viewId': VIEW_ID,
-                  'dateRanges': [{'startDate': '1daysAgo', 'endDate': 'today'}],
+                  'dateRanges': [{'startDate': startDate, 'endDate': endDate}],
                   'metrics': [
                       {'expression': metrics[0]},
                       {'expression': metrics[1]},
