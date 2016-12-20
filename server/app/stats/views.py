@@ -86,12 +86,15 @@ def devpage_joint():
 @templated('data_manager')
 def load(action):
     from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, load_web_tracking
+    from .workers import add_fips_location_emlopen, add_fips_location_emlclick
     load_map = {'customers': load_customers,
                 'purchases': load_purchases,
                 'artists': load_artists,
                 'mc-email-data': load_mc_email_data,
                 'mc-journeys': load_mc_journeys,
-                'web-tracking': load_web_tracking}
+                'web-tracking': load_web_tracking,
+                'add-fips-location-emlopen': add_fips_location_emlopen,
+                'add-fips-location-emlclick': add_fips_location_emlclick}
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')

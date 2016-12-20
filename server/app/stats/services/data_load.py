@@ -491,3 +491,54 @@ class DataLoadService(DbService):
             print('successfully loaded part of web tracking data')
         except Exception as exc:
             print('failed one of the web tracking lookups')
+
+    # this works with the fips_codes_website.csv file - which has the right FIPS values to match
+    # - up with the ids of the us-10m.v1.json data from D3
+    def add_fips_location_data(self, table, city_field=None, state_field=None, dest_fips_code_field=None):
+
+        # how it works: it goes one by one through each FIPS code in the csv file
+        # - and for each, searches the table for any records with that state/city
+        # - and if it finds some, it throws the FIPS code on the field specified and saves back the records
+        # - then moves on to the next
+
+
+        filename = 'static/data/fips_codes_website.csv'
+        db = self.db
+        if city_field is None:
+            city_field = 'City'
+        if state_field is None:
+            state_field = 'Region'
+        if dest_fips_code_field is None:
+            fips_field = 'AreaCode'
+
+        table_map = {'EmlOpen': EmlOpen,
+                     'EmlClick': EmlClick}
+        model = table_map.get(table, None)
+        if table is None:
+            return Exception('table not recognized or authorized to apply fips location code data to.')
+
+        city = getattr(model, city_field)
+        state = getattr(model, state_field)
+
+        import csv
+        with open(filename, 'r') as csvfile:
+            csvfile_reader = csv.DictReader(csvfile, delimiter=',')
+            already_processed = []
+
+            # using city names without spaces
+            for row in csvfile_reader:
+
+                if (row['GU Name'], row['State Abbreviation']) in already_processed:
+                    continue
+
+                already_processed.append((row['GU Name'], row['State Abbreviation']))
+
+                recs = model.query.filter(city == row['GU Name'].replace(' ', '').upper(),
+                                          state == row['State Abbreviation']).all()
+                # print('*', end='', flush=True)
+                if len(recs) > 0:
+                    print('found ' + str(len(recs)) + ' records with city ' + row['GU Name'].replace(' ', ''))
+                    for rec in recs:
+                        rec.__setattr__(fips_field, str(row['State FIPS Code'] + row['County FIPS Code']))
+                        db.session.add(rec)
+                    db.session.commit()

@@ -15,7 +15,7 @@ class StatsGetter(object):
         self._db = db
         self._tbl = tbl
         self._acceptable_tables = acceptable_tbls
-        self._grp_by = grp_by
+        self._grp_by = grp_by.split('-')
         self._filters = filters
         if self._tbl not in self._acceptable_tables.keys():
             raise ValueError('illegal table selection of: ' + self._tbl + '. This is not in the list of allowable tables')
@@ -41,6 +41,13 @@ class StatsGetter(object):
                 raise ValueError('invalid data for filter definition: name')
         return q
 
+    def _apply_group_bys_to_query(self, q):
+        if self._grp_by is not None:
+            for grp_by in self._grp_by:
+                column = getattr(self._model, grp_by)
+                q = q.add_columns(column).group_by(column)
+            return q
+
     def get(self):
         """
         Executes query and returns result
@@ -50,10 +57,14 @@ class StatsGetter(object):
             self._check_filters()
         except ValueError:
             raise
-        model = self._model
-        column = getattr(model, self._grp_by)
-        q = self._db.session.query(column, func.count(column)).group_by(column)
+
+        q = self._db.session.query()
+
+        q = self._apply_group_bys_to_query(q)
         q = self._apply_filters_to_query(q)
+
+        q = q.add_columns(func.count())
+
         return q.all()
 
     def get_columns(self):
