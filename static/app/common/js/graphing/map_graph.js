@@ -1,3 +1,4 @@
+// follows model here http://bl.ocks.org/mbostock/4060606
 class MapGraph {
 
     constructor(){}

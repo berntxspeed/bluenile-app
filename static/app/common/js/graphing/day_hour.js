@@ -1,3 +1,4 @@
+// follows model of http://bl.ocks.org/tjdecke/5558084
 class DayHourPlot {
     constructor(){}
 
