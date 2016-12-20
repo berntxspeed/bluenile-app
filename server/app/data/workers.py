@@ -14,3 +14,9 @@ def clean_sync_flags(table):
         service = injector.get(DataPushServ)
         service.clean_sync_flags(table)
 
+
+@celery.task
+def sync_query_to_mc(query):
+    with app.app_context():
+        service = injector.get(DataPushServ)
+        service.sync_query_to_mc(query)

@@ -27,3 +27,11 @@ def clr_ext_sync_flags(table):
     from .workers import clean_sync_flags
     result = clean_sync_flags.delay(table)
     return dict(task_id=result.id)
+
+
+@data.route('/sync-query-to-mc/<query>')
+@templated('data_pusher')
+def sync_query_to_mc(query):
+    from .workers import sync_query_to_mc
+    result = sync_query_to_mc.delay(query)
+    return dict(task_id=result.id)
