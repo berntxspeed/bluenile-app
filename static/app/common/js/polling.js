@@ -33,6 +33,8 @@ $.ajax({
      // create the infinite loop of Ajax calls to check the state
      // of the current task
      if (finished == false)
-        PollState(task_id);
+        setTimeout(function() {
+            PollState(task_id);
+        }, 2000)
     });
 }
