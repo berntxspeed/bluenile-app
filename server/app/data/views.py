@@ -1,10 +1,17 @@
 from json import dumps
 
 from flask import Response
+from flask_login import login_required
 from json import dumps
 
 from . import data
 from ..common.views.decorators import templated
+
+# Pass this function to require login for every request
+@data.before_request
+@login_required
+def before_request():
+    pass
 
 
 @data.route('/data-pusher')
