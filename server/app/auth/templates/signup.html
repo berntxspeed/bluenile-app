@@ -25,22 +25,22 @@
                 <strong>Create an account to vote, comment, and post your own videos.</strong>
             </div>
             <div class="well form-well">
-              <form id="signup-form" class="form-horizontal auth-form" method="post">
-                  {{ render_csrf_token() }}
-                  {{ render_horizontal_field(
+              <!--<form id="signup-form" class="form-horizontal auth-form" method="post">
+                  { { render_csrf_token() }}
+                  { { render_horizontal_field(
                           form.username,
                           label_class='col-md-3',
                           input_parent_class='col-md-9') }}
-                  {{ render_horizontal_field(
+                  { { render_horizontal_field(
                           form.email,
                           type='email',
                           label_class='col-md-3',
                           input_parent_class='col-md-9') }}
-                  {{ render_horizontal_field(
+                  { { render_horizontal_field(
                           form.password,
                           label_class='col-md-3',
                           input_parent_class='col-md-9') }}
-                  {{ render_horizontal_field(
+                  { { render_horizontal_field(
                           form.confirm_password,
                           label_class='col-md-3',
                           input_parent_class='col-md-9',
@@ -54,15 +54,15 @@
               <div class="row">
                   <h3 class="auth-or text-center signup">or</h3>
               </div>
-                <a href="{{ url_for('auth.google_login') }}" class="btn btn-info signup-btn google-signup-btn">
+                <a href="{ { url_for('auth.google_login') }}" class="btn btn-info signup-btn google-signup-btn">
                     <span class="fa fa-google"></span>
                     <span class="social-label">Sign up with Google</span>
                 </a>
-                <a href="{{ url_for('auth.facebook_login') }}" class="btn btn-primary signup-btn facebook-signup-btn">
+                <a href="{ { url_for('auth.facebook_login') }}" class="btn btn-primary signup-btn facebook-signup-btn">
                     <span class="fa fa-facebook"></span>
                     <span class="social-label">Sign up with Facebook</span>
                 </a>
-            </div>
+            </div>-->
         </div>
     </div>
 {% endblock %}
