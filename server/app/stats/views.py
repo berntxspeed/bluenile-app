@@ -54,6 +54,13 @@ def journey_detail(jb_stats_service, id):
     result = jb_stats_service.journey_detail(id)
     return Response(dumps(result), mimetype='application/json')
 
+@stats.route('/send-view')
+@inject(get_stats_service=GetStatsServ)
+@templated('send_view')
+def send_view(get_stats_service):
+    # passes all send ids to view
+    return get_stats_service.send_view()
+
 
 @stats.route('/celery-task-test')
 @templated('celery_updater')
