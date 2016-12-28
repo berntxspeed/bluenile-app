@@ -7,7 +7,7 @@ HASH_SECRET = b'33jjfSFTW43FE2992222FD'
 
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import TIMESTAMP
+from sqlalchemy.dialects.postgresql import TIMESTAMP, JSON, TEXT
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym, relationship, backref
 from werkzeug.security import check_password_hash
@@ -511,4 +511,32 @@ def on_update(mapper, connection, target):
 @db.event.listens_for(Customer, 'before_update', retval=True)
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
+    return target
+
+class Upload(db.Model):
+    __tablename__ = 'upload'
+    name = db.Column(db.String(200))
+    url = db.Column(db.String(255), primary_key=True)
+
+class Template(db.Model):
+    __tablename__ = 'template'
+    key = db.Column(db.String(10), primary_key=True)
+    name = db.Column(db.String(200))
+    html = db.Column(TEXT)
+    last_modified = db.Column(TIMESTAMP)
+    created = db.Column(TIMESTAMP)
+    template_data = db.Column(JSON)
+    meta_data = db.Column(JSON)
+
+    def __unicode__(self):
+        return "%s - %s" % (self.name, self.key)
+
+@db.event.listens_for(Template, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target.created = datetime.datetime.utcnow()
+    return target
+
+@db.event.listens_for(Template, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target.last_modified = datetime.datetime.utcnow()
     return target
