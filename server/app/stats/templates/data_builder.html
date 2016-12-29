@@ -1,37 +1,47 @@
 {% extends 'base.html' %}
 
-{% block title %}DevPage JointJS{% endblock %}
+{% block title %}Data Manager{% endblock %}
 
 {% block head %}
 {{ super() }}
-{% assets 'devpage-joint-css' %}
+
+{% assets "query-builder-css" %}
 <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
 {% endassets %}
 
-{% assets "devpage-joint-js" %}
+{% assets "query-builder-js" %}
 <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {% endassets %}
-
 {% endblock %}
 
+
 {% block banner %}
-<div class="banner banner-jumbotron banner-gray">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 center-block">
-                <h1>&nbsp;</h1>
-                <h1>Dev page joint diagram</h1>
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>Here you can transform your data and enrich it</h1>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
-
 {% block body %}
-<div class="col-md-12 col-lg-10 col-lg-offset-1">
-    <div id="builder" class="query-builder form-inline"></div>
-    <script>
+    <div class="row">
+        <h4>Please select all the tables you wish to join together</h4>
+        <div class="">
+            {% for table in tables %}
+                <label class="checkbox-inline col-sm-3"><input type="checkbox" value="">{{table}}</label>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="row">
+        <h4>Filter your data</h4>
+        <div class="col-md-12 col-lg-10 col-lg-offset-1">
+            <div id="builder" class="query-builder form-inline"></div>
+            <script>
           var rules_widgets = {
   condition: 'OR',
   rules: [{
@@ -197,6 +207,6 @@ $('#builder').queryBuilder({
 
 
     </script>
-</div>
-
+        </div>
+    </div>
 {% endblock %}

@@ -40,13 +40,19 @@ class Config(object):
 
     # External Data Sources
     CUSTOMER_DATA_SOURCE = os.getenv('CUSTOMER_DATA_SOURCE')
+    PURCHASE_DATA_SOURCE = os.getenv('PURCHASE_DATA_SOURCE')
     ARTIST_DATA_SOURCE = os.getenv('ARTIST_DATA_SOURCE')
     EMAIL_DATA_SOURCE = os.getenv('EMAIL_DATA_SOURCE')
     EMAIL_DATA_DEST = os.getenv('EMAIL_DATA_DEST')
 
     EXT_DATA_CREDS = {
-        'shopify': {
-            'endpoint': os.getenv('SHOPIFY_API_ENDPOINT'),
+        'shopify-customers': {
+            'endpoint': os.getenv('SHOPIFY_CUSTOMER_API_ENDPOINT'),
+            'id': os.getenv('SHOPIFY_API_APP_ID'),
+            'secret': os.getenv('SHOPIFY_API_APP_SECRET')
+        },
+        'shopify-purchases': {
+            'endpoint': os.getenv('SHOPIFY_PURCHASE_API_ENDPOINT'),
             'id': os.getenv('SHOPIFY_API_APP_ID'),
             'secret': os.getenv('SHOPIFY_API_APP_SECRET')
         },
@@ -110,9 +116,9 @@ class DevConfig(Config):
     def init_app(cls, app):
         super(DevConfig, cls).init_app(app)
 
-        if app.debug:
-            from flask_debugtoolbar import DebugToolbarExtension
-            DebugToolbarExtension(app)
+        #if app.debug:
+            #from flask_debugtoolbar import DebugToolbarExtension
+            #DebugToolbarExtension(app)
 
 
 class StgConfig(Config):
@@ -124,9 +130,9 @@ class StgConfig(Config):
     @classmethod
     def init_app(cls, app):
         super(StgConfig, cls).init_app(app)
-        if app.debug:
-            from flask_debugtoolbar import DebugToolbarExtension
-            DebugToolbarExtension(app)
+        #if app.debug:
+            #from flask_debugtoolbar import DebugToolbarExtension
+            #DebugToolbarExtension(app)
 
 
 class ProdConfig(Config):

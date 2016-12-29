@@ -23,10 +23,21 @@
             </div>
             <div class="well form-well">
                 <ul>
-                  <li><a href="{{ url_for('stats.load_customers') }}">Load Customers</a></li>
-                  <li><a href="{{ url_for('stats.load_artists') }}">Load Artists</a></li>
-                  <li><a href="{{ url_for('stats.load_mc_email_data') }}">Load Marketing Cloud Email Data</a></li>
-                  <li><a href="{{ url_for('stats.load_mc_journeys') }}">Load Journeys</a></li>
+                    <li><a href="{{ url_for('stats.load', action='customers') }}">Load Customers</a></li>
+                    <li><a href="{{ url_for('stats.load', action='purchases') }}">Load Purchases</a></li>
+                    <li><a href="{{ url_for('stats.load', action='artists') }}">Load Artists</a></li>
+                    <li><a href="{{ url_for('stats.load', action='mc-email-data') }}">Load Marketing Cloud Email Data</a></li>
+                    <li><a href="{{ url_for('stats.load', action='mc-journeys') }}">Load Journeys</a></li>
+                    <li><a href="{{ url_for('stats.load', action='web-tracking') }}">Load Web Tracking</a></li>
+                </ul>
+            </div>
+            <div class="well form-well signup-info">
+                <strong>Extra Data Processing Tools:</strong>
+            </div>
+            <div class="well form-well">
+                <ul>
+                    <li><a href="{{ url_for('stats.load', action='add-fips-location-emlopen') }}">Append FIPS location codes to Email Open Data</a></li>
+                    <li><a href="{{ url_for('stats.load', action='add-fips-location-emlclick') }}">Append FIPS location codes to Email Click Data</a></li>
                 </ul>
             </div>
         </div>

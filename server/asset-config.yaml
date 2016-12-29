@@ -30,15 +30,36 @@ bootstrap-css:
 
 graphing-js:
     contents:
+        - app/common/js/graphing/d3.v4.min.js
+        - app/common/js/graphing/d3-scale-chromatic.v1.min.js
+        - app/common/js/graphing/maps/topojson.v2.min.js
         - bower_components/d3/d3.js
         - bower_components/c3/c3.js
+        - contents:
+          - app/common/js/graphing/pieChartEmlStats.js
+          - app/common/js/graphing/emlSendGrapher.js
+          - app/common/js/graphing/day_hour.js
+          - app/common/js/graphing/map_graph.js
+          filters: babeljs
+          output: gen/graphing.babel.js
+
 graphing-css:
     contents:
       - bower_components/c3/c3.css
 
+query-builder-js:
+    contents:
+        - bower_components/moment/moment.js
+        - bower_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js
+
+query-builder-css:
+    contents:
+        - bower_components/jQuery-QueryBuilder/dist/css/query-builder.default.min.css
+
 base-css:
     contents:
         - bootstrap-css
+        - app/common/css/base.css
     filters: cssmin
     output: gen/base.%(version)s.css
 
@@ -46,8 +67,17 @@ base-js:
     contents:
         - bootstrap-js
         - bower_components/knockout/dist/knockout.js
+        - app/common/js/polling.js
     filters: rjsmin
     output: gen/base.%(version)s.js
+
+journey-view-css:
+    contents:
+        - joint-css
+        - graphing-css
+        - app/stats/css/journey_view.css
+    filters: cssmin
+    output: gen/journey_view.%(version)s.css
 
 journey-view-js:
     contents:
@@ -55,8 +85,6 @@ journey-view-js:
         - directed-graph-js
         - graphing-js
         - contents:
-            - app/common/js/pieChartEmlStats.js
-            - app/common/js/emlSendGrapher.js
             - app/stats/js/journey_view.js
           filters: babeljs
           output: gen/journey_view.babel.js
@@ -72,9 +100,10 @@ journey-view-css:
 
 devpage-joint-js:
     contents:
+        - bootstrap-js
         - joint-js
         - graphing-js
-        - app/common/js/pieChartEmlStats.js
+        - query-builder-js
         - app/stats/js/devpage_joint.js
     filters: rjsmin
     output: gen/devpage_joint.%(version)s.js
@@ -83,6 +112,23 @@ devpage-joint-css:
     contents:
         - joint-css
         - graphing-css
-        - app/stats/css/devpage_joint.css
+        - bootstrap-css
+        - query-builder-css
+        #        - app/stats/css/devpage_joint.css
     filters: cssmin
     output: gen/devpage_joint.%(version)s.css
+
+map-graph-js:
+    contents:
+        - app/common/js/graphing/d3.v4.min.js
+        - app/common/js/graphing/d3-scale-chromatic.v1.min.js
+        - app/common/js/graphing/maps/topojson.v2.min.js
+        - app/stats/js/graphing/map_graph.js
+    filters: rjsmin
+    output: gen/map_graph.%(version)s.js
+
+map-graph-css:
+    contents:
+        - app/stats/css/map_graph.css
+    filters: cssmin
+    output: gen/map_graph.%(version)s.css

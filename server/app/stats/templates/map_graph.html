@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Map Graph{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    {% assets 'map-graph-css' %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
+    {% endassets %}
+{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>Map Graph</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <svg width="960" height="600"></svg>
+
+    {% assets "map-graph-js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+{% endblock %}

@@ -1,6 +1,3 @@
-from flask import url_for
-from flask import flash
-from flask import redirect
 from flask import jsonify
 
 from ...common.services import DbService
@@ -36,7 +33,8 @@ class GetStatsService(DbService):
     def get_grouping_counts(self, tbl, grp_by, filters=None):
         """
         tbl = 'EmlOpen' # a table to query
-        grp_by = 'Device' # a field name to group by
+        grp_by = 'Device' # a db field name to group by
+            if multiple group bys are required = 'OperatingSystem-Device'
         filters=[
             {
                 'field': 'EventDate',

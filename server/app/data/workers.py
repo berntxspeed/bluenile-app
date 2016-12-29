@@ -2,7 +2,7 @@ from manage import celery, injector, app
 from .injector_keys import DataPushServ
 
 @celery.task
-def sync_mc_data(table):
+def sync_data_to_mc(table):
     with app.app_context():
         service = injector.get(DataPushServ)
         service.sync_data_to_mc(table)
@@ -10,6 +10,13 @@ def sync_mc_data(table):
 
 @celery.task
 def clean_sync_flags(table):
-    service = injector.get(DataPushServ)
-    service.clr_ext_sync_flags(table)
+    with app.app_context():
+        service = injector.get(DataPushServ)
+        service.clean_sync_flags(table)
 
+
+@celery.task
+def sync_query_to_mc(query):
+    with app.app_context():
+        service = injector.get(DataPushServ)
+        service.sync_query_to_mc(query)
