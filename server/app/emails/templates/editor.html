@@ -165,7 +165,7 @@
             }
           ];
           var ok = Mosaico.init({
-            imgProcessorBackend: basePath + '{{ url_for('emails.image') }}',
+            imgProcessorBackend: '{{ url_for('emails.image') }}',
             emailProcessorBackend: '{{ url_for('emails.download') }}',
             saveProcessorBackend: '{{ url_for('emails.template') }}',
             titleToken: "MOSAICO Responsive Email Designer",

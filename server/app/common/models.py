@@ -544,8 +544,8 @@ class Template(db.Model):
     html = db.Column(TEXT)
     last_modified = db.Column(TIMESTAMP)
     created = db.Column(TIMESTAMP)
-    template_data = db.Column(JSON)
-    meta_data = db.Column(JSON)
+    template_data = db.Column(JSON(astext_type=Text()))
+    meta_data = db.Column(JSON(astext_type=Text()))
 
     def __unicode__(self):
         return "%s - %s" % (self.name, self.key)
