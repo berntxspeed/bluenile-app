@@ -1,27 +1,34 @@
-from flask import request
+from flask import Request
 from flask import session
-from flask import Response
-from flask import url_for
+from flask import abort
+from flask import request
 from flask_login import login_required
 from injector import inject
-from premailer import transform
+#from premailer import transform
 
-from server.app.injector_keys import SQLAlchemy
 from . import emails
 from .injector_keys import EmailServ
 from ..common.views.decorators import templated
 
 
 # Pass this function to require login for every request
-@emails.before_request
+"""@emails.before_request
 @login_required
 def before_request():
     pass
+"""
 
+"""
+@emails.before_app_request
+def csrf_protect():
+    if request.method == 'POST':
+        token = session.get('_csrf_token')
+        if not token or token != request.form.get('csrf'):
+            abort(403)"""
 
-@emails.route('/index')
-@templated('index')
-def index():
+@emails.route('/mosaico-index')
+@templated('mosaico_index')
+def mosaico_index():
     return {}
 
 @emails.route('/editor')
@@ -29,37 +36,22 @@ def index():
 def editor():
     return {}
 
-@emails.route('/img/<file>')
-def image(file):
-    return {}
+@emails.route('/img', methods=['GET'])
+@inject(request=Request, email_service=EmailServ)
+def image(request, email_service):
+    return email_service.image(request)
 
-@emails.route('/upload/<file>')
-def upload(file):
-    return {}
+@emails.route('/upload', methods=['GET', 'POST'])
+@inject(request=Request, email_service=EmailServ)
+def upload(request, email_service):
+    return email_service.upload(request)
 
 @emails.route('/dl', methods=['POST'])
-def download(request):
-    html = transform(request.POST['html'])
-    action = request.POST['action']
-    if action == 'download':
-        filename = request.POST['filename']
-        content_type = "text/html"
-        content_disposition = "attachment; filename=%s" % filename
-        response = Response(html, content_type=content_type)
-        response['Content-Disposition'] = content_disposition
-    elif action == 'email':
-        print('attempting to send email...')
-        """to = request.POST['rcpt']
-        subject = request.POST['subject']
-        from_email = settings.DEFAULT_FROM_EMAIL
-        # TODO: convert the HTML email to a plain-text message here.  That way
-        # we can have both HTML and plain text.
-        msg = ""
-        send_mail(subject, msg, from_email, [to], html_message=html, fail_silently=False)
-        # TODO: return the mail ID here"""
-        response = Response("OK: 250 OK id=12345")
-    return response
+@inject(request=Request, email_service=EmailServ)
+def download(request, email_service):
+    return email_service.download(request)
 
-@emails.route('/template/<file>')
-def template(file):
-    return {}
+@emails.route('/template', methods=['GET','POST'])
+@inject(request=Request, email_service=EmailServ)
+def template(request, email_service):
+    return email_service.template(request)

@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    {{ super() }}
+    {% assets 'mosaico-editor-css' %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
+    {% endassets %}
+    {% assets 'mosaico-editor-js' %}
+        <script type="text/javascript" src="{{ ASSET_URL }}" ></script>
+    {% endassets %}
+    <script>
+        $(function() {
+          if (!Mosaico.isCompatible()) {
+            alert('Update your browser!');
+            return;
+          }
+          // var basePath = window.location.href.substr(0, window.location.href.lastIndexOf('/')).substr(window.location.href.indexOf('/','https://'.length));
+          var basePath = window.location.href.substr(0, window.location.href.lastIndexOf('/'));
+          var plugins;
+          // A basic plugin that expose the "viewModel" object as a global variable.
+          plugins = [
+            function(vm) {window.viewModel = vm;},
+            // plugin for integrating save button
+            function(viewModel) {
+                var saveCmd = {
+                    name: 'Save', // l10n happens in the template
+                    enabled: ko.observable(true)
+                };
+
+                saveCmd.execute = function() {
+                    saveCmd.enabled(false);
+                    viewModel.metadata.changed = Date.now();
+                    if (typeof viewModel.metadata.key == 'undefined') {
+                        viewModel.metadata.key = 'generate your unique key here';
+                    }
+
+                    /*
+                    // This is the simplest for sending it as POST
+                    // append postData with csrfToken
+                    var postData = {
+                        action: 'save',
+                        key: 'key',
+                        name: 'name',
+                        csrf: '{{ csrf_token() }}', // this is only required if your back-end requires csrf token
+                        meta_data: viewModel.exportMetadata(),
+                        template_data: viewModel.exportJSON(),
+                        html: viewModel.exportHTML()
+                    };
+
+                    $.post( '{{ url_for('emails.template') }}', postData)
+                        .done(function() {
+                            viewModel.notifier.success(viewModel.t('Successfully saved.'));
+                        })
+                        .fail(function(jqXHR, textStatus, error) {
+                            console.log(textStatus);
+                            console.log(error);
+                            console.log(jqXHR);
+                            viewModel.notifier.error(viewModel.t('Saving failed. Please try again in a few moment or contact us.'));
+                        })
+                        .always(function() {
+                            saveCmd.enabled(true);
+                        }
+                    );*/
+
+                    // and this is the alternative by sending it as POST but the html content as blob.
+                    // you can ignore and remove this part.
+
+                    var name = prompt('enter a name for this email');
+
+                    var formData = new FormData();
+                    formData.append('action', 'save');
+                    formData.append('key', name);
+                    formData.append('name', name);
+                    formData.append('csrf', '{{ csrf_token() }}'); // this only applies if your need csrf token
+                    formData.append('meta_data', viewModel.exportMetadata());
+                    formData.append('template_data', viewModel.exportJSON());
+
+                    // I intended to send the html as blob
+                    // JavaScript file-like object
+                    //var html = new Blob([viewModel.exportHTML()], { type: 'text/html'});
+                    var html = viewModel.exportHTML();
+                    formData.append('html', html);
+
+                    // You can use the simple $.post() instead of this.
+                    $.ajax({
+                        url: '{{ url_for('emails.template') }}',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,  // tell jQuery not to process the data
+                        contentType: false,   // tell jQuery not to set contentType
+                        beforeSend: function() {
+                            viewModel.notifier.info(viewModel.t('Saving please wait...'));
+                        },
+                        success: function(){
+                            viewModel.notifier.success(viewModel.t('Successfully saved.'));
+                        },
+                        error: function(jqXHR, textStatus, error) {
+                            console.log(textStatus);
+                            console.log(error);
+                            console.log(jqXHR);
+                            viewModel.notifier.error(viewModel.t('Saving failed. Please try again in a few moment or contact us.'));
+                        },
+                        complete: function() {
+                            saveCmd.enabled(true);
+                        }
+                    });
+                };
+
+                viewModel.save = saveCmd;
+            },
+            function(viewModel) {
+                var pushToEmsCmd = {
+                    name: 'Push To EMS', // l10n happens in the template
+                    enabled: ko.observable(true)
+                };
+
+                pushToEmsCmd.execute = function() {
+                    pushToEmsCmd.enabled(false);
+                    viewModel.metadata.changed = Date.now();
+                    if (typeof viewModel.metadata.key == 'undefined') {
+                        viewModel.metadata.key = 'generate your unique key here';
+                    }
+
+                    var emlName = prompt('enter a name for this email...');
+                    var formData = new FormData();
+                    formData.append('action', 'push-to-ems');
+                    formData.append('key', 'ke2y');
+                    formData.append('name', emlName);
+                    formData.append('csrf', '{{ csrf_token() }}'); // this only applies if your need csrf token
+                    formData.append('meta_data', viewModel.exportMetadata());
+                    formData.append('template_data', viewModel.exportJSON());
+
+                    // I intended to send the html as blob
+                    // JavaScript file-like object
+                    //var html = new Blob([viewModel.exportHTML()], { type: 'text/html'});
+                    var html = viewModel.exportHTML();
+                    formData.append('html', html);
+
+                    // You can use the simple $.post() instead of this.
+                    $.ajax({
+                        url: '{{ url_for('emails.template') }}',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,  // tell jQuery not to process the data
+                        contentType: false,   // tell jQuery not to set contentType
+                        beforeSend: function() {
+                            viewModel.notifier.info(viewModel.t('Pushing email to EMS, please wait...'));
+                        },
+                        success: function(){
+                            viewModel.notifier.success(viewModel.t('Successfully pushed.'));
+                        },
+                        error: function(jqXHR, textStatus, error) {
+                            console.log(textStatus);
+                            console.log(error);
+                            console.log(jqXHR);
+                            viewModel.notifier.error(viewModel.t('Push failed. Please try again in a few moment or contact us.'));
+                        },
+                        complete: function() {
+                            pushToEmsCmd.enabled(true);
+                        }
+                    });
+                };
+
+                viewModel.download = pushToEmsCmd;
+            }
+          ];
+          var ok = Mosaico.init({
+            imgProcessorBackend: basePath + '{{ url_for('emails.image') }}',
+            emailProcessorBackend: '{{ url_for('emails.download') }}',
+            saveProcessorBackend: '{{ url_for('emails.template') }}',
+            titleToken: "MOSAICO Responsive Email Designer",
+            // @see https://github.com/blueimp/jQuery-File-Upload/wiki/Options
+            fileuploadConfig: {
+              url: '{{ url_for('emails.upload') }}', // WARN: Viene aggiunto "/KEY" nell'onLoad sotto
+              formData: { // <-- THIS HERE! credits: http://stackoverflow.com/questions/12074200/cant-verify-csrf-token-for-a-jquery-file-upload-ie-9-only-rails-3-app
+                  csrf: '{{ csrf_token() }}'
+              },
+              // Le opzioni di validazione sono gestite server-side dal path /upload (tramite ElysiaUploadHandler), ma per alcune validazioni conviene metterle anche client-side da qui
+              maxFileSize: 2 * 1024 * 1024, // WARN: Collegato a config.inc:$moxieManagerConfig['upload.maxsize']
+              messages: {
+                // Errori lato client
+                unknownError: 'Unknown error',
+                uploadedBytes: 'Uploaded bytes exceed file size',
+                maxNumberOfFiles: 'Maximum number of files exceeded',
+                acceptFileTypes: 'File type not allowed',
+                maxFileSize: 'File is too large',
+                minFileSize: 'File is too small',
+                // Errori lato server, @see ElysiaUploadHandler.inc / UploadHandler.inc
+                post_max_size: 'The uploaded file exceeds the post_max_size directive in php.ini',
+                max_file_size: 'File is too big',
+                min_file_size: 'File is too small',
+                accept_file_types: 'Filetype not allowed',
+                max_number_of_files: 'Maximum number of files exceeded',
+                max_width: 'Image exceeds maximum width',
+                min_width: 'Image requires a minimum width',
+                max_height: 'Image exceeds maximum height',
+                min_height: 'Image requires a minimum height',
+                abort: 'File upload aborted',
+                image_resize: 'Failed to resize image',
+                generic: 'Unexpected upload error'
+              }
+            },
+            templateLoader: function(hash_key, callback){
+                $.post('{{ url_for('emails.template') }}', {
+                    action: 'load',
+                    key: hash_key,
+                    csrf: '{{ csrf_token() }}'
+                }, null, 'html').done(function(){
+                    resp = JSON.parse(arguments[0]);
+                    var td = resp.content;
+                    var mdStr = resp.meta_data;
+                    console.log('md: ');
+                    console.log(mdStr);
+                    console.log('td: ');
+                    console.log(td);
+                    callback(null, mdStr, td);
+                }).fail(function(jqXHR, textStatus, error){
+                    console.log(jqXHR);
+                    console.log(textStatus);
+                    console.log(error);
+                    callback(error);
+                });
+            }
+          }, plugins);
+          if (!ok) {
+            console.log("Missing initialization hash, redirecting to main entrypoint");
+            //document.location = ".";
+          }
+        });
+    </script>
+{% endblock %}
+
+{% block body_class %}mo-standalone{% endblock %}
+{% block body %}
+{% endblock %}

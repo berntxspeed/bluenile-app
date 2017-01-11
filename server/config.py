@@ -18,6 +18,7 @@ class Config(object):
     SECRET_KEY = os.getenv('SECRET_KEY')
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     SEND_FILE_MAX_AGE_DEFAULT = 31536000
+    UPLOAD_FOLDER = os.path.join(PROJECT_ROOT, '..', 'static/uploads')
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')

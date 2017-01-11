@@ -515,8 +515,26 @@ def on_update(mapper, connection, target):
 
 class Upload(db.Model):
     __tablename__ = 'upload'
-    name = db.Column(db.String(200))
-    url = db.Column(db.String(255), primary_key=True)
+    name = db.Column(db.String(200), primary_key=True)
+    image = db.Column(db.LargeBinary)
+    last_modified = db.Column(TIMESTAMP)
+    created = db.Column(TIMESTAMP)
+    esp_hosted_url = db.Column(db.String(255))
+    esp_hosted_key = db.Column(db.String(255))
+    esp_hosted_id = db.Column(db.String(255))
+    esp_hosted_category_id = db.Column(db.String(255))
+    image_size_height = db.Column(db.Integer)
+    image_size_width = db.Column(db.Integer)
+
+@db.event.listens_for(Upload, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target.created = datetime.datetime.utcnow()
+    return target
+
+@db.event.listens_for(Upload, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target.last_modified = datetime.datetime.utcnow()
+    return target
 
 class Template(db.Model):
     __tablename__ = 'template'
