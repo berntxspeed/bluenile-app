@@ -8,6 +8,7 @@ HASH_SECRET = b'33jjfSFTW43FE2992222FD'
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import TIMESTAMP, JSON, TEXT
+from sqlalchemy.types import Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym, relationship, backref
 from werkzeug.security import check_password_hash
