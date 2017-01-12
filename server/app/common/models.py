@@ -540,12 +540,17 @@ def on_update(mapper, connection, target):
 class Template(db.Model):
     __tablename__ = 'template'
     key = db.Column(db.String(10), primary_key=True)
-    name = db.Column(db.String(200))
+    name = db.Column(db.String(200), nullable=False)
     html = db.Column(TEXT)
     last_modified = db.Column(TIMESTAMP)
     created = db.Column(TIMESTAMP)
     template_data = db.Column(JSON(astext_type=Text()))
     meta_data = db.Column(JSON(astext_type=Text()))
+
+    def get_key(self, name=None):
+        if name is None:
+            name = self.name
+        return abs(hash(name)) % (10 ** 7)
 
     def __unicode__(self):
         return "%s - %s" % (self.name, self.key)
@@ -553,6 +558,7 @@ class Template(db.Model):
 @db.event.listens_for(Template, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
     target.created = datetime.datetime.utcnow()
+    target.key = hashlib.md5(target.name.encode()).hexdigest()[0:7]
     return target
 
 @db.event.listens_for(Template, 'before_update', retval=True)

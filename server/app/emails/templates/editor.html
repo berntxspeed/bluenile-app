@@ -14,12 +14,19 @@
             alert('Update your browser!');
             return;
           }
-          // var basePath = window.location.href.substr(0, window.location.href.lastIndexOf('/')).substr(window.location.href.indexOf('/','https://'.length));
-          var basePath = window.location.href.substr(0, window.location.href.lastIndexOf('/'));
+
+          var basePath = window.location.href.substr(0, window.location.href.indexOf('/','https://'.length));
+
           var plugins;
-          // A basic plugin that expose the "viewModel" object as a global variable.
           plugins = [
-            function(vm) {window.viewModel = vm;},
+            // plugin for grabbing key from url
+            function(vm) {
+                var hashkey = window.location.href.substr(window.location.href.lastIndexOf('#')+1);
+                if (hashkey.length === 7) {
+                    vm.metadata.key = hashkey;
+                }
+                window.viewModel = vm;
+            },
             // plugin for integrating save button
             function(viewModel) {
                 var saveCmd = {
@@ -30,56 +37,18 @@
                 saveCmd.execute = function() {
                     saveCmd.enabled(false);
                     viewModel.metadata.changed = Date.now();
-                    if (typeof viewModel.metadata.key == 'undefined') {
-                        viewModel.metadata.key = 'generate your unique key here';
-                    }
-
-                    /*
-                    // This is the simplest for sending it as POST
-                    // append postData with csrfToken
-                    var postData = {
-                        action: 'save',
-                        key: 'key',
-                        name: 'name',
-                        csrf: '{{ csrf_token() }}', // this is only required if your back-end requires csrf token
-                        meta_data: viewModel.exportMetadata(),
-                        template_data: viewModel.exportJSON(),
-                        html: viewModel.exportHTML()
-                    };
-
-                    $.post( '{{ url_for('emails.template') }}', postData)
-                        .done(function() {
-                            viewModel.notifier.success(viewModel.t('Successfully saved.'));
-                        })
-                        .fail(function(jqXHR, textStatus, error) {
-                            console.log(textStatus);
-                            console.log(error);
-                            console.log(jqXHR);
-                            viewModel.notifier.error(viewModel.t('Saving failed. Please try again in a few moment or contact us.'));
-                        })
-                        .always(function() {
-                            saveCmd.enabled(true);
-                        }
-                    );*/
-
-                    // and this is the alternative by sending it as POST but the html content as blob.
-                    // you can ignore and remove this part.
-
-                    var name = prompt('enter a name for this email');
 
                     var formData = new FormData();
                     formData.append('action', 'save');
-                    formData.append('key', name);
-                    formData.append('name', name);
+                    if (typeof viewModel.metadata.key !== 'undefined') {
+                        formData.append('key', viewModel.metadata.key);
+                    } else {
+                        formData.append('name', prompt('enter a name for this email'));
+                    }
                     formData.append('csrf', '{{ csrf_token() }}'); // this only applies if your need csrf token
                     formData.append('meta_data', viewModel.exportMetadata());
                     formData.append('template_data', viewModel.exportJSON());
-
-                    // I intended to send the html as blob
-                    // JavaScript file-like object
-                    //var html = new Blob([viewModel.exportHTML()], { type: 'text/html'});
-                    var html = viewModel.exportHTML();
-                    formData.append('html', html);
+                    formData.append('html', viewModel.exportHTML());
 
                     // You can use the simple $.post() instead of this.
                     $.ajax({
@@ -100,72 +69,45 @@
                             console.log(jqXHR);
                             viewModel.notifier.error(viewModel.t('Saving failed. Please try again in a few moment or contact us.'));
                         },
-                        complete: function() {
-                            saveCmd.enabled(true);
+                        complete: function(jqXHR, textStatus) {
+                            var key = jqXHR.responseJSON.key;
+                            viewModel.metadata.key = jqXHR.responseJSON.key;
+                            var formData = new FormData();
+                            formData.append('action', 'push-to-ems');
+                            formData.append('key', key);
+                            formData.append('csrf', '{{ csrf_token() }}'); // this only applies if your need csrf token
+
+                            $.ajax({
+                                url: '{{ url_for('emails.template') }}',
+                                type: 'POST',
+                                data: formData,
+                                processData: false,  // tell jQuery not to process the data
+                                contentType: false,   // tell jQuery not to set contentType
+                                beforeSend: function() {
+                                    viewModel.notifier.info(viewModel.t('Pushing email to EMS, please wait...'));
+                                },
+                                success: function(){
+                                    viewModel.notifier.success(viewModel.t('Successfully pushed.'));
+                                },
+                                error: function(jqXHR, textStatus, error) {
+                                    console.log(textStatus);
+                                    console.log(error);
+                                    console.log(jqXHR);
+                                    viewModel.notifier.error(viewModel.t('Push failed. Please try again in a few moment or contact us.'));
+                                },
+                                complete: function() {
+                                    saveCmd.enabled(true);
+                                }
+                            });
                         }
                     });
                 };
 
                 viewModel.save = saveCmd;
-            },
-            function(viewModel) {
-                var pushToEmsCmd = {
-                    name: 'Push To EMS', // l10n happens in the template
-                    enabled: ko.observable(true)
-                };
-
-                pushToEmsCmd.execute = function() {
-                    pushToEmsCmd.enabled(false);
-                    viewModel.metadata.changed = Date.now();
-                    if (typeof viewModel.metadata.key == 'undefined') {
-                        viewModel.metadata.key = 'generate your unique key here';
-                    }
-
-                    var emlName = prompt('enter a name for this email...');
-                    var formData = new FormData();
-                    formData.append('action', 'push-to-ems');
-                    formData.append('key', 'ke2y');
-                    formData.append('name', emlName);
-                    formData.append('csrf', '{{ csrf_token() }}'); // this only applies if your need csrf token
-                    formData.append('meta_data', viewModel.exportMetadata());
-                    formData.append('template_data', viewModel.exportJSON());
-
-                    // I intended to send the html as blob
-                    // JavaScript file-like object
-                    //var html = new Blob([viewModel.exportHTML()], { type: 'text/html'});
-                    var html = viewModel.exportHTML();
-                    formData.append('html', html);
-
-                    // You can use the simple $.post() instead of this.
-                    $.ajax({
-                        url: '{{ url_for('emails.template') }}',
-                        type: 'POST',
-                        data: formData,
-                        processData: false,  // tell jQuery not to process the data
-                        contentType: false,   // tell jQuery not to set contentType
-                        beforeSend: function() {
-                            viewModel.notifier.info(viewModel.t('Pushing email to EMS, please wait...'));
-                        },
-                        success: function(){
-                            viewModel.notifier.success(viewModel.t('Successfully pushed.'));
-                        },
-                        error: function(jqXHR, textStatus, error) {
-                            console.log(textStatus);
-                            console.log(error);
-                            console.log(jqXHR);
-                            viewModel.notifier.error(viewModel.t('Push failed. Please try again in a few moment or contact us.'));
-                        },
-                        complete: function() {
-                            pushToEmsCmd.enabled(true);
-                        }
-                    });
-                };
-
-                viewModel.download = pushToEmsCmd;
             }
           ];
           var ok = Mosaico.init({
-            imgProcessorBackend: '{{ url_for('emails.image') }}',
+            imgProcessorBackend: basePath + '{{ url_for('emails.image') }}',
             emailProcessorBackend: '{{ url_for('emails.download') }}',
             saveProcessorBackend: '{{ url_for('emails.template') }}',
             titleToken: "MOSAICO Responsive Email Designer",

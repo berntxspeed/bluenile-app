@@ -9,6 +9,7 @@ from injector import inject
 from . import emails
 from .injector_keys import EmailServ
 from ..common.views.decorators import templated
+from ..common.models import Template
 
 
 # Pass this function to require login for every request
@@ -29,7 +30,7 @@ def csrf_protect():
 @emails.route('/mosaico-index')
 @templated('mosaico_index')
 def mosaico_index():
-    return {}
+    return dict(templates=Template.query.all())
 
 @emails.route('/editor')
 @templated('editor')

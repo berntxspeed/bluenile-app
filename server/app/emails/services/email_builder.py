@@ -103,23 +103,23 @@ class EmailService(DbService):
             html = request.form.get('html', None)
             template_data = json.loads(request.form.get('template_data', None))
             meta_data = json.loads(request.form.get('meta_data', None))
-            template = Template.query.filter_by(key=key).first()
-            if template is None:
-                template = Template(
-                    key=key,
-                    name=name
-                )
-                template.html = html
-                template.template_data = template_data
-                template.meta_data = meta_data
+
+            if key is not None:
+                template = Template.query.filter_by(key=key).first()
             else:
+                template = Template.query.filter_by(name=name).first()
+            if template is None:
+                template = Template()
+
+            if name is not None:
                 template.name = name
-                template.html = html
-                template.template_data = template_data
-                template.meta_data = meta_data
+            template.html = html
+            template.template_data = template_data
+            template.meta_data = meta_data
+
             self.db.session.add(template)
             self.db.session.commit()
-            return jsonify("template saved"), 200
+            return jsonify(status='template saved', key=str(template.key)), 200
         elif action == 'load':
             key = request.form.get('key', None)
             if key is None:
@@ -131,12 +131,11 @@ class EmailService(DbService):
                 return jsonify(status='template not found'), 404
         elif action == 'push-to-ems':
             print('executing push of email to EMS')
-            name = request.form.get('name', None)
-            html = request.form.get('html', None)
-            if html is None:
-                raise ValueError('html content can not be empty')
-            print('pushing email with name: ' + name + ' to SFMC...')
-            eml = EmlPush(name, html)
+            key = request.form.get('key', None)
+            if key is None:
+                raise ValueError('name cannot be empty')
+            print('pushing email with key: ' + key + ' to SFMC...')
+            eml = EmlPush(key)
             resp = eml.sync_to_ems()
             return jsonify(results=resp.message), resp.code
         else:

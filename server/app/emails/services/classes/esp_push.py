@@ -4,16 +4,15 @@ import requests
 import base64
 import json
 
-from ....common.models import Upload
+from ....common.models import Upload, Template
 from ....stats.services.classes.api_data import ApiData
 
 
 class EmlPush(object):
 
-    def __init__(self, name, html):
+    def __init__(self, key):
 
-        self._name = name
-        self._html = html
+        self._key = key
         self._id = None
 
         # Marketing Cloud Specific
@@ -22,11 +21,16 @@ class EmlPush(object):
 
     def sync_to_ems(self):
 
+        # grab email from db
+        template = Template.query.filter_by(key=self._key).first()
+        if template is None:
+            raise ValueError('no template at specified key exists: ' + self._key)
+
         # email creation
         if not self._check_email_exists():
-            resp = self._push_email('create')
+            resp = self._push_email('create', template)
         else:
-            resp = self._push_email('update')
+            resp = self._push_email('update', template)
 
         if resp.code is not None and resp.code != 200:
             return resp
@@ -38,7 +42,7 @@ class EmlPush(object):
         eml = ET_Email()
         eml.auth_stub = self._stub_obj
         eml.props = ['ID', 'Name', 'CustomerKey']
-        eml.search_filter = {'Property': 'CustomerKey', 'SimpleOperator': 'equals', 'Value': self._name}
+        eml.search_filter = {'Property': 'CustomerKey', 'SimpleOperator': 'equals', 'Value': self._key}
 
         resp = eml.get()
 
@@ -48,31 +52,30 @@ class EmlPush(object):
             raise ValueError('there should only be one email object with that particular customer key value: ' + self._name)
         if len(resp.results) == 0:
             return False # to indicate that 'no' the email does not exist in Marketing Cloud at the moment
-        if resp.results[0].CustomerKey == self._name:
+        if resp.results[0].CustomerKey == self._key:
             self._id = resp.results[0].ID
             return True # to indicate that 'yes' the email does exist in Marketing Cloud at the moment
         # if no return conditions were meant something went off the rails,
         # - so raise an exception
         raise ValueError('none of the conditions were met in attempting to determine if email exists in marketing cloud')
 
-    def _push_email(self, action):
+    def _push_email(self, action, template):
 
         allowed_actions = ['create', 'update']
         if action not in allowed_actions:
             raise ValueError('Illegal action used for _push_email() call')
 
         props = {
-            'CustomerKey': self._name,
-            'Name': self._name,
+            'CustomerKey': self._key,
+            'Name': template.name,
             'Subject': '***update me***',
-            'HTMLBody': self._html,
+            'HTMLBody': template.html,
             'EmailType': 'HTML',
             'IsHTMLPaste': 'true'
         }
         if self._id is not None:
             # in case of email update, must pass ID along too
             props['ID'] = self._id
-        pp(props)
 
         eml = ET_Email()
         eml.auth_stub = self._stub_obj
