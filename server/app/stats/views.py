@@ -33,11 +33,40 @@ def special_logged_in_page(jb_stats_service):
 def data_manager():
     return {}
 
+
 @stats.route('/data-builder')
 @inject(db=SQLAlchemy)
 @templated('data_builder')
 def data_builder(db):
-    return {'tables': list(db.metadata.tables.keys())}
+    return {'tables':
+        {'users':
+            {
+                'fields': ['username', 'nickname', 'email']
+            },
+            'eml_open': {
+                'fields:'['SendId', 'SubscriberKey', 'EmailAddress']
+            },
+            'eml_click': {
+                'fields:'['City', 'Country', 'Region', 'URL', 'Alias', 'Browser', 'Device']
+            },
+            'eml_send': {},
+            'purchase': {},
+            'web_event': {},
+            'customer': {},
+            'web_tracking_event': {},
+            'web_tracking_page_view': {},
+            'artist': {}
+        }
+    }
+
+
+@stats.route('/build-tables')
+@inject(db=SQLAlchemy)
+def table_builder(db):
+    result = {'tables': {'users': {'selected': True}, 'eml_open': {'selected': True},
+                         'purchase': {'selected': False}}}
+    return Response(dumps(result), mimetype='application/json')
+
 
 @stats.route('/journey-view')
 @inject(jb_stats_service=JbStatsServ)
@@ -85,7 +114,8 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, load_web_tracking
+    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, \
+        load_web_tracking
     load_map = {'customers': load_customers,
                 'purchases': load_purchases,
                 'artists': load_artists,
@@ -115,6 +145,7 @@ def metrics_grouped_by(get_stats_service, grp_by, tbl):
         filters = q.get('filters')
         print(filters)
     return get_stats_service.get_grouping_counts(tbl, grp_by, filters)
+
 
 @stats.route('/map-graph')
 @templated('map_graph')

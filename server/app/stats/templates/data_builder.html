@@ -31,9 +31,9 @@
 {% block body %}
     <div class="row">
         <h4>Please select all the tables you wish to join together</h4>
-        <div class="">
+        <div id="tables" class="">
             {% for table in tables %}
-                <label class="checkbox-inline col-sm-3"><input type="checkbox" value="">{{table}}</label>
+                <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
             {% endfor %}
         </div>
     </div>
