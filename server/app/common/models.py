@@ -207,6 +207,8 @@ class EmlSend(db.Model):
     EmailAddress = db.Column(db.String(255))
     _EventDate = db.Column(TIMESTAMP, primary_key=True)
     TriggeredSendExternalKey = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
@@ -224,6 +226,13 @@ class EmlSend(db.Model):
 
     def __repr__(self):
         return '<EmlSend %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlSend, 'before_insert', retval=True)
+def on_insert(mapper, connection, target):
+    if target.EventDate is not None:
+        target._day = target.EventDate.weekday()
+        target._hour = target.EventDate.hour
+    return target
 
 @db.event.listens_for(EmlSend, 'before_update', retval=True)
 def on_update(mapper, connection, target):
@@ -250,6 +259,8 @@ class EmlOpen(db.Model):
     EmailClient = db.Column(db.String(255))
     OperatingSystem = db.Column(db.String(255))
     Device = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
@@ -267,6 +278,13 @@ class EmlOpen(db.Model):
 
     def __repr__(self):
         return '<EmlOpen %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlOpen, 'before_insert', retval=True)
+def on_insert(mapper, connection, target):
+    if target.EventDate is not None:
+        target._day = target.EventDate.weekday()
+        target._hour = target.EventDate.hour
+    return target
 
 @db.event.listens_for(EmlOpen, 'before_update', retval=True)
 def on_update(mapper, connection, target):
@@ -297,6 +315,8 @@ class EmlClick(db.Model):
     EmailClient = db.Column(db.String(255))
     OperatingSystem = db.Column(db.String(255))
     Device = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
@@ -314,6 +334,13 @@ class EmlClick(db.Model):
 
     def __repr__(self):
         return '<EmlClick %r>' % self.SubscriberKey
+
+@db.event.listens_for(EmlClick, 'before_insert', retval=True)
+def on_insert(mapper, connection, target):
+    if target.EventDate is not None:
+        target._day = target.EventDate.weekday()
+        target._hour = target.EventDate.hour
+    return target
 
 @db.event.listens_for(EmlClick, 'before_update', retval=True)
 def on_update(mapper, connection, target):

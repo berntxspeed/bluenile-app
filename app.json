@@ -15,6 +15,9 @@
     "CUSTOMER_DATA_SOURCE": {
       "required": true
     },
+    "PURCHASE_DATA_SOURCE": {
+      "required": true
+    },
     "EMAIL_DATA_DEST": {
       "required": true
     },
@@ -69,7 +72,10 @@
     "SHOPIFY_API_APP_SECRET": {
       "required": true
     },
-    "SHOPIFY_API_ENDPOINT": {
+    "SHOPIFY_CUSTOMER_API_ENDPOINT": {
+      "required": true
+    },
+    "SHOPIFY_PURCHASE_API_ENDPOINT": {
       "required": true
     },
     "SPOTIFY_API_ENDPOINT": {

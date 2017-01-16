@@ -30,8 +30,18 @@ bootstrap-css:
 
 graphing-js:
     contents:
+        - app/common/js/graphing/d3.v4.min.js
+        - app/common/js/graphing/d3-scale-chromatic.v1.min.js
+        - app/common/js/graphing/maps/topojson.v2.min.js
         - bower_components/d3/d3.js
         - bower_components/c3/c3.js
+        - contents:
+          - app/common/js/graphing/pieChartEmlStats.js
+          - app/common/js/graphing/emlSendGrapher.js
+          - app/common/js/graphing/day_hour.js
+          - app/common/js/graphing/map_graph.js
+          filters: babeljs
+          output: gen/graphing.babel.js
 
 graphing-css:
     contents:
@@ -62,15 +72,10 @@ base-js:
     filters: rjsmin
     output: gen/base.%(version)s.js
 
-journey-view-js:
-    contents:
-        -
-    filters: rjsmin
-    output: gen/journey_view.%(version)s.js
-
 journey-view-css:
     contents:
         - joint-css
+        - graphing-css
         - app/stats/css/journey_view.css
     filters: cssmin
     output: gen/journey_view.%(version)s.css
@@ -81,8 +86,6 @@ journey-view-js:
         - directed-graph-js
         - graphing-js
         - contents:
-            - app/common/js/pieChartEmlStats.js
-            - app/common/js/emlSendGrapher.js
             - app/stats/js/journey_view.js
           filters: babeljs
           output: gen/journey_view.babel.js
@@ -102,7 +105,6 @@ devpage-joint-js:
         - joint-js
         - graphing-js
         - query-builder-js
-        - app/common/js/pieChartEmlStats.js
         - app/stats/js/devpage_joint.js
     filters: rjsmin
     output: gen/devpage_joint.%(version)s.js
@@ -119,10 +121,10 @@ devpage-joint-css:
 
 map-graph-js:
     contents:
-        - app/common/js/d3.v4.min.js
-        - app/common/js/d3-scale-chromatic.v1.min.js
-        - app/common/js/topojson.v2.min.js
-        - app/stats/js/map_graph.js
+        - app/common/js/graphing/d3.v4.min.js
+        - app/common/js/graphing/d3-scale-chromatic.v1.min.js
+        - app/common/js/graphing/maps/topojson.v2.min.js
+        - app/stats/js/graphing/map_graph.js
     filters: rjsmin
     output: gen/map_graph.%(version)s.js
 

@@ -31,6 +31,15 @@
                     <li><a href="{{ url_for('stats.load', action='web-tracking') }}">Load Web Tracking</a></li>
                 </ul>
             </div>
+            <div class="well form-well signup-info">
+                <strong>Extra Data Processing Tools:</strong>
+            </div>
+            <div class="well form-well">
+                <ul>
+                    <li><a href="{{ url_for('stats.load', action='add-fips-location-emlopen') }}">Append FIPS location codes to Email Open Data</a></li>
+                    <li><a href="{{ url_for('stats.load', action='add-fips-location-emlclick') }}">Append FIPS location codes to Email Click Data</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 {% endblock %}

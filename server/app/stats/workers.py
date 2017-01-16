@@ -55,6 +55,20 @@ def load_web_tracking():
         service.load_web_tracking()
 
 
+@celery.task
+def add_fips_location_emlopen():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.add_fips_location_data('EmlOpen')
+
+
+@celery.task
+def add_fips_location_emlclick():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.add_fips_location_data('EmlClick')
+
+
 NUM_OBJ_TO_CREATE = 30;
 
 
