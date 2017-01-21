@@ -27,6 +27,7 @@ def csrf_protect():
         if not token or token != request.form.get('csrf'):
             abort(403)
 
+"""
 @auth.route('/facebook-authorized')
 @logout_required
 @inject(auth_service=AuthServ)
@@ -64,6 +65,7 @@ def google_login(auth_service):
 @templated('google_signup')
 def google_signup(auth_service):
     return auth_service.google_signup(request=request, session=session)
+"""
 
 @auth.route('/login', methods=['GET', 'POST'])
 @logout_required
@@ -79,9 +81,11 @@ def login(auth_service):
 def logout(auth_service):
     return auth_service.logout(session)
 
+"""
 @auth.route('/signup', methods=['GET', 'POST'])
 @logout_required
 @inject(auth_service=AuthServ)
 @templated('signup')
 def signup(auth_service):
     return auth_service.signup(request)
+"""

@@ -142,6 +142,28 @@ def get_columns(get_stats_service, tbl):
 @stats.route('/metrics-grouped-by/<grp_by>/<tbl>')
 @inject(get_stats_service=GetStatsServ)
 def metrics_grouped_by(get_stats_service, grp_by, tbl):
+    """
+    tbl = 'EmlOpen' # a table to query
+    grp_by = 'Device' # a db field name to group by
+        if multiple group bys are required = 'OperatingSystem-Device'
+    filters=[
+        {
+            'field': 'EventDate',
+            'op': 'gt',
+            'val': '12/01/2016 11:59:00 PM'
+        },{
+            'field': 'EventDate',
+            'op': 'lt',
+            'val': '11/01/2016 11:59:00 PM'
+        },{
+            'field': 'SendID',
+            'op': 'eq',
+            'val': '23421'
+        }
+    ]
+    """
+    if grp_by is None:
+        return Exception('Must provide a column to group by')
     filters = None
     q = request.args.get('q')
     if q:

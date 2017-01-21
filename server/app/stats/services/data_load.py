@@ -239,7 +239,12 @@ class DataLoadService(DbService):
                 primary_keys=['id'])
             adm.load_data()
 
-    def load_web_tracking(self):
+    def load_web_tracking(self, startDate=None, endDate=None):
+
+        if startDate is None:
+            startDate = '1daysAgo'
+        if endDate is None:
+            endDate = 'today'
 
         from apiclient.discovery import build
         from oauth2client.service_account import ServiceAccountCredentials
@@ -247,7 +252,7 @@ class DataLoadService(DbService):
 
         SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
         DISCOVERY_URI = ('https://analyticsreporting.googleapis.com/$discovery/rest')
-        KEY_FILE_LOCATION = 'tmp/bluenilesw-app-f937c2e51267.p12'
+        KEY_FILE_LOCATION = 'bluenilesw-app-f937c2e51267.p12'
         SERVICE_ACCOUNT_EMAIL = 'bluenile-sw-google-analytics@bluenilesw-app.iam.gserviceaccount.com'
         VIEW_ID = '122242971'
 
@@ -265,7 +270,7 @@ class DataLoadService(DbService):
                 'reportRequests': [
                 {
                   'viewId': VIEW_ID,
-                  'dateRanges': [{'startDate': '1daysAgo', 'endDate': 'today'}],
+                  'dateRanges': [{'startDate': startDate, 'endDate': endDate}],
                   'metrics': [
                       {'expression': metrics[0]},
                       {'expression': metrics[1]},
