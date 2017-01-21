@@ -1,6 +1,5 @@
 # other files (relative to this project)
 tmp/
-static/bower_components/
 static/gen/
 static/data
 migrations/
@@ -99,3 +98,25 @@ ENV/
 
 # Rope project settings
 .ropeproject
+static/bower_components/bootstrap/.bower.json
+static/bower_components/bootstrap/CHANGELOG.md
+static/bower_components/bootstrap/Gemfile
+static/bower_components/bootstrap/Gemfile.lock
+static/bower_components/bootstrap/Gruntfile.js
+static/bower_components/bootstrap/ISSUE_TEMPLATE.md
+static/bower_components/bootstrap/LICENSE
+static/bower_components/bootstrap/README.md
+static/bower_components/bootstrap/bower.json
+static/bower_components/bootstrap/fonts/
+static/bower_components/bootstrap/grunt/
+static/bower_components/bootstrap/js/
+static/bower_components/bootstrap/less/
+static/bower_components/bootstrap/nuget/
+static/bower_components/bootstrap/package.js
+static/bower_components/bootstrap/package.json
+static/bower_components/bootstrap_old/
+static/bower_components/doT/
+static/bower_components/jQuery-QueryBuilder/
+static/bower_components/jquery-extendext/
+static/bower_components/moment/
+static/bower_components/tether/
