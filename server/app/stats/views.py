@@ -44,10 +44,10 @@ def data_builder(db):
                 'fields': ['username', 'nickname', 'email']
             },
             'eml_open': {
-                'fields:'['SendId', 'SubscriberKey', 'EmailAddress']
+                'fields':['SendId', 'SubscriberKey', 'EmailAddress']
             },
             'eml_click': {
-                'fields:'['City', 'Country', 'Region', 'URL', 'Alias', 'Browser', 'Device']
+                'fields':['City', 'Country', 'Region', 'URL', 'Alias', 'Browser', 'Device']
             },
             'eml_send': {},
             'purchase': {},
@@ -114,13 +114,10 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-<<<<<<< HEAD
     from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, \
         load_web_tracking
-=======
-    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, load_web_tracking
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
->>>>>>> origin/feature-segment-builder
+
     load_map = {'customers': load_customers,
                 'purchases': load_purchases,
                 'artists': load_artists,
