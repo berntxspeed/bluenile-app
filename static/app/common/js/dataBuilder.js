@@ -1,3 +1,27 @@
+
+var test_rules = {
+
+    return  {
+              condition: 'AND',
+              rules: [{
+                id: 'price',
+                operator: 'less',
+                value: 123.4
+              }, {
+                condition: 'OR',
+                rules: [{
+                  id: 'category',
+                  operator: 'equal',
+                  value: 5
+                }, {
+                  id: 'category',
+                  operator: 'equal',
+                  value: 6
+                }]
+              }]
+            }
+}
+
 $(document).ready(function() {
 
     var buildUI = function(data){
@@ -6,6 +30,12 @@ $(document).ready(function() {
             console.log(tbl)
             $("#" + i)[0].checked = tbl["selected"]
         };
+
+        //            var res = $("#builder").queryBuilder('getRules');
+        $('#builder').queryBuilder('setRules', test_rules);
+
+        //            $('#builder').queryBuilder('setFilters', buildFilters());
+
     };
     //fetch all the tables and their elements
     $.ajax({
@@ -28,5 +58,4 @@ $(document).ready(function() {
             alert(i);
         });
     });
-
 });

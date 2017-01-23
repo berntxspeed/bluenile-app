@@ -1,14 +1,15 @@
 from flask import request
 from flask import session
 from flask import Response
-from flask import url_for
 from flask_login import login_required
 from injector import inject
 from json import dumps, loads
 
-from werkzeug.utils import redirect
+from sqlalchemy import Integer
 
+from server.app.common.models import *
 from server.app.injector_keys import SQLAlchemy
+from sqlalchemy import inspect
 from . import stats
 from .injector_keys import JbStatsServ, GetStatsServ, DataLoadServ
 from ..common.views.decorators import templated
@@ -34,37 +35,95 @@ def data_manager():
     return {}
 
 
+def type_mapper(type):
+    if (type.python_type is datetime) or isinstance(type, TIMESTAMP):
+        return 'datetime'
+    if (type.python_type is int) or isinstance(type, Integer):
+        return 'integer'
+    if type.python_type is float:
+        return 'double'
+    if type.python_type is bool:
+        return 'boolean'
+    return 'string'
+
+
 @stats.route('/data-builder')
 @inject(db=SQLAlchemy)
 @templated('data_builder')
 def data_builder(db):
-    return {'tables':
-        {'users':
+    result = dict()
+
+    for model in [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
+                  WebTrackingEcomm, WebTrackingPageView, Artist]:
+        columns = inspect(model).columns
+        field_dict = dict()
+        for column in columns:
+            field_dict[column.key] = {
+                'key': column.key,
+                'name': column.name,
+                'table': model.__name__,
+                'expression': model.__name__ + '.' + column.name,
+                'type': type_mapper(column.type)
+            }
+
+        result[model.__name__] = field_dict
+
+    return {
+        'tables':
             {
-                'fields': ['username', 'nickname', 'email']
-            },
-            'eml_open': {
-                'fields':['SendId', 'SubscriberKey', 'EmailAddress']
-            },
-            'eml_click': {
-                'fields':['City', 'Country', 'Region', 'URL', 'Alias', 'Browser', 'Device']
-            },
-            'eml_send': {},
-            'purchase': {},
-            'web_event': {},
-            'customer': {},
-            'web_tracking_event': {},
-            'web_tracking_page_view': {},
-            'artist': {}
-        }
+                'users': {
+                    'fields': ['username', 'nickname', 'email']
+                },
+                'eml_open': {
+                    'fields': ['SendId', 'SubscriberKey', 'EmailAddress']
+                },
+                'eml_click': {
+                    'fields': ['City', 'Country', 'Region', 'URL', 'Alias', 'Browser', 'Device']
+                },
+                'eml_send': {},
+                'purchase': {},
+                'web_event': {},
+                'customer': {},
+                'web_tracking_event': {},
+                'web_tracking_page_view': {},
+                'artist': {}
+            }
     }
 
 
 @stats.route('/build-tables')
 @inject(db=SQLAlchemy)
 def table_builder(db):
-    result = {'tables': {'users': {'selected': True}, 'eml_open': {'selected': True},
-                         'purchase': {'selected': False}}}
+    result = {
+        'tables': {
+            'users': {'selected': True},
+            'eml_open': {'selected': True},
+            'eml_click': {'selected': True}
+        },
+        'rules': {
+            'condition': 'AND',
+            'rules': [
+                {
+                    'id': 'users.username',
+                    'operator': 'equal',
+                    'value': "Bernt"
+                }, {
+                    'condition': 'OR',
+                    'rules': [
+                        {
+                            'id': 'eml_open.EmailAddress',
+                            'operator': 'equal',
+                            'value': "bernt@bluenilesw.com"
+                        }, {
+                            'id': 'eml_click.City',
+                            'operator': 'equal',
+                            'value': "San Francisco"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
     return Response(dumps(result), mimetype='application/json')
 
 

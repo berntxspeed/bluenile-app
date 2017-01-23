@@ -115,8 +115,4 @@ static/bower_components/bootstrap/nuget/
 static/bower_components/bootstrap/package.js
 static/bower_components/bootstrap/package.json
 static/bower_components/bootstrap_old/
-static/bower_components/doT/
-static/bower_components/jQuery-QueryBuilder/
-static/bower_components/jquery-extendext/
-static/bower_components/moment/
-static/bower_components/tether/
+
