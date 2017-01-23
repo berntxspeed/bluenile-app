@@ -91,12 +91,22 @@ journey-view-js:
     filters: rjsmin
     output: gen/journey_view.%(version)s.js
 
-journey-view-css:
+send-view-css:
     contents:
-        - joint-css
-        - app/stats/css/journey_view.css
+        - graphing-css
+        - app/stats/css/send_view.css
     filters: cssmin
-    output: gen/journey_view.%(version)s.css
+    output: gen/send_view.%(version)s.css
+
+send-view-js:
+    contents:
+        - graphing-js
+        - contents:
+            - app/stats/js/send_view.js
+          filters: babeljs
+          output: gen/send_view.babel.js
+    filters: rjsmin
+    output: gen/send_view.%(version)s.js
 
 devpage-joint-js:
     contents:
