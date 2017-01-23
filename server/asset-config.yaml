@@ -139,27 +139,29 @@ mosaico-editor-js:
         - mosaico/dist/vendor/jquery.ui.touch-punch.min.js
         - mosaico/dist/vendor/load-image.all.min.js
         - mosaico/dist/vendor/canvas-to-blob.min.js
-        - mosaico/dist/vendor/jquery.iframe-transport.js
-        - mosaico/dist/vendor/jquery.fileupload.js
-        - mosaico/dist/vendor/jquery.fileupload-process.js
-        - mosaico/dist/vendor/jquery.fileupload-image.js
-        - mosaico/dist/vendor/jquery.fileupload-validate.js
         - mosaico/dist/vendor/knockout-jqueryui.min.js
         - mosaico/dist/vendor/evol.colorpicker.min.js
         - mosaico/dist/vendor/tinymce.min.js
+        - mosaico/dist/mosaico.min.js
         - contents:
-            - mosaico/dist/mosaico.min.js
-          filters: babeljs
-          output: gen/mosaico.babel.min.js
+            - mosaico/dist/vendor/jquery.iframe-transport.js
+            - mosaico/dist/vendor/jquery.fileupload.js
+            - mosaico/dist/vendor/jquery.fileupload-process.js
+            - mosaico/dist/vendor/jquery.fileupload-image.js
+            - mosaico/dist/vendor/jquery.fileupload-validate.js
+          filters: rjsmin
+          output: gen/mosaico-deps.min.js
     filters: rjsmin
     output: gen/editor.%(version)s.js
 
 mosaico-editor-css:
     contents:
-        - mosaico/dist/mosaico-material.min.css
-        - mosaico/dist/vendor/notoregular/stylesheet.css
         - mosaico/dist/vendor/evol.colorpicker.min.css
-    filters: cssmin
+        - mosaico/dist/mosaico-material.min.css
+        contents:
+            - mosaico/dist/vendor/notoregular/stylesheet.css
+        filters: cssmin
+        output: gen/editor-stylesheet.min.css
     output: gen/editor.%(version)s.css
 
 mosaico-index-css:
