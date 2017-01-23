@@ -15,6 +15,8 @@ class DataBuilderQuery(object):
         all_queries = []
         try:
             for a_query in self._collection.find():
+                # remove the _id to prevent information leak to UI
+                del a_query['_id']
                 all_queries.append(a_query)
 
             return True, all_queries

@@ -70,9 +70,11 @@ def get_blueprints():
     from .auth import auth as auth_blueprint
     from .stats import stats as stats_blueprint
     from .data import data as data_blueprint
+    from .data_builder import databuilder as data_builder_blueprint
     return [
         main_blueprint,
         auth_blueprint,
         stats_blueprint,
-        data_blueprint
+        data_blueprint,
+        data_builder_blueprint
     ]

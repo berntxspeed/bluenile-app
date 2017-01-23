@@ -1,7 +1,5 @@
 
 var test_rules = {
-
-    return  {
               condition: 'AND',
               rules: [{
                 id: 'price',
@@ -19,8 +17,7 @@ var test_rules = {
                   value: 6
                 }]
               }]
-            }
-}
+            };
 
 $(document).ready(function() {
 
@@ -39,7 +36,7 @@ $(document).ready(function() {
     };
     //fetch all the tables and their elements
     $.ajax({
-          url: "/build-tables",
+          url: "/builder/build-tables",
           dataType: "json",
           contentType: "application/json",
           success: function(data) {
