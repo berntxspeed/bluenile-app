@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
+{% block title %}Journey Analyzer{% endblock %}
+
 {% block head %}
     {{ super() }}
     {% assets 'journey-view-css' %}
         <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
     {% endassets %}
 {% endblock %}
-
-{% block title %}Journeys{% endblock %}
 
 {% block banner %}
     <div class="banner banner-jumbotron banner-gray">

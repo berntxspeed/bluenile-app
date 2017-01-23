@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
+{% block title %}Send Analyzer{% endblock %}
+
 {% block head %}
     {{ super() }}
     {% assets 'send-view-css' %}
         <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
     {% endassets %}
 {% endblock %}
-
-{% block title %}Send Analysis{% endblock %}
 
 {% block banner %}
     <div class="banner banner-jumbotron banner-gray">
@@ -22,7 +22,7 @@
     </div>
 {% endblock %}
 
-{% block body %}
+{% block body_content %}
     <div class="row">
         <div class="col-md-6 center-block">
             <div class="well form-well signup-info">
