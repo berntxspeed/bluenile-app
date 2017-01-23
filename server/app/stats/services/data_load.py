@@ -201,7 +201,7 @@ class DataLoadService(DbService):
         self.__load_mc_journeys_to_db(journeys, token)
 
     def __get_mc_auth(self):
-
+        #TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
         # get auth token
         url = 'https://auth.exacttargetapis.com/v1/requestToken'
         body = dict(clientId='pmbrqffimjnc2p9hfdnvg1sn',

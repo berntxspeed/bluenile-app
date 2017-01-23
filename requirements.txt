@@ -8,6 +8,8 @@ cffi==1.8.3
 click==6.6
 cryptography==1.5.2
 cssmin==0.2.0
+cssselect==1.0.0
+cssutils==1.0.1
 decorator==4.0.10
 dukpy==0.0.6
 Flask==0.11.1
@@ -35,6 +37,7 @@ itsdangerous==0.24
 Jinja2==2.8
 jsmin==2.2.1
 kombu==4.0.0
+lxml==3.7.1
 Mako==1.0.4
 MarkupSafe==0.23
 mimerender==0.6.0
@@ -45,6 +48,8 @@ paramiko==2.0.2
 pbr==1.10.0
 pexpect==4.2.1
 pickleshare==0.7.4
+Pillow==3.4.2
+premailer==3.0.1
 prompt-toolkit==1.0.8
 psycopg2==2.6.2
 ptyprocess==0.5.1
