@@ -34,16 +34,25 @@ $(document).ready(function() {
     $("#tables input").each(function(i){
         // this should yield the input field
         $(this).change(function(){
-            $('#tables input').each(function(){
-                //TODO: get all the checked names, iterate the g_models and call the new the reduced model, then
-                //call ('#builder').queryBuilder('setFilters', get_filters(reduced_model));
-            })
-            if(this.checked)
-                alert("checked! " + i);
-//                current_model[]
+            reduced_model = {}
+            for(var j in $('#tables input')){
+                var input = $('#tables input')[j];
+                if(!input.checked) continue;
+                reduced_model[input.id] = g_model[input.id]
+            }
+            try{
+                $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
+            }
+            catch(ex){
+                this.checked = !this.checked
+            }
 
-            else
-                alert("unchecked! " + i);
+//            if(this.checked)
+//                alert("checked! " + i);
+////                current_model[]
+//
+//            else
+//                alert("unchecked! " + i);
         });
     });
 });
