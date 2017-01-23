@@ -1,37 +1,19 @@
-
-var test_rules = {
-              condition: 'AND',
-              rules: [{
-                id: 'price',
-                operator: 'less',
-                value: 123.4
-              }, {
-                condition: 'OR',
-                rules: [{
-                  id: 'category',
-                  operator: 'equal',
-                  value: 5
-                }, {
-                  id: 'category',
-                  operator: 'equal',
-                  value: 6
-                }]
-              }]
-            };
-
 $(document).ready(function() {
 
     var buildUI = function(data){
-        for(var i in data["tables"]){
-            tbl = data["tables"][i]
-            console.log(tbl)
-            $("#" + i)[0].checked = tbl["selected"]
+        reduced_model = {}
+        for(var i in data["selected_tables"]){
+            tbl = data["selected_tables"][i]
+            $("#" + tbl)[0].checked = true;
+
+            //copy the table in the reduced model if it's selected
+            reduced_model[tbl] = g_model[tbl]
         };
+        console.log('reduced model');
+        console.log(reduced_model);
 
-        //            var res = $("#builder").queryBuilder('getRules');
-        $('#builder').queryBuilder('setRules', test_rules);
-
-        //            $('#builder').queryBuilder('setFilters', buildFilters());
+        $('#builder').queryBuilder('setRules', data["rules"]);
+        $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
 
     };
     //fetch all the tables and their elements
@@ -52,7 +34,16 @@ $(document).ready(function() {
     $("#tables input").each(function(i){
         // this should yield the input field
         $(this).change(function(){
-            alert(i);
+            $('#tables input').each(function(){
+                //TODO: get all the checked names, iterate the g_models and call the new the reduced model, then
+                //call ('#builder').queryBuilder('setFilters', get_filters(reduced_model));
+            })
+            if(this.checked)
+                alert("checked! " + i);
+//                current_model[]
+
+            else
+                alert("unchecked! " + i);
         });
     });
 });

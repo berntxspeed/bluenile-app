@@ -1,5 +1,6 @@
 import datetime
 import json
+import pprint
 
 from flask import Response
 from injector import inject
@@ -27,9 +28,9 @@ def type_mapper(column_type):
 
 
 @databuilder.route('/data-builder')
-@inject(db=SQLAlchemy)
+# @inject(db=SQLAlchemy)
 @templated('data_builder')
-def data_builder(db):
+def data_builder():
     result = dict()
 
     for model in [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
@@ -37,6 +38,7 @@ def data_builder(db):
         columns = inspect(model).columns
         field_dict = dict()
         for column in columns:
+            if column.key.startswith("_"): continue
             field_dict[column.key] = {
                 'key': column.key,
                 'name': column.name,
@@ -46,57 +48,36 @@ def data_builder(db):
             }
 
         result[model.__name__] = field_dict
+    print(pprint.pprint(result))
 
-    return {
-        'tables':
-            {
-                'users': {
-                    'fields': ['username', 'nickname', 'email']
-                },
-                'eml_open': {
-                    'fields': ['SendId', 'SubscriberKey', 'EmailAddress']
-                },
-                'eml_click': {
-                    'fields': ['City', 'Country', 'Region', 'URL', 'Alias', 'Browser', 'Device']
-                },
-                'eml_send': {},
-                'purchase': {},
-                'web_event': {},
-                'customer': {},
-                'web_tracking_event': {},
-                'web_tracking_page_view': {},
-                'artist': {}
-            }
-    }
+    return {'model': result}
 
 
 @databuilder.route('/build-tables')
 @inject(db=SQLAlchemy)
 def table_builder(db):
     result = {
-        'tables': {
-            'users': {'selected': True},
-            'eml_open': {'selected': True},
-            'eml_click': {'selected': True}
-        },
+        'selected_tables': [
+            'Customer', 'EmlOpen', 'EmlClick'
+        ],
         'rules': {
             'condition': 'AND',
             'rules': [
                 {
-                    'id': 'users.username',
+                    'id': 'Customer.fname',
                     'operator': 'equal',
                     'value': "Bernt"
                 }, {
                     'condition': 'OR',
                     'rules': [
                         {
-                            'id': 'eml_open.EmailAddress',
+                            'id': 'EmlOpen.EmailAddress',
                             'operator': 'equal',
                             'value': "bernt@bluenilesw.com"
                         }, {
-                            'id': 'eml_click.City',
+                            'id': 'EmlClick.City',
                             'operator': 'equal',
-                            'value': "San Francisco"
+                            'value': "San Fancisco"
                         }
                     ]
                 }

@@ -12,6 +12,26 @@
 {% assets "query-builder-js" %}
 <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {% endassets %}
+<script type="text/javascript">
+    var get_filters = function(model){
+        filters_result = []
+        for(table in model){
+            for(column in model[table]){
+                column_obj = model[table][column]
+                filters_result.push({
+                    id: column_obj.expression,
+                    label: column_obj.expression,
+                    type: column_obj.type
+                  })
+            }
+        }
+        return filters_result;
+    };
+
+    var g_model = {{ model|tojson|safe }};
+    var g_filters = get_filters(g_model);
+    //console.log(g_model)
+</script>
 {% endblock %}
 
 
@@ -32,7 +52,7 @@
     <div class="row">
         <h4>Please select all the tables you wish to join together</h4>
         <div id="tables" class="">
-            {% for table in tables %}
+            {% for table in model %}
                 <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
             {% endfor %}
         </div>
@@ -41,80 +61,32 @@
         <h4>Filter your data</h4>
         <div class="col-md-12 col-lg-10 col-lg-offset-1">
             <div id="builder" class="query-builder form-inline"></div>
-            <script>
-          var rules_basic = {
-  condition: 'AND',
-  rules: [{
-    id: 'price',
-    operator: 'less',
-    value: 10.25
-  }, {
-    condition: 'OR',
-    rules: [{
-      id: 'category',
-      operator: 'equal',
-      value: 2
-    }, {
-      id: 'category',
-      operator: 'equal',
-      value: 1
-    }]
-  }]
-};
-
-$('#builder').queryBuilder({
-  plugins: ['bt-tooltip-errors'],
-
-  filters: [{
-    id: 'name',
-    label: 'Name',
-    type: 'string'
-  }, {
-    id: 'category',
-    label: 'Category',
-    type: 'integer',
-    input: 'select',
-    values: {
-      1: 'Books',
-      2: 'Movies',
-      3: 'Music',
-      4: 'Tools',
-      5: 'Goodies',
-      6: 'Clothes'
-    },
-    operators: ['equal', 'not_equal', 'in', 'not_in', 'is_null', 'is_not_null']
-  }, {
-    id: 'in_stock',
-    label: 'In stock',
-    type: 'integer',
-    input: 'radio',
-    values: {
-      1: 'Yes',
-      0: 'No'
-    },
-    operators: ['equal']
-  }, {
-    id: 'price',
-    label: 'Price',
-    type: 'double',
-    validation: {
-      min: 0,
-      step: 0.01
-    }
-  }, {
-    id: 'id',
-    label: 'Identifier',
-    type: 'string',
-    placeholder: '____-____-____',
-    operators: ['equal', 'not_equal'],
-    validation: {
-      format: /^.{4}-.{4}-.{4}$/
-    }
-  }],
-
-  rules: rules_basic
-
-});
+            <script type="text/javascript">
+              var rules_basic = {
+                  condition: 'AND',
+                  rules: [{
+                    id: 'Purchase.price',
+                    operator: 'equal',
+                    value: 10.25
+                  }, {
+                    condition: 'OR',
+                    rules: [{
+                      id: 'Customer.email_address',
+                      operator: 'equal',
+                      value: 'test@test.com'
+                    }, {
+                      id: 'EmlClick.Country',
+                      operator: 'equal',
+                      value: 'Canada'
+                    }]
+                  }]
+                };
+                //console.log(g_filters)
+                $('#builder').queryBuilder({
+                  plugins: ['bt-tooltip-errors'],
+                  filters: g_filters,
+                  rules: rules_basic
+                });
 
 
     </script>
