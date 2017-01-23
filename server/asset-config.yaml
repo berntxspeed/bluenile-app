@@ -158,7 +158,7 @@ mosaico-editor-css:
     contents:
         - mosaico/dist/vendor/evol.colorpicker.min.css
         - mosaico/dist/mosaico-material.min.css
-        contents:
+        - contents:
             - mosaico/dist/vendor/notoregular/stylesheet.css
         filters: cssmin
         output: gen/editor-stylesheet.min.css
