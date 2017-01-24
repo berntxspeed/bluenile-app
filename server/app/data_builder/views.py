@@ -3,6 +3,7 @@ import json
 import pprint
 
 from flask import Response
+from flask import request
 from injector import inject
 from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
@@ -48,14 +49,16 @@ def data_builder():
             }
 
         result[model.__name__] = field_dict
-    print(pprint.pprint(result))
+    # print(pprint.pprint(result))
 
     return {'model': result}
 
 
-@databuilder.route('/build-tables')
-@inject(db=SQLAlchemy)
-def table_builder(db):
+@databuilder.route('/get-query/<query_id>')
+@inject(mongo=MongoDB)
+def get_query(mongo, query_id):
+    # status, result = DataBuilderQuery(mongo.db).get_query(query_id)
+    # return json.dumps(result)
     result = {
         'selected_tables': [
             'Customer', 'EmlOpen', 'EmlClick'
@@ -85,6 +88,14 @@ def table_builder(db):
         }
     }
     return Response(json.dumps(result), mimetype='application/json')
+
+
+@databuilder.route('/save-query/<query_id>', methods=['POST'])
+@inject(mongo=MongoDB)
+def save_query(mongo, query_id):
+    query = request.json
+    # TODO: reshape the dict {'selected_tables': ['','',''], 'rules': json}
+    DataBuilderQuery(mongo.db).save_query(query_id, query)
 
 
 @databuilder.route('/get-queries')

@@ -46,7 +46,7 @@ $(document).ready(function() {
     $('#btn-get-query').on('click', function() {
        //fetch all the tables and their elements
        $.ajax({
-                url: "/builder/build-tables",
+                url: "/builder/get-query/demo",
                 dataType: "json",
                 contentType: "application/json",
                 success: function(data) {
@@ -57,6 +57,31 @@ $(document).ready(function() {
                 }
             });
     });
+    $('#btn-save-query').on('click', function() {
+           //fetch all the tables and their elements
+           var save_query = {}
+           save_query.rules = $('#builder').queryBuilder('getRules');
+           save_query.selected_tables = []
+           for(var j in $('#tables input')){
+               var input = $('#tables input')[j];
+               if(input.checked)
+                    save_query.selected_tables.push(input.id);
+           }
+           console.log(save_query);
+           $.ajax({
+                    url: "/builder/save-query/demo",
+//                    dataType: "json",
+                    contentType: "application/json",
+                    method: 'POST',
+                    contents: save_query,
+                    success: function(data) {
+//                        buildUI(data);
+                    },
+                    error: function(err) {
+                        //handle the error or retry
+                    }
+                });
+        });
 
     $("#tables input").each(function(i){
         // this should yield the input field
