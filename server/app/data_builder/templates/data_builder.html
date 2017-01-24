@@ -50,7 +50,9 @@
 
 {% block body %}
     <div class="row">
-        <h4>Please select all the tables you wish to join together</h4>
+        <div id="queries">
+            <button id="btn-get-sql" class="btn btn-primary parse-sql">SQL statement</button>
+        </div>
         <div id="tables" class="">
             {% for table in model %}
                 <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
@@ -62,6 +64,13 @@
         <div class="col-md-12 col-lg-10 col-lg-offset-1">
             <div id="builder" class="query-builder form-inline"></div>
             <script type="text/javascript">
+              $('#btn-get-sql').on('click', function() {
+                  var result = $('#builder').queryBuilder('getSQL', false);
+                  console.log(result);
+                  if (result.sql.length) {
+                    alert(result.sql);
+                  }
+              });
               var rules_basic = {
                   condition: 'AND',
                   rules: [{

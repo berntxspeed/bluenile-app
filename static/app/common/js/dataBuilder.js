@@ -9,8 +9,6 @@ $(document).ready(function() {
             //copy the table in the reduced model if it's selected
             reduced_model[tbl] = g_model[tbl]
         };
-        console.log('reduced model');
-        console.log(reduced_model);
 
         $('#builder').queryBuilder('setRules', data["rules"]);
         $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
@@ -22,8 +20,6 @@ $(document).ready(function() {
           dataType: "json",
           contentType: "application/json",
           success: function(data) {
-              console.log(data);
-              //do something meaningful like build the UI
               buildUI(data);
           },
           error: function(err) {
@@ -44,6 +40,7 @@ $(document).ready(function() {
                 $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
             }
             catch(ex){
+                console.log(ex)
                 this.checked = !this.checked
             }
 
