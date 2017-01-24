@@ -13,6 +13,25 @@
 <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {% endassets %}
 <script type="text/javascript">
+    var g_rules_basic = {
+                  condition: 'AND',
+                  rules: [{
+                    id: 'Purchase.price',
+                    operator: 'equal',
+                    value: 10.25
+                  }, {
+                    condition: 'OR',
+                    rules: [{
+                      id: 'Customer.email_address',
+                      operator: 'equal',
+                      value: 'test@test.com'
+                    }, {
+                      id: 'EmlClick.Country',
+                      operator: 'equal',
+                      value: 'Canada'
+                    }]
+                  }]
+                };
     var get_filters = function(model){
         filters_result = []
         for(table in model){
@@ -52,10 +71,14 @@
     <div class="row">
         <div id="queries">
             <button id="btn-get-sql" class="btn btn-primary parse-sql">SQL statement</button>
+            <button id="btn-get-query" class="btn btn-primary">Load Saved Query</button>
+            <button id="btn-reset" class="btn btn-primary">Reset Defaults</button>
         </div>
         <div id="tables" class="">
             {% for table in model %}
-                <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
+
+                    <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
+
             {% endfor %}
         </div>
     </div>
@@ -64,40 +87,11 @@
         <div class="col-md-12 col-lg-10 col-lg-offset-1">
             <div id="builder" class="query-builder form-inline"></div>
             <script type="text/javascript">
-              $('#btn-get-sql').on('click', function() {
-                  var result = $('#builder').queryBuilder('getSQL', false);
-                  console.log(result);
-                  if (result.sql.length) {
-                    alert(result.sql);
-                  }
-              });
-              var rules_basic = {
-                  condition: 'AND',
-                  rules: [{
-                    id: 'Purchase.price',
-                    operator: 'equal',
-                    value: 10.25
-                  }, {
-                    condition: 'OR',
-                    rules: [{
-                      id: 'Customer.email_address',
-                      operator: 'equal',
-                      value: 'test@test.com'
-                    }, {
-                      id: 'EmlClick.Country',
-                      operator: 'equal',
-                      value: 'Canada'
-                    }]
-                  }]
-                };
-                //console.log(g_filters)
                 $('#builder').queryBuilder({
                   plugins: ['bt-tooltip-errors'],
                   filters: g_filters,
-                  rules: rules_basic
+                  rules: g_rules_basic
                 });
-
-
     </script>
         </div>
     </div>

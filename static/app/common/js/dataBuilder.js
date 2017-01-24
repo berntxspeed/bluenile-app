@@ -1,7 +1,24 @@
 $(document).ready(function() {
 
+    var set_defaults = function(){
+//        $("#Purchase")[0].checked = true;
+//        $("#Customer")[0].checked = true;
+//        $("#EmlClick")[0].checked = true;
+        for(var j in $('#tables input')){
+            var input = $('#tables input')[j];
+            input.checked = true;
+        }
+        $('#builder').queryBuilder('setFilters', get_filters(g_model));
+        $('#builder').queryBuilder('setRules', g_rules_basic);
+    };
+    set_defaults();
+
     var buildUI = function(data){
         reduced_model = {}
+        for(var j in $('#tables input')){
+            var input = $('#tables input')[j];
+            input.checked = false;
+        }
         for(var i in data["selected_tables"]){
             tbl = data["selected_tables"][i]
             $("#" + tbl)[0].checked = true;
@@ -13,19 +30,33 @@ $(document).ready(function() {
         $('#builder').queryBuilder('setRules', data["rules"]);
         $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
 
+        $('')
+
     };
-    //fetch all the tables and their elements
-    $.ajax({
-          url: "/builder/build-tables",
-          dataType: "json",
-          contentType: "application/json",
-          success: function(data) {
-              buildUI(data);
-          },
-          error: function(err) {
-              //handle the error or retry
-          }
-      });
+    $('#btn-get-sql').on('click', function() {
+        var result = $('#builder').queryBuilder('getSQL', false);
+        console.log(result);
+        if (result.sql.length) {
+            alert(result.sql);
+        }
+    });
+    $('#btn-reset').on('click', function() {
+        set_defaults();
+    });
+    $('#btn-get-query').on('click', function() {
+       //fetch all the tables and their elements
+       $.ajax({
+                url: "/builder/build-tables",
+                dataType: "json",
+                contentType: "application/json",
+                success: function(data) {
+                    buildUI(data);
+                },
+                error: function(err) {
+                    //handle the error or retry
+                }
+            });
+    });
 
     $("#tables input").each(function(i){
         // this should yield the input field
