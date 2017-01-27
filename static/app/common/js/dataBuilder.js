@@ -1,24 +1,12 @@
 $(document).ready(function() {
 
-    var set_defaults = function(){
-//        $("#Purchase")[0].checked = true;
-//        $("#Customer")[0].checked = true;
-//        $("#EmlClick")[0].checked = true;
-        for(var j in $('#tables input')){
-            var input = $('#tables input')[j];
-            input.checked = true;
-        }
-        $('#builder').queryBuilder('setFilters', get_filters(g_model));
-        $('#builder').queryBuilder('setRules', g_rules_basic);
-    };
-    set_defaults();
-
     var buildUI = function(data){
         reduced_model = {}
         for(var j in $('#tables input')){
             var input = $('#tables input')[j];
             input.checked = false;
         }
+        console.log(data);
         for(var i in data["selected_tables"]){
             tbl = data["selected_tables"][i]
             $("#" + tbl)[0].checked = true;
@@ -27,12 +15,33 @@ $(document).ready(function() {
             reduced_model[tbl] = g_model[tbl]
         };
 
-        $('#builder').queryBuilder('setRules', data["rules"]);
         $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
-
-        $('')
+        $('#builder').queryBuilder('setRules', data["rules"]);
 
     };
+
+    var set_defaults = function(){
+        for(var j in $('#tables input')){
+            var input = $('#tables input')[j];
+            input.checked = true;
+        }
+        $('#builder').queryBuilder('setFilters', get_filters(g_model));
+        $('#builder').queryBuilder('setRules', {
+                                                 condition: 'AND',
+                                                 rules: [
+                                                   {
+                                                     /* empty rule */
+                                                     empty: true
+                                                   }
+                                                 ]
+                                               });
+    };
+
+    var init = function(){
+        buildUI(g_rules);
+    }
+    init();
+
     $('#btn-get-sql').on('click', function() {
         var result = $('#builder').queryBuilder('getSQL', false);
         if (result.sql.length) {
@@ -45,7 +54,7 @@ $(document).ready(function() {
     $('#btn-get-query').on('click', function() {
        //fetch all the tables and their elements
        $.ajax({
-                url: "get-query/demo",
+                url: "/builder/get-query/demo",
                 dataType: "json",
                 contentType: "application/json",
                 success: function(data) {
@@ -62,21 +71,21 @@ $(document).ready(function() {
            var save_query = {}
            save_query.rules = $('#builder').queryBuilder('getRules');
            save_query.selected_tables = []
-           for(var j in $('#tables input')){
+           for(var j in $('#tables input:checkbox')){
                var input = $('#tables input')[j];
-               if(input.checked)
+               if(input.checked && input.id)
                     save_query.selected_tables.push(input.id);
            }
            $.ajax({
-                    url: "save-query/demo",
+                    url: "/builder/save-query/demo",
                     method: "POST",
                     data: JSON.stringify(save_query),
                     contentType: 'application/json;charset=UTF-8',
                     beforeSend: function(request) {
                         request.setRequestHeader("X-CSRFToken", g_csrf_token);
-                      },
+                    },
                     success: function(data) {
-                        //pass
+                        alert("Saved!");
                     },
                     error: function(err) {
                         //TODO: handle the error here

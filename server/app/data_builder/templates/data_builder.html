@@ -14,25 +14,7 @@
 {% endassets %}
 <script type="text/javascript">
     var g_csrf_token = '{{ csrf_token() }}';
-    var g_rules_basic = {
-                  condition: 'AND',
-                  rules: [{
-                    id: 'Purchase.price',
-                    operator: 'equal',
-                    value: 10.25
-                  }, {
-                    condition: 'OR',
-                    rules: [{
-                      id: 'Customer.email_address',
-                      operator: 'equal',
-                      value: 'test@test.com'
-                    }, {
-                      id: 'EmlClick.Country',
-                      operator: 'equal',
-                      value: 'Canada'
-                    }]
-                  }]
-                };
+    var g_rules = {{ data|tojson|safe }};
     var get_filters = function(model){
         filters_result = []
         for(table in model){
@@ -50,7 +32,6 @@
 
     var g_model = {{ model|tojson|safe }};
     var g_filters = get_filters(g_model);
-    //console.log(g_model)
 </script>
 {% endblock %}
 
@@ -78,9 +59,7 @@
         </div>
         <div id="tables" class="">
             {% for table in model %}
-
                     <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
-
             {% endfor %}
         </div>
     </div>
@@ -92,7 +71,6 @@
                 $('#builder').queryBuilder({
                   plugins: ['bt-tooltip-errors'],
                   filters: g_filters,
-                  rules: g_rules_basic
                 });
     </script>
         </div>

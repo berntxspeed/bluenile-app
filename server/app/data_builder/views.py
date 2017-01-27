@@ -28,10 +28,10 @@ def type_mapper(column_type):
     return 'string'
 
 
-@databuilder.route('/data-builder')
-# @inject(db=SQLAlchemy)
+@databuilder.route('/data-builder/<query_id>')
+@inject(mongo=MongoDB)
 @templated('data_builder')
-def data_builder():
+def data_builder(mongo, query_id):
     result = dict()
 
     for model in [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
@@ -49,9 +49,10 @@ def data_builder():
             }
 
         result[model.__name__] = field_dict
-    # print(pprint.pprint(result))
 
-    return {'model': result}
+    status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+
+    return {'model': result, 'data': data, 'status': status}
 
 
 @databuilder.route('/get-query/<query_id>')
