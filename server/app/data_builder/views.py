@@ -57,36 +57,7 @@ def data_builder():
 @databuilder.route('/get-query/<query_id>')
 @inject(mongo=MongoDB)
 def get_query(mongo, query_id):
-    # status, result = DataBuilderQuery(mongo.db).get_query(query_id)
-    # return json.dumps(result)
-    result = {
-        'selected_tables': [
-            'Customer', 'EmlOpen', 'EmlClick'
-        ],
-        'rules': {
-            'condition': 'AND',
-            'rules': [
-                {
-                    'id': 'Customer.fname',
-                    'operator': 'equal',
-                    'value': "Bernt"
-                }, {
-                    'condition': 'OR',
-                    'rules': [
-                        {
-                            'id': 'EmlOpen.EmailAddress',
-                            'operator': 'equal',
-                            'value': "bernt@bluenilesw.com"
-                        }, {
-                            'id': 'EmlClick.City',
-                            'operator': 'equal',
-                            'value': "San Fancisco"
-                        }
-                    ]
-                }
-            ]
-        }
-    }
+    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
     return Response(json.dumps(result), mimetype='application/json')
 
 
@@ -94,8 +65,11 @@ def get_query(mongo, query_id):
 @inject(mongo=MongoDB)
 def save_query(mongo, query_id):
     query = request.json
-    # TODO: reshape the dict {'selected_tables': ['','',''], 'rules': json}
-    DataBuilderQuery(mongo.db).save_query(query_id, query)
+    success, error = DataBuilderQuery(mongo.db).save_query(query_id, query)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
 
 
 @databuilder.route('/get-queries')

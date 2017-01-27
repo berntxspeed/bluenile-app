@@ -5,10 +5,9 @@ from server.app.stats.services.classes.db_data_loader import MongoDataLoader
 class DataBuilderQuery(object):
     def __init__(self, client_instance):
         self._primary_key = 'name'
-        self._db_name = 'simple_di_flask_dev'
         self._collection_name = 'data_builder_qs'
 
-        self._db = client_instance[self._db_name]
+        self._db = client_instance
         self._collection = self._db[self._collection_name]
 
     def get_all_queries(self):

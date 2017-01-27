@@ -35,7 +35,6 @@ $(document).ready(function() {
     };
     $('#btn-get-sql').on('click', function() {
         var result = $('#builder').queryBuilder('getSQL', false);
-        console.log(result);
         if (result.sql.length) {
             alert(result.sql);
         }
@@ -46,13 +45,14 @@ $(document).ready(function() {
     $('#btn-get-query').on('click', function() {
        //fetch all the tables and their elements
        $.ajax({
-                url: "/builder/get-query/demo",
+                url: "get-query/demo",
                 dataType: "json",
                 contentType: "application/json",
                 success: function(data) {
                     buildUI(data);
                 },
                 error: function(err) {
+//                    TODO: handle the errror
                     //handle the error or retry
                 }
             });
@@ -67,17 +67,19 @@ $(document).ready(function() {
                if(input.checked)
                     save_query.selected_tables.push(input.id);
            }
-           console.log(save_query);
            $.ajax({
-                    url: "/builder/save-query/demo",
-//                    dataType: "json",
-                    contentType: "application/json",
-                    method: 'POST',
-                    contents: save_query,
+                    url: "save-query/demo",
+                    method: "POST",
+                    data: JSON.stringify(save_query),
+                    contentType: 'application/json;charset=UTF-8',
+                    beforeSend: function(request) {
+                        request.setRequestHeader("X-CSRFToken", g_csrf_token);
+                      },
                     success: function(data) {
-//                        buildUI(data);
+                        //pass
                     },
                     error: function(err) {
+                        //TODO: handle the error here
                         //handle the error or retry
                     }
                 });
