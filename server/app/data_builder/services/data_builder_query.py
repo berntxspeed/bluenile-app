@@ -23,13 +23,22 @@ class DataBuilderQuery(object):
         except Exception as e:
             return False, 'Get All Queries Failed: {0}'.format(str(e))
 
-    def save_query(self, search_query):
+    def save_query(self, query_name, search_query):
+        search_query[self._primary_key] = query_name
         item_loader = MongoDataLoader(self._collection, [self._primary_key])
         try:
             item_loader.load_to_db(search_query)
             return True, True
         except Exception as e:
             return False, 'Saving Query Failed: {0}'.format(str(e))
+
+    def get_query_by_name(self, query_name):
+        try:
+            query = self._collection.find( { self._primary_key: query_name } )[0]
+            del query['_id']
+            return True, query
+        except Exception as e:
+            return False, 'Getting Query Failed: {0}'.format(str(e))
 
     def remove_query(self, query_name):
         try:
