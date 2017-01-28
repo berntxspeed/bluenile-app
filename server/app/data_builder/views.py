@@ -7,6 +7,7 @@ from flask import request
 from injector import inject
 from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
+from sqlalchemy import func
 from sqlalchemy import inspect
 
 from server.app.common.models import *
@@ -103,9 +104,11 @@ def query_preview(alchemy):
         'price': '$2'
     }]
 
+
+
     # query = db.query(Customer).join
-    query1 = alchemy.db.session.query(Customer) \
+    query1 = alchemy.session.query(Customer) \
         .join(Purchase, Customer.purchases) \
         .group_by(Customer.customer_id) \
         .having(func.count(Customer.purchases) >= 2)
-    return Response({'columns': columns, 'data': data}, type='application/json')
+    return Response(json.dumps({'columns': columns, 'data': data}), mimetype='application/json')
