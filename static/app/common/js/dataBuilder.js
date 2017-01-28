@@ -40,7 +40,9 @@ $(document).ready(function() {
     var init = function(){
         buildUI(g_rules);
     }
+//    console.log(g_rules)
     init();
+
 
     $('#btn-get-sql').on('click', function() {
         var result = $('#builder').queryBuilder('getSQL', false);
@@ -118,5 +120,21 @@ $(document).ready(function() {
 //            else
 //                alert("unchecked! " + i);
         });
+    });
+
+    $('#btn-preview').on('click', function() {
+       //fetch all the tables and their elements
+       $.ajax({
+                url: "/builder/query-preview",
+//                dataType: "json",
+//                contentType: "application/json",
+                success: function(data) {
+                    $('#preview-table').bootstrapTable(data);
+                },
+                error: function(err) {
+//                    TODO: handle the errror
+                    //handle the error or retry
+                }
+            });
     });
 });

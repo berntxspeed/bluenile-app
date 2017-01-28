@@ -63,6 +63,12 @@ def get_query(mongo, query_id):
     return Response(json.dumps(result), mimetype='application/json')
 
 
+@databuilder.route('/get-query/preview')
+@inject(mongo=MongoDB)
+def preview(mongo, query_id):
+    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+    return Response(json.dumps(result), mimetype='application/json')
+
 @databuilder.route('/save-query/<query_id>', methods=['POST'])
 @inject(mongo=MongoDB)
 def save_query(mongo, query_id):
@@ -99,9 +105,9 @@ def query_preview(alchemy):
         'name': 'Item 1',
         'price': '$2'
     }, {
-        'id': 2,
-        'name': 'Item 2',
-        'price': '$2'
+        'id': 4,
+        'name': 'Item 4',
+        'price': '$4'
     }]
 
 

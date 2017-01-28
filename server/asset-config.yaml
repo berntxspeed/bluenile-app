@@ -52,10 +52,12 @@ query-builder-js:
         - bower_components/moment/moment.js
         - bower_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js
         - app/common/js/dataBuilder.js
+        - bower_components/bootstrap-table/dist/bootstrap-table.js
 
 query-builder-css:
     contents:
         - bower_components/jQuery-QueryBuilder/dist/css/query-builder.default.min.css
+        - bower_components/bootstrap-table/dist/bootstrap-table.css
 
 base-css:
     contents:
