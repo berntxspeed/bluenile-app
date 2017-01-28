@@ -78,3 +78,34 @@ def save_query(mongo, query_id):
 def get_queries(mongo):
     status, result = DataBuilderQuery(mongo.db).get_all_queries()
     return json.dumps(result)
+
+
+@databuilder.route('/query-preview')
+@inject(alchemy=SQLAlchemy)
+def query_preview(alchemy):
+    columns = [{
+        'field': 'id',
+        'title': 'Item ID'
+    }, {
+        'field': 'name',
+        'title': 'Item Name'
+    }, {
+        'field': 'price',
+        'title': 'Item Price'
+    }]
+    data = [{
+        'id': 1,
+        'name': 'Item 1',
+        'price': '$2'
+    }, {
+        'id': 2,
+        'name': 'Item 2',
+        'price': '$2'
+    }]
+
+    # query = db.query(Customer).join
+    query1 = alchemy.db.session.query(Customer) \
+        .join(Purchase, Customer.purchases) \
+        .group_by(Customer.customer_id) \
+        .having(func.count(Customer.purchases) >= 2)
+    return Response({'columns': columns, 'data': data}, type='application/json')
