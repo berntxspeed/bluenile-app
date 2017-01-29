@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import json
 import pprint
 
@@ -33,10 +34,19 @@ def type_mapper(column_type):
 @inject(mongo=MongoDB)
 @templated('data_builder')
 def data_builder(mongo, query_id):
-    result = dict()
+    models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
+              WebTrackingEcomm, WebTrackingPageView, Artist]
 
-    for model in [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
-                  WebTrackingEcomm, WebTrackingPageView, Artist]:
+    result = map_models_to_columns(models)
+
+    status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+
+    return {'model': result, 'data': data, 'status': status}
+
+
+def map_models_to_columns(models):
+    result = dict()
+    for model in models:
         columns = inspect(model).columns
         field_dict = dict()
         for column in columns:
@@ -50,10 +60,7 @@ def data_builder(mongo, query_id):
             }
 
         result[model.__name__] = field_dict
-
-    status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
-
-    return {'model': result, 'data': data, 'status': status}
+    return result
 
 
 @databuilder.route('/get-query/<query_id>')
@@ -68,6 +75,7 @@ def get_query(mongo, query_id):
 def preview(mongo, query_id):
     status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
     return Response(json.dumps(result), mimetype='application/json')
+
 
 @databuilder.route('/save-query/<query_id>', methods=['POST'])
 @inject(mongo=MongoDB)
@@ -87,34 +95,40 @@ def get_queries(mongo):
     return json.dumps(result)
 
 
-@databuilder.route('/query-preview')
+def extract_data(results):
+    model_columns = inspect(Customer).columns
+    columns_list = []
+    for column in model_columns:
+        if column.key.startswith("_"): continue
+        columns_list.append({
+            'field': column.key,
+            'title': column.name,
+            'type': type_mapper(column.type)
+        })
+    data_list = []
+    for customer in results:
+        data_list.append(customer.__dict__)
+
+    return columns_list, data_list
+
+
+@databuilder.route('/query-preview', methods=['GET', 'POST'])
 @inject(alchemy=SQLAlchemy)
 def query_preview(alchemy):
-    columns = [{
-        'field': 'id',
-        'title': 'Item ID'
-    }, {
-        'field': 'name',
-        'title': 'Item Name'
-    }, {
-        'field': 'price',
-        'title': 'Item Price'
-    }]
-    data = [{
-        'id': 1,
-        'name': 'Item 1',
-        'price': '$2'
-    }, {
-        'id': 4,
-        'name': 'Item 4',
-        'price': '$4'
-    }]
-
-
-
-    # query = db.query(Customer).join
     query1 = alchemy.session.query(Customer) \
         .join(Purchase, Customer.purchases) \
         .group_by(Customer.customer_id) \
         .having(func.count(Customer.purchases) >= 2)
-    return Response(json.dumps({'columns': columns, 'data': data}), mimetype='application/json')
+    results = query1.all()
+
+    columns, data = extract_data(results)
+
+    return Response(json.dumps({'columns': columns, 'data': data}, default=alchemy_encoder), mimetype='application/json')
+
+
+def alchemy_encoder(obj):
+    """JSON encoder function for SQLAlchemy special classes."""
+    if isinstance(obj, datetime.date):
+        return obj.isoformat()
+    elif isinstance(obj, decimal.Decimal):
+        return float(obj)
