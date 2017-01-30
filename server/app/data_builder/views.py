@@ -10,6 +10,7 @@ from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 from sqlalchemy import inspect
+from sqlalchemy import text
 
 from server.app.common.models import *
 from server.app.common.views.decorators import templated
@@ -115,9 +116,16 @@ def extract_data(results):
 @databuilder.route('/query-preview', methods=['GET', 'POST'])
 @inject(alchemy=SQLAlchemy)
 def query_preview(alchemy):
-    query1 = alchemy.session.query(Customer) \
-        .group_by(Customer.customer_id)
-    results = query1.all()
+
+    query1 = alchemy.session.query(Customer)
+        # .group_by(Customer.customer_id)
+
+    query2 = alchemy.session.query(Customer).filter(text("customer.fname like 'Bernt%'"))
+
+        # .join(WebTrackingPageView, Customer.web_tracking_page_views)
+        # .group_by(Customer.customer_id) \
+        # .having(func.count(Customer.web_tracking_page_views) >= 1)
+    results = query2.all()
 
     columns, data = extract_data(results)
 

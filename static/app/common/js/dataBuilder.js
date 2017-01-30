@@ -148,8 +148,13 @@ $(document).ready(function() {
        //fetch all the tables and their elements
        $.ajax({
                 url: "/builder/query-preview",
+                method: "POST",
 //                dataType: "json",
-//                contentType: "application/json",
+                data: JSON.stringify(save_query),
+                contentType: "application/json",
+                beforeSend: function(request) {
+                                        request.setRequestHeader("X-CSRFToken", g_csrf_token);
+                                    },
                 success: function(data) {
                     // being OCD about pre-existing table contents
                     destroy_preview()
