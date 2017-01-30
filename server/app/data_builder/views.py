@@ -116,9 +116,7 @@ def extract_data(results):
 @inject(alchemy=SQLAlchemy)
 def query_preview(alchemy):
     query1 = alchemy.session.query(Customer) \
-        .join(Purchase, Customer.purchases) \
-        .group_by(Customer.customer_id) \
-        .having(func.count(Customer.purchases) >= 2)
+        .group_by(Customer.customer_id)
     results = query1.all()
 
     columns, data = extract_data(results)

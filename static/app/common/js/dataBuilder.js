@@ -20,6 +20,10 @@ $(document).ready(function() {
 
     };
 
+    var destroy_preview = function(){
+        $('#preview-table').bootstrapTable('destroy');
+    };
+
     var set_defaults = function(){
         for(var j in $('#tables input')){
             var input = $('#tables input')[j];
@@ -52,6 +56,8 @@ $(document).ready(function() {
     });
     $('#btn-reset').on('click', function() {
         set_defaults();
+        destroy_preview();
+
     });
     $('#btn-get-query').on('click', function() {
        //fetch all the tables and their elements
@@ -122,6 +128,22 @@ $(document).ready(function() {
         });
     });
 
+//  Set global defaults on bootstrap table columns
+    $.extend($.fn.bootstrapTable.columnDefaults, {
+      	sortable: true,
+    });
+
+//  Set global defaults on bootstrap table
+    $.extend($.fn.bootstrapTable.defaults, {
+      	pagination: true,
+      	showRefresh: true,
+      	showToggle: true,
+      	showColumns: true,
+      	search: true,
+      	striped: true,
+      	clickToSelect: true,
+    });
+
     $('#btn-preview').on('click', function() {
        //fetch all the tables and their elements
        $.ajax({
@@ -129,6 +151,8 @@ $(document).ready(function() {
 //                dataType: "json",
 //                contentType: "application/json",
                 success: function(data) {
+                    // being OCD about pre-existing table contents
+                    destroy_preview()
                     $('#preview-table').bootstrapTable(data);
                 },
                 error: function(err) {
