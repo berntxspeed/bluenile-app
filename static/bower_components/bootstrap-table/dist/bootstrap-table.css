@@ -4,6 +4,10 @@
  * https://github.com/wenzhixin/bootstrap-table/
  */
 
+th {
+    background-color: rgb(252, 244, 222)
+}
+
 .bootstrap-table .table {
     margin-bottom: 0 !important;
     border-bottom: 1px solid #dddddd;

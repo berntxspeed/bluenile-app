@@ -20,6 +20,19 @@ $(document).ready(function() {
 
     };
 
+    var get_current_query = function(){
+           current_query = {}
+           current_query.rules = $('#builder').queryBuilder('getRules');
+           current_query.selected_tables = []
+           for(var j in $('#tables input:checkbox')){
+               var input = $('#tables input')[j];
+               if(input.checked && input.id)
+                    current_query.selected_tables.push(input.id);
+           }
+
+           return current_query
+    };
+
     var destroy_preview = function(){
         $('#preview-table').bootstrapTable('destroy');
     };
@@ -76,14 +89,7 @@ $(document).ready(function() {
     });
     $('#btn-save-query').on('click', function() {
            //fetch all the tables and their elements
-           var save_query = {}
-           save_query.rules = $('#builder').queryBuilder('getRules');
-           save_query.selected_tables = []
-           for(var j in $('#tables input:checkbox')){
-               var input = $('#tables input')[j];
-               if(input.checked && input.id)
-                    save_query.selected_tables.push(input.id);
-           }
+           var save_query = get_current_query()
            $.ajax({
                     url: "/builder/save-query/demo",
                     method: "POST",
@@ -146,22 +152,26 @@ $(document).ready(function() {
 
     $('#btn-preview').on('click', function() {
        //fetch all the tables and their elements
+       var sql_query = $('#builder').queryBuilder('getSQL', false);
+       var preview_query = get_current_query()
+       preview_query.sql = sql_query.sql
        $.ajax({
                 url: "/builder/query-preview",
                 method: "POST",
-//                dataType: "json",
-                data: JSON.stringify(save_query),
-                contentType: "application/json",
+                data: JSON.stringify(preview_query),
+                contentType: 'application/json;charset=UTF-8',
                 beforeSend: function(request) {
-                                        request.setRequestHeader("X-CSRFToken", g_csrf_token);
-                                    },
+                    request.setRequestHeader("X-CSRFToken", g_csrf_token);
+                },
                 success: function(data) {
-                    // being OCD about pre-existing table contents
                     destroy_preview()
+//                    $.extend($.fn.bootstrapTable.defaults, {
+//                        striped: false
+//                    });
                     $('#preview-table').bootstrapTable(data);
                 },
                 error: function(err) {
-//                    TODO: handle the errror
+                    //TODO: handle the error here
                     //handle the error or retry
                 }
             });

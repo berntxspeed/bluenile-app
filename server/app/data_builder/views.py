@@ -96,6 +96,21 @@ def get_queries(mongo):
     return json.dumps(result)
 
 
+def map_name_to_header(column_name):
+    column_header_map = {
+        'created_at': 'Created',
+        'customer_id': 'Customer ID',
+        'email_address': 'Email Address',
+        'hashed_email': 'Hashed Email',
+        'fname': 'First Name',
+        'lname': 'Last Name',
+        'marketing_allowed': 'Marketing Allowed',
+        'purchase_count': 'Purchase Count',
+        'total_spent_so_far': 'Total Spent'
+    }
+    return column_header_map.get(column_name, '')
+
+
 def extract_data(results):
     model_columns = inspect(Customer).columns
     columns_list = []
@@ -103,7 +118,7 @@ def extract_data(results):
         if column.key.startswith("_"): continue
         columns_list.append({
             'field': column.key,
-            'title': column.name,
+            'title': map_name_to_header(column.name),
             'type': type_mapper(column.type)
         })
     data_list = []
@@ -116,20 +131,90 @@ def extract_data(results):
 @databuilder.route('/query-preview', methods=['GET', 'POST'])
 @inject(alchemy=SQLAlchemy)
 def query_preview(alchemy):
+    # TODO: handle empty query: return all list of all customers
 
-    query1 = alchemy.session.query(Customer)
-        # .group_by(Customer.customer_id)
+    query = request.json
+    # pprint.pprint(query)
 
-    query2 = alchemy.session.query(Customer).filter(text("customer.fname like 'Bernt%'"))
+    joined_query_obj, sql_query = get_joined_query_obj_and_sql(alchemy, query)
+    final_query = joined_query_obj.filter(text(sql_query))
 
-        # .join(WebTrackingPageView, Customer.web_tracking_page_views)
-        # .group_by(Customer.customer_id) \
-        # .having(func.count(Customer.web_tracking_page_views) >= 1)
-    results = query2.all()
+    # query2 = alchemy.session.query(Customer).filter(text(""))
+    results = final_query.all()
 
     columns, data = extract_data(results)
-
     return Response(json.dumps({'columns': columns, 'data': data}, default=alchemy_encoder), mimetype='application/json')
+
+
+def get_all_ids(rules):
+    all_ids = set()
+    for a_rule in rules.get('rules', []):
+        if 'condition' in a_rule:
+            all_ids = all_ids.union(get_all_ids(a_rule))
+        else:
+            all_ids.add(a_rule['id'])
+    return all_ids
+
+
+# TODO: combine this logic with make_sql_replacements
+def get_joined_query_obj_and_sql(alchemy, query):
+    models_map, class_relations = get_model_relations()
+    sql_query = query.get('sql', '')
+    joined_query = alchemy.session.query(Customer)
+    all_ids = get_all_ids(query.get('rules', {}))
+
+    for an_id in all_ids:
+        model, column = an_id.split('.')
+        if model == 'Customer': continue
+        rel_class, rel_column = class_relations[model].split('.')
+        joined_query = joined_query.join(models_map[model]['class'],
+                                         getattr(models_map[rel_class]['class'], rel_column))
+        if an_id in sql_query:
+            replaced_id = an_id.replace(model, models_map[model]['tablename']) \
+                .replace(column, models_map[model]['columns_map'][column])
+        sql_query = sql_query.replace(an_id, replaced_id)
+    return joined_query, sql_query
+
+
+# def make_sql_replacements(query):
+#     models_map, _ = get_model_relations()
+#     sql_query = query['sql']
+#
+#     for a_rule in query['rules']['rules']:
+#         current_rule = a_rule['id']
+#         model, column = current_rule.split('.')
+#         if model == 'Customer': continue
+#         if current_rule in sql_query:
+#             new_rule = current_rule.replace(model, models_map[model]['tablename']) \
+#                 .replace(column, models_map[model]['columns_map'][column])
+#         sql_query = sql_query.replace(current_rule, new_rule)
+#     return sql_query
+
+
+def get_model_relations():
+    models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
+          WebTrackingEcomm, WebTrackingPageView, Artist]
+
+    def get_columns_map(model):
+        columns = inspect(model).columns
+        cols_dict = dict()
+        for column in columns:
+            if column.key.startswith("_"): continue
+            col_sub_name = '"'+column.key+'"' if column.key[0].isupper() else column.key
+            cols_dict[column.key] = col_sub_name
+        return cols_dict
+
+    models_map = dict()
+    for a_model in models:
+        models_map[a_model.__name__] = {
+            'class': a_model,
+            'tablename': a_model.__tablename__,
+            'columns_map': get_columns_map(a_model)
+        }
+
+    model_relations = dict([(relation.mapper.class_.__name__, str(relation))
+                            for relation in inspect(Customer).relationships])
+    return models_map, model_relations
 
 
 def alchemy_encoder(obj):
