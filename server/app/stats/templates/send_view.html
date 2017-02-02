@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Analyzer{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    {% assets 'send-view-css' %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
+    {% endassets %}
+{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>View Email Sends and their performance data.</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body_content %}
+    <div class="row">
+        <div class="col-md-6 center-block">
+            <div class="well form-well signup-info">
+                <strong>Select a send</strong>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 center-block" id="a-side">
+            <strong>Drill Down into One Email (A SIDE)</strong>
+            <div class="well form-well">
+                <select class="send-select">
+                    {% for send in sends %}
+                        <option value="{{ send[0] }}">{{ send[0] }} with {{ send[1] }} opens</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="well" id="drill-down-well">
+                <div id="drill-down-areaA" style="background-color: ghostwhite"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 center-block" id="b-side">
+            <strong>Drill Down into One Email (B SIDE)</strong>
+            <div class="well form-well">
+                <select class="send-select">
+                    {% for send in sends %}
+                        <option value="{{ send[0] }}">{{ send[0] }} with {{ send[1] }} opens</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="well" id="drill-down-well">
+                <div id="drill-down-areaB" style="background-color: ghostwhite"></div>
+            </div>
+        </div>
+    </div>
+    {% assets "send-view-js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+{% endblock %}

@@ -22,24 +22,39 @@ def json_select(json, selector):
 
 
 class ApiData(object):
-    def __init__(self, endpoint, auth, headers, params):
+    def __init__(self, endpoint, auth, headers, params, body_json=None):
         self._endpoint = endpoint
         self._auth = auth
         self._headers = headers
         self._params = params
+        self._body_json = body_json
 
-    def get_data(self):
-        # retrieves the data from the api endpoint
-        response = requests.get(url=self._endpoint,
-                                params=self._params,
-                                headers=self._headers,
-                                auth=self._auth)
+    def get_data(self, http_method=None):
+
+        if http_method is None:
+            http_method = 'GET'
+
+        if http_method is 'GET':
+            # retrieves the data from the api endpoint
+            response = requests.get(url=self._endpoint,
+                                    params=self._params,
+                                    headers=self._headers,
+                                    auth=self._auth)
+        elif http_method is 'POST':
+            response = requests.post(url=self._endpoint,
+                                     data=self._body_json,
+                                     params=self._params,
+                                     headers=self._headers,
+                                     auth=self._auth)
+        else:
+            raise ValueError('illegal http_method: ' + http_method)
+
         self._response = response
-        if response.status_code != 200:
+        """if response.status_code != 200:
             raise ConnectionError(
                 'Failed to retrieve data with {0} from api endpoint: {1}\n{2}'.format(str(response.status_code),
                                                                                       self._endpoint,
-                                                                                      response.request.headers))
+                                                                                      response.request.headers))"""
         return response
 
 

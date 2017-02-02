@@ -1,0 +1,75 @@
+.container { width: 1000; }
+.jumbotron { width: 1000; }
+
+#paper-html-elements {
+    position: relative;
+    border: 1px solid gray;
+    display: inline-block;
+    background: transparent;
+    overflow: hidden;
+}
+
+#paper-html-elements svg {
+    background: transparent;
+}
+
+#paper-html-elements svg .link {
+    z-index: 2;
+}
+
+.html-element {
+    position: absolute;
+    background: transparent;
+    /* make sure events are propagated to the JointJS element so, e.g. dragging works */
+    pointer-events: none;
+    -webkit-user-select: none;
+    border: 2px solid #2980B9;
+    box-sizing: border-box;
+    z-index: 2;
+    text-align: center;
+    font-size: 10px;
+}
+
+.html-element .chart,
+.html-element img,
+.html-element label,
+.html-element .drill-down-checkboxA,
+.html-element .drill-down-checkboxB {
+    position: absolute !important;
+}
+
+.html-element .chart,
+.html-element .drill-down-checkboxA,
+.html-element .drill-down-checkboxB {
+    /* Enable interacting with inputs only. */
+    pointer-events: auto;
+    top: 4px;
+}
+
+.html-element .drill-down-checkboxA {
+    left: 5px;
+}
+
+.html-element .drill-down-checkboxB {
+    right: 5px;
+}
+
+.html-element img {
+    top: 31%;
+    left: 37%;
+}
+
+.html-element label.title {
+    color: #333;
+    text-shadow: 1px 0 0 lightgray;
+    font-weight: bold;
+    bottom: 0px;
+    left: 2px;
+}
+
+.html-element label.sendCnt {
+    color: blue;
+    font-style: italic;
+    bottom: 0px;
+    right: 2px;
+}

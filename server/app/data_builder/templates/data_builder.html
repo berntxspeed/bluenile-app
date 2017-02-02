@@ -12,29 +12,30 @@
 {% assets "query-builder-js" %}
 <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {% endassets %}
+
 <script type="text/javascript">
-    var g_csrf_token = '{{ csrf_token() }}';
-    var g_rules = {{ data|tojson|safe }};
-    var get_filters = function(model){
-        filters_result = []
-        for(table in model){
-            for(column in model[table]){
-                column_obj = model[table][column]
-                filters_result.push({
-                    id: column_obj.expression,
-                    label: column_obj.expression,
-                    type: column_obj.type
-                  })
+        var g_csrf_token = '{{ csrf_token() }}';
+        var g_rules = {{ data|tojson|safe }};
+        var get_filters = function(model){
+            filters_result = []
+            for(table in model){
+                for(column in model[table]){
+                    column_obj = model[table][column]
+                    filters_result.push({
+                        id: column_obj.expression,
+                        label: column_obj.expression,
+                        type: column_obj.type
+                      })
+                }
             }
-        }
-        return filters_result;
-    };
+            return filters_result;
+        };
 
-    var g_model = {{ model|tojson|safe }};
-    var g_filters = get_filters(g_model);
-</script>
+        var g_model = {{ model|tojson|safe }};
+        var g_filters = get_filters(g_model);
+    </script>
+
 {% endblock %}
-
 
 {% block banner %}
     <div class="banner banner-jumbotron banner-gray">
@@ -49,7 +50,7 @@
     </div>
 {% endblock %}
 
-{% block body %}
+{% block body_content %}
     <div class="row">
         <div id="queries">
             <!--<button id="btn-get-sql" class="btn btn-primary parse-sql">SQL statement</button>-->
@@ -73,7 +74,7 @@
                   plugins: ['bt-tooltip-errors'],
                   filters: g_filters,
                 });
-    </script>
+            </script>
         </div>
     </div>
     <div class="row">

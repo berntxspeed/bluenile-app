@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Builder{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h1>Build Emails to send to your subscribers</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block body_content %}
+    <div class="row">
+        <div class="col-md-6 center-block">
+            <div class="well form-well signup-info">
+                <strong>You can either start from a bare template or resume editing an existing email</strong>
+            </div>
+            <div class="well form-well">
+                <h4>Base Templates:</h4>
+                <ul>
+                    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/bluenile/template-bluenile.html' }}">Blunile Template</a></li>
+                    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/versafix-1/template-versafix-1.html' }}">Versafix Template</a></li>
+                    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/tedc15/template-tedc15.html' }}">Tedc15 Template</a></li>
+                    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/tutorial/template-tutorial.html' }}">Tutorial Template</a></li>
+                </ul>
+            </div>
+            <div class="well form-well">
+                <h4>Existing Emails:</h4>
+                <ul>
+                    {% for template in templates %}
+                        <li><a href="{{ url_for('emails.editor') + '#' + template.key }}">{{ template.name }}</a>
+                            <br>last edited on: {{ template.last_modified }}
+                            <br>created on: {{ template.created_at }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

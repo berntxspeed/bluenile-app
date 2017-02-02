@@ -28,7 +28,7 @@ def get(key):
 
 # how would i get cache'ing here without invoking inject (since injectors not built yet?)
 # @cached(timeout=1)
-@main.route('/api/kv/')
+@main.route('/api/kv/', methods=['GET'])
 def list():
     data = [i.key for i in KeyValue.query.order_by(KeyValue.key)]
     return jsonify(keys=data)

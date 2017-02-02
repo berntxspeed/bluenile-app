@@ -82,7 +82,7 @@ $(document).ready(function() {
                     buildUI(data);
                 },
                 error: function(err) {
-//                    TODO: handle the errror
+//                    TODO: handle the error
                     //handle the error or retry
                 }
             });

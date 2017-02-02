@@ -62,3 +62,20 @@ class GetStatsService(DbService):
             return jsonify(error=str(exc)), 400
 
         return jsonify(results=results)
+
+    def send_view(self):
+        """
+        uses self.get_grouping_counts to order and sort send results by number
+        of sent/opens/clicks in descending order
+        """
+        st = StatsGetter(db=self.db,
+                         tbl='EmlOpen',
+                         acceptable_tbls=self._acceptable_tables,
+                         grp_by='SendID',
+                         filters=None)
+        sends = st.get()
+        sends.sort(key=lambda send: send[1], reverse=True)
+
+        return {
+            'sends': sends
+        }
