@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Data Manager{% endblock %}
+
+{% block head %}
+{{ super() }}
+
+{% assets "query-builder-css" %}
+<link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+{% endassets %}
+
+{% assets "query-builder-js" %}
+<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
+
+<script type="text/javascript">
+        var g_csrf_token = '{{ csrf_token() }}';
+        var g_rules = {{ data|tojson|safe }};
+        var get_filters = function(model){
+            filters_result = []
+            for(table in model){
+                for(column in model[table]){
+                    column_obj = model[table][column]
+                    filters_result.push({
+                        id: column_obj.expression,
+                        label: column_obj.expression,
+                        type: column_obj.type
+                      })
+                }
+            }
+            return filters_result;
+        };
+
+        var g_model = {{ model|tojson|safe }};
+        var g_filters = get_filters(g_model);
+    </script>
+
+{% endblock %}
+
+{% block banner %}
+    <div class="banner banner-jumbotron banner-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <h1>&nbsp;</h1>
+                    <h3>Transform and Enrich Your Data</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body_content %}
+    <div class="row">
+        <div id="queries">
+            <!--<button id="btn-get-sql" class="btn btn-primary parse-sql">SQL statement</button>-->
+            <button id="btn-get-query" class="btn btn-primary">Load Saved Query</button>
+            <button id="btn-save-query" class="btn btn-primary">Save Query</button>
+            <button id="btn-reset" class="btn btn-primary">Reset Defaults</button>
+            <button id="btn-preview" class="btn btn-primary">Preview Results</button>
+        </div>
+        <div id="tables" class="collapse">
+            {% for table in model %}
+                    <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="row">
+        <h4>Filter your data</h4>
+        <div class="col-md-12 col-lg-10 col-lg-offset-1">
+            <div id="builder" class="query-builder form-inline"></div>
+            <script type="text/javascript">
+                $('#builder').queryBuilder({
+                  plugins: ['bt-tooltip-errors'],
+                  filters: g_filters,
+                });
+            </script>
+        </div>
+    </div>
+    <div class="row">
+        <h4>Data Preview</h4>
+        <table id="preview-table"></table>
+    </div>
+{% endblock %}

@@ -100,3 +100,21 @@ ENV/
 
 # Rope project settings
 .ropeproject
+static/bower_components/bootstrap/.bower.json
+static/bower_components/bootstrap/CHANGELOG.md
+static/bower_components/bootstrap/Gemfile
+static/bower_components/bootstrap/Gemfile.lock
+static/bower_components/bootstrap/Gruntfile.js
+static/bower_components/bootstrap/ISSUE_TEMPLATE.md
+static/bower_components/bootstrap/LICENSE
+static/bower_components/bootstrap/README.md
+static/bower_components/bootstrap/bower.json
+static/bower_components/bootstrap/fonts/
+static/bower_components/bootstrap/grunt/
+static/bower_components/bootstrap/js/
+static/bower_components/bootstrap/less/
+static/bower_components/bootstrap/nuget/
+static/bower_components/bootstrap/package.js
+static/bower_components/bootstrap/package.json
+static/bower_components/bootstrap_old/
+
