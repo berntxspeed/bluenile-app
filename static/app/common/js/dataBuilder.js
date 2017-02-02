@@ -1,12 +1,19 @@
 $(document).ready(function() {
-
+    var l_empty_rules = {
+                         condition: 'AND',
+                         rules: [
+                           {
+                             /* empty rule */
+                             empty: true
+                           }
+                         ]
+                       };
     var buildUI = function(data){
         reduced_model = {}
         for(var j in $('#tables input')){
             var input = $('#tables input')[j];
             input.checked = false;
         }
-        console.log(data);
         for(var i in data["selected_tables"]){
             tbl = data["selected_tables"][i]
             $("#" + tbl)[0].checked = true;
@@ -16,7 +23,9 @@ $(document).ready(function() {
         };
 
         $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
-        $('#builder').queryBuilder('setRules', data["rules"]);
+        var rules = (data.rules) ? data.rules : l_empty_rules
+        console.log(rules)
+        $('#builder').queryBuilder('setRules', rules);
 
     };
 
@@ -43,15 +52,7 @@ $(document).ready(function() {
             input.checked = true;
         }
         $('#builder').queryBuilder('setFilters', get_filters(g_model));
-        $('#builder').queryBuilder('setRules', {
-                                                 condition: 'AND',
-                                                 rules: [
-                                                   {
-                                                     /* empty rule */
-                                                     empty: true
-                                                   }
-                                                 ]
-                                               });
+        $('#builder').queryBuilder('setRules', l_empty_rules);
     };
 
     var init = function(){
@@ -124,13 +125,6 @@ $(document).ready(function() {
                 console.log(ex)
                 this.checked = !this.checked
             }
-
-//            if(this.checked)
-//                alert("checked! " + i);
-////                current_model[]
-//
-//            else
-//                alert("unchecked! " + i);
         });
     });
 
@@ -152,9 +146,7 @@ $(document).ready(function() {
 
     $('#btn-preview').on('click', function() {
        //fetch all the tables and their elements
-       var sql_query = $('#builder').queryBuilder('getSQL', false);
        var preview_query = get_current_query()
-       preview_query.sql = sql_query.sql
        $.ajax({
                 url: "/builder/query-preview",
                 method: "POST",
@@ -164,10 +156,12 @@ $(document).ready(function() {
                     request.setRequestHeader("X-CSRFToken", g_csrf_token);
                 },
                 success: function(data) {
+                    visible_header = (data.data.length)
                     destroy_preview()
-//                    $.extend($.fn.bootstrapTable.defaults, {
-//                        striped: false
-//                    });
+                    $.extend($.fn.bootstrapTable.defaults, {
+                                                showHeader: visible_header
+                                            });
+
                     $('#preview-table').bootstrapTable(data);
                 },
                 error: function(err) {
