@@ -25,6 +25,7 @@ $(document).ready(function() {
         if(Object.keys(reduced_model).length === 0){
             reduced_model = g_model;
         }
+
         $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
         var rules = (data.rules) ? data.rules : l_empty_rules
         console.log(rules)
