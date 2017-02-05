@@ -1,6 +1,7 @@
 from sqlalchemy import or_, and_
 from sqlalchemy import inspect
-from sqlalchemy.sql.operators import ColumnOperators
+from sqlalchemy.sql.operators import ColumnOperators,\
+    like_op, notcontains_op, notbetween_op, notendswith_op, notstartswith_op
 
 from server.app.common.models import *
 
@@ -48,23 +49,23 @@ def get_filter(rule, models_map):
 
     operator_lookup = {'equal': ColumnOperators.__eq__,
                        #TODO: change like to ilike?
-                       'contains': ColumnOperators.cont,
-                       'not_contains': ColumnOperators.notcontains,  # notilike?
+                       'contains': ColumnOperators.contains,
+                       'not_contains': lambda col, cond: col.operate(notcontains_op, cond),
                        'begins_with': ColumnOperators.startswith,
-                       'not_begins_with': ColumnOperators.notstartswith,
+                       'not_begins_with': lambda col, cond: col.operate(notstartswith_op, cond),
                        'not_equal': ColumnOperators.__ne__,
                        'in': ColumnOperators.in_,
                        'not_in': ColumnOperators.notin_,
                        'ends_with': ColumnOperators.endswith,
-                       'not_ends_with': ColumnOperators.notendswith,
+                       'not_ends_with': lambda col, cond: col.operate(notendswith_op, cond),
                        'greater': ColumnOperators.__gt__,
                        'greater_or_equal': ColumnOperators.__ge__,
                        'less': ColumnOperators.__lt__,
                        'less_or_equal': ColumnOperators.__le__,
-                       'between': ColumnOperators.between,
-                       'not_between': ColumnOperators.notbetween,
-                       'is_empty': ColumnOperators.isempty,
-                       'is_not_empty': ColumnOperators.isnotempty,
+                       'between': lambda col, cond: col.between(*cond),
+                       'not_between': lambda col, cond: col.operate(notbetween_op, *cond),
+                       'is_empty': lambda col, cond: col.operate(like_op, ''),
+                       'is_not_empty': lambda col, cond: col.notlike(''),
                        'is_null': ColumnOperators.is_,
                        'is_not_null': ColumnOperators.isnot
                        }
