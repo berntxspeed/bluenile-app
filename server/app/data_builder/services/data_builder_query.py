@@ -13,9 +13,7 @@ class DataBuilderQuery(object):
     def get_all_queries(self):
         all_queries = []
         try:
-            for a_query in self._collection.find():
-                # remove the _id to prevent information leak to UI
-                del a_query['_id']
+            for a_query in self._collection.find( { }, { '_id': 0 } ):
                 all_queries.append(a_query)
 
             return True, all_queries
@@ -33,8 +31,7 @@ class DataBuilderQuery(object):
 
     def get_query_by_name(self, query_name):
         try:
-            query = self._collection.find( { self._primary_key: query_name } )[0]
-            del query['_id']
+            query = self._collection.find( { self._primary_key: query_name } , { '_id': 0 } )[0]
             return True, query
         except Exception as e:
             return False, 'Getting Query Failed: {0}'.format(str(e))
