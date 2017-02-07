@@ -1,12 +1,8 @@
-import decimal
 import json
 
 from flask import Response
 from flask import request
 from injector import inject
-from sqlalchemy import inspect
-from sqlalchemy import Integer
-from sqlalchemy import TIMESTAMP
 
 from server.app.common.models import *
 from server.app.common.views.decorators import templated
@@ -14,7 +10,8 @@ from server.app.injector_keys import SQLAlchemy, MongoDB
 from . import databuilder
 from .services.data_builder_query import DataBuilderQuery
 
-from server.app.data_builder.query_utils import get_customer_query_based_on_rules
+from .query_utils import get_customer_query_based_on_rules, extract_data,\
+    map_models_to_columns, alchemy_encoder
 
 
 @databuilder.route('/data-builder/<query_id>')
@@ -48,6 +45,8 @@ def preview(mongo, query_id):
 @databuilder.route('/save-query/<query_id>', methods=['POST'])
 @inject(mongo=MongoDB)
 def save_query(mongo, query_id):
+    # get user_id from session: for now saves only _csrf_token
+
     query = request.json
     success, error = DataBuilderQuery(mongo.db).save_query(query_id, query)
     if success:
@@ -63,38 +62,6 @@ def get_queries(mongo):
     return json.dumps(result)
 
 
-def map_name_to_header(column_name):
-    column_header_map = {
-        'created_at': 'Created',
-        'customer_id': 'Customer ID',
-        'email_address': 'Email Address',
-        'hashed_email': 'Hashed Email',
-        'fname': 'First Name',
-        'lname': 'Last Name',
-        'marketing_allowed': 'Marketing Allowed',
-        'purchase_count': 'Purchase Count',
-        'total_spent_so_far': 'Total Spent'
-    }
-    return column_header_map.get(column_name, '')
-
-
-def extract_data(results):
-    model_columns = inspect(Customer).columns
-    columns_list = []
-    for column in model_columns:
-        if column.key.startswith("_"): continue
-        columns_list.append({
-            'field': column.key,
-            'title': map_name_to_header(column.name),
-            'type': type_mapper(column.type)
-        })
-    data_list = []
-    for customer in results:
-        data_list.append(customer.__dict__)
-
-    return columns_list, data_list
-
-
 @databuilder.route('/query-preview', methods=['GET', 'POST'])
 @inject(alchemy=SQLAlchemy)
 def query_preview(alchemy):
@@ -106,42 +73,3 @@ def query_preview(alchemy):
     columns, data = extract_data(results)
     return Response(json.dumps({'columns': columns, 'data': data}, default=alchemy_encoder),
                     mimetype='application/json')
-
-
-def alchemy_encoder(obj):
-    """JSON encoder function for SQLAlchemy special classes."""
-    if isinstance(obj, datetime.date):
-        return obj.isoformat()
-    elif isinstance(obj, decimal.Decimal):
-        return float(obj)
-
-
-def map_models_to_columns(models):
-    result = dict()
-    for model in models:
-        columns = inspect(model).columns
-        field_dict = dict()
-        for column in columns:
-            if column.key.startswith("_"): continue
-            field_dict[column.key] = {
-                'key': column.key,
-                'name': column.name,
-                'table': model.__name__,
-                'expression': model.__name__ + '.' + column.name,
-                'type': type_mapper(column.type)
-            }
-
-        result[model.__name__] = field_dict
-    return result
-
-
-def type_mapper(column_type):
-    if (column_type.python_type is datetime) or isinstance(column_type, TIMESTAMP):
-        return 'datetime'
-    if (column_type.python_type is int) or isinstance(column_type, Integer):
-        return 'integer'
-    if column_type.python_type is float:
-        return 'double'
-    if column_type.python_type is bool:
-        return 'boolean'
-    return 'string'
