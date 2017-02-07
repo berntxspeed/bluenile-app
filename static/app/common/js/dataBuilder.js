@@ -79,8 +79,13 @@ $(document).ready(function() {
     });
     $('#btn-get-query').on('click', function() {
        //fetch all the tables and their elements
+       var query_name=prompt('Enter Query Name');
+       // TODO: the ajax call needs to get names of all queries
+       // TODO: potentially build a clickable table? (columns: timestamp| name) hidden table? [CARD VIEW?]
+       // TODO: limit query_name mistake by the UI: with search box
+       destroy_preview();
        $.ajax({
-                url: "/builder/get-query/demo",
+                url: "/builder/get-query/"+query_name,
                 dataType: "json",
                 contentType: "application/json",
                 success: function(data) {
@@ -95,8 +100,12 @@ $(document).ready(function() {
     $('#btn-save-query').on('click', function() {
            //fetch all the tables and their elements
            var save_query = get_current_query()
+           var query_name=prompt('Enter Query Name');
+//                   if(my_text) alert(query_name);
+//TODO: check if valid query name; uniqueness?
+           save_query.name = query_name
            $.ajax({
-                    url: "/builder/save-query/demo",
+                    url: "/builder/save-query/"+query_name,
                     method: "POST",
                     data: JSON.stringify(save_query),
                     contentType: 'application/json;charset=UTF-8',
