@@ -46,8 +46,8 @@ $(document).ready(function() {
            return current_query
     };
 
-    var destroy_preview = function(){
-        $('#preview-table').bootstrapTable('destroy');
+    var destroy_table = function(table){
+        table.bootstrapTable('destroy');
     };
 
     var set_defaults = function(){
@@ -66,37 +66,76 @@ $(document).ready(function() {
     init();
 
 
-    $('#btn-get-sql').on('click', function() {
-        var result = $('#builder').queryBuilder('getSQL', false);
-        if (result.sql.length) {
-            alert(result.sql);
-        }
-    });
+//    $('#btn-get-sql').on('click', function() {
+//        var result = $('#builder').queryBuilder('getSQL', false);
+//        if (result.sql.length) {
+//            alert(result.sql);
+//        }
+//    });
     $('#btn-reset').on('click', function() {
         set_defaults();
-        destroy_preview();
+        destroy_table($('#preview-table'));
 
     });
+    var sample_data = {
+                                  columns: [{
+                                      field: 'name',
+                                      title: 'Query Name'
+                                  }, {
+                                      field: 'created',
+                                      title: 'Created'
+                                  }],
+                                  data: [{
+                                      name: 'Query 1',
+                                      created: '2015-11-10'
+                                  }, {
+                                      name: 'Query 2',
+                                      created: '2016-12-12'
+                                  }]
+                              };
     $('#btn-get-query').on('click', function() {
-       //fetch all the tables and their elements
-       var query_name=prompt('Enter Query Name');
-       // TODO: the ajax call needs to get names of all queries
-       // TODO: potentially build a clickable table? (columns: timestamp| name) hidden table? [CARD VIEW?]
-       // TODO: limit query_name mistake by the UI: with search box
-       destroy_preview();
-       $.ajax({
-                url: "/builder/get-query/"+query_name,
+//    TODO: when to reset preview_table
+
+        var sqtable = $('#saved-queries-table');
+        destroy_table(sqtable);
+        $("#modalTable").on('show.bs.modal', function () {
+            $.ajax({
+                url: "/builder/get-query/demo",
                 dataType: "json",
                 contentType: "application/json",
                 success: function(data) {
-                    buildUI(data);
+                    sqtable.bootstrapTable(data);
+//                    buildUI(data);
                 },
                 error: function(err) {
 //                    TODO: handle the error
+                    sqtable.bootstrapTable(sample_data);
                     //handle the error or retry
                 }
             });
+        });
+        $("#modalTable").modal({backdrop: "static"});
     });
+//    $('#btn-get-query').on('click', function() {
+//       //fetch all the tables and their elements
+//       var query_name=prompt('Enter Query Name');
+//       // TODO: the ajax call needs to get names of all queries
+//       // TODO: potentially build a modal clickable table? (columns: timestamp| name)
+//       // TODO: that will limit query_name mistake by the UI: with search box
+//       destroy_table($('#preview-table'))
+//       $.ajax({
+//                url: "/builder/get-query/"+query_name,
+//                dataType: "json",
+//                contentType: "application/json",
+//                success: function(data) {
+//                    buildUI(data);
+//                },
+//                error: function(err) {
+////                    TODO: handle the error
+//                    //handle the error or retry
+//                }
+//            });
+//    });
     $('#btn-save-query').on('click', function() {
            //fetch all the tables and their elements
            var save_query = get_current_query()
@@ -170,7 +209,7 @@ $(document).ready(function() {
                 },
                 success: function(data) {
                     visible_header = (data.data.length)
-                    destroy_preview()
+                    destroy_table($('#preview-table'))
                     $.extend($.fn.bootstrapTable.defaults, {
                                                 showHeader: visible_header
                                             });
