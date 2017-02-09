@@ -70,11 +70,11 @@ def save_query(mongo, query_id):
         return error, 500
 
 
-@databuilder.route('/get-queries')
-@inject(mongo=MongoDB)
-def get_queries(mongo):
-    status, result = DataBuilderQuery(mongo.db).get_all_queries()
-    return json.dumps(result)
+# @databuilder.route('/get-queries')
+# @inject(mongo=MongoDB)
+# def get_queries(mongo):
+#     status, result = DataBuilderQuery(mongo.db).get_all_queries()
+#     return json.dumps(result)
 
 
 @databuilder.route('/query-preview', methods=['GET', 'POST'])

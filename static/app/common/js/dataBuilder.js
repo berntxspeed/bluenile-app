@@ -79,22 +79,6 @@ $(document).ready(function() {
         destroy_table($('#preview-table'));
 
     });
-    var sample_data = {
-                                  columns: [{
-                                      field: 'name',
-                                      title: 'Query Name'
-                                  }, {
-                                      field: 'created',
-                                      title: 'Created'
-                                  }],
-                                  data: [{
-                                      name: 'Query 1',
-                                      created: '2015-11-10'
-                                  }, {
-                                      name: 'Query 2',
-                                      created: '2016-12-12'
-                                  }]
-                              };
     $('#btn-get-query').on('click', function() {
 //    TODO: when to reset preview_table
 
@@ -110,7 +94,7 @@ $(document).ready(function() {
                 },
                 error: function(err) {
 //                    TODO: handle the error
-                    sqtable.bootstrapTable(sample_data);
+                    console.log(err)
                     //handle the error or retry
                 }
             });

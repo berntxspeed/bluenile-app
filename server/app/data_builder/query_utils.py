@@ -1,4 +1,6 @@
 import decimal
+import re
+
 from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import inspect
@@ -152,6 +154,11 @@ def extract_data(results):
     return columns_list, data_list
 
 
+def user_friendly_label(table_name, column_name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', table_name + ': ' + column_name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower().replace('_', ' ').title()
+
+
 def map_models_to_columns(models):
     result = dict()
     for model in models:
@@ -164,7 +171,8 @@ def map_models_to_columns(models):
                 'name': column.name,
                 'table': model.__name__,
                 'expression': model.__name__ + '.' + column.name,
-                'type': type_mapper(column.type)
+                'type': type_mapper(column.type),
+                'label': user_friendly_label(model.__name__, column.name)
             }
 
         result[model.__name__] = field_dict
