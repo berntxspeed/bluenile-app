@@ -22,7 +22,6 @@ def data_builder(mongo, query_id):
               WebTrackingEcomm, WebTrackingPageView]
 
     result = map_models_to_columns(models)
-
     status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
 
     return {'model': result, 'data': data, 'status': status}

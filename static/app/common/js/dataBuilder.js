@@ -62,7 +62,6 @@ $(document).ready(function() {
     var init = function(){
         buildUI(g_rules);
     }
-//    console.log(g_rules)
     init();
 
 
@@ -82,20 +81,19 @@ $(document).ready(function() {
     $('#btn-get-query').on('click', function() {
 //    TODO: when to reset preview_table
 
-        var sqtable = $('#saved-queries-table');
-        destroy_table(sqtable);
+        var saved_queries_table = $('#saved-queries-table');
+        destroy_table(saved_queries_table);
         $("#modalTable").on('show.bs.modal', function () {
             $.ajax({
                 url: "/builder/get-query/demo",
                 dataType: "json",
                 success: function(data) {
-                    sqtable.bootstrapTable(data);
+                    saved_queries_table.bootstrapTable(data);
 //                    buildUI(data);
                 },
                 error: function(err) {
-//                    TODO: handle the error
+//                    TODO: handle the error or retry
                     console.log(err)
-                    //handle the error or retry
                 }
             });
         });
@@ -108,29 +106,39 @@ $(document).ready(function() {
         show_preview(row)
     });
 
+
+    $("#modalDialog").on('show.bs.modal', function () {
+        document.getElementById("save-query-form").reset()
+    });
+
+    $("#submit-save-query").click(function(e) {
+        e.preventDefault();
+        $("#modalDialog").modal("hide")
+        var save_query = get_current_query()
+        query_name = $("#query_name").val().trim();
+        //TODO: check if valid query name; uniqueness?
+        save_query.name = query_name
+        $.ajax({
+                 url: "/builder/save-query/"+query_name,
+                 method: "POST",
+                 data: JSON.stringify(save_query),
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token);
+                 },
+                 success: function(data) {
+                     alert("Saved!");
+                 },
+                 error: function(err) {
+//                         //TODO: handle the error here
+                     //handle the error or retry
+                 }
+             });
+    });
+
     $('#btn-save-query').on('click', function() {
            //fetch all the tables and their elements
-           var save_query = get_current_query()
-           var query_name=prompt('Enter Query Name');
-//                   if(my_text) alert(query_name);
-//TODO: check if valid query name; uniqueness?
-           save_query.name = query_name
-           $.ajax({
-                    url: "/builder/save-query/"+query_name,
-                    method: "POST",
-                    data: JSON.stringify(save_query),
-                    contentType: 'application/json;charset=UTF-8',
-                    beforeSend: function(request) {
-                        request.setRequestHeader("X-CSRFToken", g_csrf_token);
-                    },
-                    success: function(data) {
-                        alert("Saved!");
-                    },
-                    error: function(err) {
-                        //TODO: handle the error here
-                        //handle the error or retry
-                    }
-                });
+           $("#modalDialog").modal('show');
         });
 
     $("#tables input").each(function(i){
@@ -183,7 +191,6 @@ $(document).ready(function() {
                     $.extend($.fn.bootstrapTable.defaults, {
                                                 showHeader: visible_header
                                             });
-
                     $('#preview-table').bootstrapTable(data);
                 },
                 error: function(err) {
@@ -199,4 +206,5 @@ $(document).ready(function() {
        var preview_query = get_current_query()
        show_preview(preview_query)
     });
+
 });
