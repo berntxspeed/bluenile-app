@@ -72,6 +72,8 @@ $(document).ready(function() {
 //            alert(result.sql);
 //        }
 //    });
+
+
     $('#btn-reset').on('click', function() {
         set_defaults();
         destroy_table($('#preview-table'));
@@ -102,7 +104,6 @@ $(document).ready(function() {
             $.ajax({
                 url: "/builder/get-query/demo",
                 dataType: "json",
-                contentType: "application/json",
                 success: function(data) {
                     sqtable.bootstrapTable(data);
 //                    buildUI(data);
@@ -114,28 +115,15 @@ $(document).ready(function() {
                 }
             });
         });
-        $("#modalTable").modal({backdrop: "static"});
+        $("#modalTable").modal("show")//{backdrop: "static"});
     });
-//    $('#btn-get-query').on('click', function() {
-//       //fetch all the tables and their elements
-//       var query_name=prompt('Enter Query Name');
-//       // TODO: the ajax call needs to get names of all queries
-//       // TODO: potentially build a modal clickable table? (columns: timestamp| name)
-//       // TODO: that will limit query_name mistake by the UI: with search box
-//       destroy_table($('#preview-table'))
-//       $.ajax({
-//                url: "/builder/get-query/"+query_name,
-//                dataType: "json",
-//                contentType: "application/json",
-//                success: function(data) {
-//                    buildUI(data);
-//                },
-//                error: function(err) {
-////                    TODO: handle the error
-//                    //handle the error or retry
-//                }
-//            });
-//    });
+
+    $('#saved-queries-table').on('click-row.bs.table', function (e, row, $element) {
+        $("#modalTable").modal("hide")//{backdrop: "static"});
+        buildUI(row)
+        show_preview(row)
+    });
+
     $('#btn-save-query').on('click', function() {
            //fetch all the tables and their elements
            var save_query = get_current_query()
@@ -196,9 +184,7 @@ $(document).ready(function() {
       	clickToSelect: true,
     });
 
-    $('#btn-preview').on('click', function() {
-       //fetch all the tables and their elements
-       var preview_query = get_current_query()
+    var show_preview = function(preview_query) {
        $.ajax({
                 url: "/builder/query-preview",
                 method: "POST",
@@ -221,5 +207,12 @@ $(document).ready(function() {
                     //handle the error or retry
                 }
             });
+    };
+
+
+    $('#btn-preview').on('click', function() {
+       //fetch all the tables and their elements
+       var preview_query = get_current_query()
+       show_preview(preview_query)
     });
 });
