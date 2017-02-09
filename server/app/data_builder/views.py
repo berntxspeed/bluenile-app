@@ -19,7 +19,7 @@ from .query_utils import get_customer_query_based_on_rules, extract_data,\
 @templated('data_builder')
 def data_builder(mongo, query_id):
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
-              WebTrackingEcomm, WebTrackingPageView, Artist]
+              WebTrackingEcomm, WebTrackingPageView]
 
     result = map_models_to_columns(models)
 

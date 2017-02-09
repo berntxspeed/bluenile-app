@@ -4,7 +4,7 @@ from pprint import pprint as pp
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile
 from ...common.services import DbService
-from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Artist, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
+from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
 
 class DataLoadService(DbService):
@@ -76,27 +76,27 @@ class DataLoadService(DbService):
                            json_data_keys=json_data_keys)
         ad1.load_data()
 
-    def load_artists(self):
-        artist_data_source = self.config.get('ARTIST_DATA_SOURCE')
-        endpoint = self.config.get('EXT_DATA_CREDS')[artist_data_source]['endpoint']
-        headers = {'Content-Type': 'application/json'}
-        params = dict(q='year:2016', type='artist', market='us', limit=20)
-        db_field_map = dict(name='name', popularity='popularity', uri='uri', href='href')
-        primary_keys = ['name']
-        json_data_keys = 'artists.items'
-
-        ad = ApiDataToSql(endpoint=endpoint,
-                          auth=None,
-                          headers=headers,
-                          params=params,
-                          db_session=self.db.session,
-                          db_model=Artist,
-                          primary_keys=primary_keys,
-                          db_field_map=db_field_map,
-                          json_data_keys=json_data_keys)
-
-        ad.load_data()
-        pp(ad._get_data().keys())
+    # def load_artists(self):
+    #     artist_data_source = self.config.get('ARTIST_DATA_SOURCE')
+    #     endpoint = self.config.get('EXT_DATA_CREDS')[artist_data_source]['endpoint']
+    #     headers = {'Content-Type': 'application/json'}
+    #     params = dict(q='year:2016', type='artist', market='us', limit=20)
+    #     db_field_map = dict(name='name', popularity='popularity', uri='uri', href='href')
+    #     primary_keys = ['name']
+    #     json_data_keys = 'artists.items'
+    #
+    #     ad = ApiDataToSql(endpoint=endpoint,
+    #                       auth=None,
+    #                       headers=headers,
+    #                       params=params,
+    #                       db_session=self.db.session,
+    #                       db_model=Artist,
+    #                       primary_keys=primary_keys,
+    #                       db_field_map=db_field_map,
+    #                       json_data_keys=json_data_keys)
+    #
+    #     ad.load_data()
+    #     pp(ad._get_data().keys())
 
     def load_mc_email_data(self):
         config = self.config

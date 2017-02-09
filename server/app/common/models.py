@@ -349,11 +349,6 @@ def on_update(mapper, connection, target):
     return target
 
 
-@db.event.listens_for(Artist, 'before_update', retval=True)
-def on_update(mapper, connection, target):
-    target._last_updated = datetime.datetime.utcnow()
-    return target
-
 class WebTrackingEvent(db.Model):
     __tablename__ = 'web_tracking_event'
     browser_id = db.Column(db.String(255), primary_key=True)

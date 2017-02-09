@@ -98,7 +98,7 @@ def get_all_filters(rules, models_map):
 
 def get_db_model_relations():
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
-              WebTrackingEcomm, WebTrackingPageView, Artist]
+              WebTrackingEcomm, WebTrackingPageView]
 
     def get_columns_map(model):
         columns = inspect(model).columns
