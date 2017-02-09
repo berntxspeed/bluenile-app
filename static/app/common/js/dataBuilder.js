@@ -139,7 +139,7 @@ $(document).ready(function() {
     $('#btn-save-query').on('click', function() {
            //fetch all the tables and their elements
            $("#modalDialog").modal('show');
-        });
+    });
 
     $("#tables input").each(function(i){
         // this should yield the input field
