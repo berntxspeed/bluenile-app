@@ -24,7 +24,7 @@ def logout_required(f):
 def csrf_protect():
     if request.method == 'POST':
         token = session.get('_csrf_token')
-        if not token or token != request.form.get('csrf'):
+        if not token or token not in (request.form.get('csrf'), request.headers.get('X-CSRFToken')):
             abort(403)
 
 """

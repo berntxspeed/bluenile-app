@@ -55,12 +55,14 @@ def get_modules():
     from .auth.module import AuthModule
     from .stats.module import StatsModule
     from .data.module import DataModule
+    from .emails.module import EmailModule
 
     return [
         AppModule(),
         AuthModule(),
         StatsModule(),
-        DataModule()
+        DataModule(),
+        EmailModule()
     ]
 
 
@@ -70,9 +72,13 @@ def get_blueprints():
     from .auth import auth as auth_blueprint
     from .stats import stats as stats_blueprint
     from .data import data as data_blueprint
+    from .data_builder import databuilder as data_builder_blueprint
+    from .emails import emails as emails_blueprint
     return [
         main_blueprint,
         auth_blueprint,
         stats_blueprint,
-        data_blueprint
+        data_blueprint,
+        data_builder_blueprint,
+        emails_blueprint
     ]

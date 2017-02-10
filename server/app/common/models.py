@@ -7,7 +7,8 @@ HASH_SECRET = b'33jjfSFTW43FE2992222FD'
 
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import TIMESTAMP
+from sqlalchemy.dialects.postgresql import TIMESTAMP, JSON, TEXT
+from sqlalchemy.types import Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym, relationship, backref
 from werkzeug.security import check_password_hash
@@ -219,7 +220,7 @@ class EmlSend(db.Model):
     @EventDate.setter
     def EventDate(self, event_date):
         if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -271,7 +272,7 @@ class EmlOpen(db.Model):
     @EventDate.setter
     def EventDate(self, event_date):
         if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -327,7 +328,7 @@ class EmlClick(db.Model):
     @EventDate.setter
     def EventDate(self, event_date):
         if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -511,4 +512,56 @@ def on_update(mapper, connection, target):
 @db.event.listens_for(Customer, 'before_update', retval=True)
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
+    return target
+
+class Upload(db.Model):
+    __tablename__ = 'upload'
+    name = db.Column(db.String(200), primary_key=True)
+    image = db.Column(db.LargeBinary)
+    last_modified = db.Column(TIMESTAMP)
+    created = db.Column(TIMESTAMP)
+    esp_hosted_url = db.Column(db.String(255))
+    esp_hosted_key = db.Column(db.String(255))
+    esp_hosted_id = db.Column(db.String(255))
+    esp_hosted_category_id = db.Column(db.String(255))
+    image_size_height = db.Column(db.Integer)
+    image_size_width = db.Column(db.Integer)
+
+@db.event.listens_for(Upload, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target.created = datetime.datetime.utcnow()
+    return target
+
+@db.event.listens_for(Upload, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target.last_modified = datetime.datetime.utcnow()
+    return target
+
+class Template(db.Model):
+    __tablename__ = 'template'
+    key = db.Column(db.String(10), primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    html = db.Column(TEXT)
+    last_modified = db.Column(TIMESTAMP)
+    created = db.Column(TIMESTAMP)
+    template_data = db.Column(JSON(astext_type=Text()))
+    meta_data = db.Column(JSON(astext_type=Text()))
+
+    def get_key(self, name=None):
+        if name is None:
+            name = self.name
+        return abs(hash(name)) % (10 ** 7)
+
+    def __unicode__(self):
+        return "%s - %s" % (self.name, self.key)
+
+@db.event.listens_for(Template, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target.created = datetime.datetime.utcnow()
+    target.key = hashlib.md5(target.name.encode()).hexdigest()[0:7]
+    return target
+
+@db.event.listens_for(Template, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target.last_modified = datetime.datetime.utcnow()
     return target

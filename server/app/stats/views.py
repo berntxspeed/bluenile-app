@@ -1,16 +1,13 @@
-from flask import request
-from flask import session
-from flask import Response
-from flask import url_for
-from flask_login import login_required
-from injector import inject
 from json import dumps, loads
 
-from werkzeug.utils import redirect
+from flask import Response
+from flask import request
+from flask import session
+from flask_login import login_required
+from injector import inject
 
-from server.app.injector_keys import SQLAlchemy
 from . import stats
-from .injector_keys import JbStatsServ, GetStatsServ, DataLoadServ
+from .injector_keys import JbStatsServ, GetStatsServ
 from ..common.views.decorators import templated
 
 
@@ -32,12 +29,6 @@ def special_logged_in_page(jb_stats_service):
 @templated('data_manager')
 def data_manager():
     return {}
-
-@stats.route('/data-builder')
-@inject(db=SQLAlchemy)
-@templated('data_builder')
-def data_builder(db):
-    return {'tables': list(db.metadata.tables.keys())}
 
 @stats.route('/journey-view')
 @inject(jb_stats_service=JbStatsServ)
@@ -92,8 +83,10 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, load_web_tracking
+    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, \
+        load_web_tracking
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+
     load_map = {'customers': load_customers,
                 'purchases': load_purchases,
                 'artists': load_artists,
