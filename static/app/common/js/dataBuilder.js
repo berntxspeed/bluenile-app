@@ -85,7 +85,7 @@ $(document).ready(function() {
         destroy_table(saved_queries_table);
         $("#modalTable").on('show.bs.modal', function () {
             $.ajax({
-                url: "/builder/get-query/demo",
+                url: "/builder/get-queries",
                 dataType: "json",
                 success: function(data) {
                     saved_queries_table.bootstrapTable(data);

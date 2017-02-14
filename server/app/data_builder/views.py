@@ -10,14 +10,15 @@ from server.app.injector_keys import SQLAlchemy, MongoDB
 from . import databuilder
 from .services.data_builder_query import DataBuilderQuery
 
-from .query_utils import get_customer_query_based_on_rules, extract_data,\
+from .query_utils import get_customer_query_based_on_rules, extract_data, \
     map_models_to_columns, alchemy_encoder
 
 
+@databuilder.route('/data-builder/')
 @databuilder.route('/data-builder/<query_id>')
 @inject(mongo=MongoDB)
 @templated('data_builder')
-def data_builder(mongo, query_id):
+def data_builder(mongo, query_id=None):
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
               WebTrackingEcomm, WebTrackingPageView]
 
@@ -27,32 +28,26 @@ def data_builder(mongo, query_id):
     return {'model': result, 'data': data, 'status': status}
 
 
-# @databuilder.route('/get-query/<query_id>')
-# @inject(mongo=MongoDB)
-# def get_query(mongo, query_id):
-#     status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
-#     return Response(json.dumps(result), mimetype='application/json')
-
-@databuilder.route('/get-query/<query_id>')
+@databuilder.route('/get-queries')
 @inject(mongo=MongoDB)
-def get_query(mongo, query_id):
+def get_queries(mongo):
     status, result = DataBuilderQuery(mongo.db).get_all_queries()
     columns = [{
         'field': 'name',
         'title': 'Query Name'
-        },
+    },
         {
-        'field': 'created',
-        'title': 'Created'
+            'field': 'created',
+            'title': 'Created'
         }]
     return Response(json.dumps({'columns': columns, 'data': result}, default=alchemy_encoder),
                     mimetype='application/json')
 
 
-@databuilder.route('/get-query/preview')
+@databuilder.route('/get-query/<query_id>')
 @inject(mongo=MongoDB)
-def preview(mongo, query_id):
-    status, _ = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+def get_query(mongo, query_id):
+    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
     return Response(json.dumps(result), mimetype='application/json')
 
 
@@ -69,14 +64,7 @@ def save_query(mongo, query_id):
         return error, 500
 
 
-# @databuilder.route('/get-queries')
-# @inject(mongo=MongoDB)
-# def get_queries(mongo):
-#     status, result = DataBuilderQuery(mongo.db).get_all_queries()
-#     return json.dumps(result)
-
-
-@databuilder.route('/query-preview', methods=['GET', 'POST'])
+@databuilder.route('/query-preview', methods=['POST'])
 @inject(alchemy=SQLAlchemy)
 def query_preview(alchemy):
     rules_query = request.json
