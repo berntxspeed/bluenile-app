@@ -220,7 +220,7 @@ class EmlSend(db.Model):
     @EventDate.setter
     def EventDate(self, event_date):
         if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -272,7 +272,7 @@ class EmlOpen(db.Model):
     @EventDate.setter
     def EventDate(self, event_date):
         if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -328,7 +328,7 @@ class EmlClick(db.Model):
     @EventDate.setter
     def EventDate(self, event_date):
         if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %H:%M:%S %p')
+            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
