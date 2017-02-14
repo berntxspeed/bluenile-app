@@ -1,7 +1,7 @@
 from flask import jsonify
 
 from ...common.services import DbService
-from ...common.models import Artist, Customer, EmlSend, EmlOpen, EmlClick
+from ...common.models import Artist, Customer, EmlSend, EmlOpen, EmlClick, SendJob
 from .classes.get_stats import StatsGetter
 
 class GetStatsService(DbService):
@@ -64,18 +64,34 @@ class GetStatsService(DbService):
         return jsonify(results=results)
 
     def send_view(self):
-        """
-        uses self.get_grouping_counts to order and sort send results by number
-        of sent/opens/clicks in descending order
-        """
-        st = StatsGetter(db=self.db,
-                         tbl='EmlOpen',
-                         acceptable_tbls=self._acceptable_tables,
-                         grp_by='SendID',
-                         filters=None)
-        sends = st.get()
-        sends.sort(key=lambda send: send[1], reverse=True)
+
+        sends = SendJob.query.all()
+
+        sends_by_emailname = {}
+        sends_by_sendid = []
+
+        for send in sends:
+            print('processing sendid: ' + str(send.SendID))
+            sends_by_sendid.append({
+                'sendid': send.SendID,
+                'email_name': send.EmailName,
+                'num_sent': send.num_sends
+            })
+            if send.EmailName in sends_by_emailname.keys():
+                sends_by_emailname.get(send.EmailName).get('sendids').append(send.SendID)
+                sends_by_emailname.get(send.EmailName)['num_sendids'] += 1
+                sends_by_emailname.get(send.EmailName)['num_sent'] += send.num_sends
+            else:
+                sends_by_emailname[send.EmailName] = {
+                    'sendids': [send.SendID],
+                    'num_sendids': 1,
+                    'num_sent': send.num_sends
+                }
+
+        sends_by_sendid.sort(key=lambda send: send['num_sent'], reverse=True)
+
 
         return {
-            'sends': sends
+            'sends_by_sendid': sends_by_sendid,
+            'sends_by_emailname': sends_by_emailname
         }

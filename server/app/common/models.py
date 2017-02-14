@@ -161,46 +161,6 @@ def on_update(mapper, connection, target):
     return target
 
 
-class SendJob(db.Model):
-    __tablename__ = 'send_job'
-    SendID = db.Column(db.Integer, primary_key=True) # SendID Field
-    SchedTime = db.Column(db.String(255))
-    SentTime = db.Column(db.String(255))
-    EmailName= db.Column(db.String(64))
-    Subject = db.Column(db.String(1024))
-    PreviewURL = db.Column(db.String(1024))
-    _last_updated = db.Column(TIMESTAMP)
-    _last_ext_sync = db.Column(TIMESTAMP)
-
-    """"@hybrid_property
-    def SchedTime(self):
-        return self._SchedTime
-
-    @SchedTime.setter
-    def SchedTime(self, sched_time):
-        if isinstance(sched_time, str):
-            self._SchedTime = datetime.datetime.strptime(sched_time, '%m/%d/%Y %H:%M:%S %p')
-
-    @hybrid_property
-    def SentTime(self):
-        return self._SentTime
-
-    @SentTime.setter
-    def SentTime(self, sent_time):
-        if isinstance(sent_time, str):
-            self._SentTime = datetime.datetime.strptime(sent_time, '%m/%d/%Y %H:%M:%S %p')"""
-
-    def _update_last_ext_sync(self):
-        self._last_ext_sync = datetime.datetime.utcnow()
-
-    def __repr__(self):
-        return '<SendJob %r>' % self.SendID
-
-@db.event.listens_for(SendJob, 'before_update', retval=True)
-def on_update(mapper, connection, target):
-    target._last_updated = datetime.datetime.utcnow()
-    return target
-
 class EmlSend(db.Model):
     __tablename__ = 'eml_send'
     SendID = db.Column(db.Integer)
@@ -344,6 +304,70 @@ def on_insert(mapper, connection, target):
     return target
 
 @db.event.listens_for(EmlClick, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
+
+
+class SendJob(db.Model):
+    __tablename__ = 'send_job'
+    SendID = db.Column(db.Integer, primary_key=True) # SendID Field
+    SchedTime = db.Column(db.String(255))
+    SentTime = db.Column(db.String(255))
+    EmailName= db.Column(db.String(64))
+    Subject = db.Column(db.String(1024))
+    PreviewURL = db.Column(db.String(1024))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+    eml_sends = relationship(EmlSend, backref='send_job',
+                             primaryjoin='SendJob.SendID==EmlSend.SendID',
+                             foreign_keys=[EmlSend.SendID],
+                             passive_deletes='all')
+    eml_opens = relationship(EmlOpen, backref='send_job',
+                             primaryjoin='SendJob.SendID==EmlOpen.SendID',
+                             foreign_keys=[EmlOpen.SendID],
+                             passive_deletes='all')
+    eml_clicks = relationship(EmlClick, backref='send_job',
+                              primaryjoin='SendJob.SendID==EmlClick.SendID',
+                              foreign_keys=[EmlClick.SendID],
+                              passive_deletes='all')
+    num_sends = db.Column(db.Integer)
+    num_opens = db.Column(db.Integer)
+    num_clicks = db.Column(db.Integer)
+
+    def _get_stats(self):
+        self.num_sends = db.session.object_session(self).query(EmlSend).with_parent(self, "eml_sends").count()
+        self.num_opens = db.session.object_session(self).query(EmlOpen).with_parent(self, "eml_opens").count()
+        self.num_clicks = db.session.object_session(self).query(EmlClick).with_parent(self, "eml_clicks").count()
+        db.session.add(self)
+        db.session.commit()
+
+
+    """"@hybrid_property
+    def SchedTime(self):
+        return self._SchedTime
+
+    @SchedTime.setter
+    def SchedTime(self, sched_time):
+        if isinstance(sched_time, str):
+            self._SchedTime = datetime.datetime.strptime(sched_time, '%m/%d/%Y %H:%M:%S %p')
+
+    @hybrid_property
+    def SentTime(self):
+        return self._SentTime
+
+    @SentTime.setter
+    def SentTime(self, sent_time):
+        if isinstance(sent_time, str):
+            self._SentTime = datetime.datetime.strptime(sent_time, '%m/%d/%Y %H:%M:%S %p')"""
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+    def __repr__(self):
+        return '<SendJob %r>' % self.SendID
+
+@db.event.listens_for(SendJob, 'before_update', retval=True)
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target

@@ -34,9 +34,23 @@
         <div class="col-md-12 center-block" id="a-side">
             <strong>Drill Down into One Email (A SIDE)</strong>
             <div class="well form-well">
+                By Specific Send Job:
                 <select class="send-select">
-                    {% for send in sends %}
-                        <option value="{{ send[0] }}">{{ send[0] }} with {{ send[1] }} opens</option>
+                    <option value="">--select an send--</option>
+                    <option value="">All Sends</option>
+                    {% for send in sends_by_sendid %}
+                        {% if send['num_sent'] > 0 %}
+                            <option value="{{ send['sendid'] }}">{{ send['email_name'] }} [{{ send['sendid'] }}] with {{ send['num_sent'] }} sent</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                By Email Name:
+                <select class="email-select">
+                    <option value="">--select an emailname--</option>
+                    {% for send in sends_by_emailname.items() %}
+                        {% if send[1]['num_sent'] > 0 %}
+                            <option value="{{ send[1]['sendids'] }}">{{ send[0] }} with {{ send[1]['num_sendids'] }} send jobs and {{ send[1]['num_sent'] }} sent</option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>
@@ -50,8 +64,21 @@
             <strong>Drill Down into One Email (B SIDE)</strong>
             <div class="well form-well">
                 <select class="send-select">
-                    {% for send in sends %}
-                        <option value="{{ send[0] }}">{{ send[0] }} with {{ send[1] }} opens</option>
+                    <option value="">--select an send--</option>
+                    <option value="">All Sends</option>
+                    {% for send in sends_by_sendid %}
+                        {% if send['num_sent'] > 0 %}
+                            <option value="{{ send['sendid'] }}">{{ send['email_name'] }} [{{ send['sendid'] }}] with {{ send['num_sent'] }} sent</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                By Email Name:
+                <select class="email-select">
+                    <option value="">--select an emailname--</option>
+                    {% for send in sends_by_emailname.items() %}
+                        {% if send[1]['num_sent'] > 0 %}
+                            <option value="{{ send[1]['sendids'] }}">{{ send[0] }} with {{ send[1]['num_sendids'] }} send jobs and {{ send[1]['num_sent'] }} sent</option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>

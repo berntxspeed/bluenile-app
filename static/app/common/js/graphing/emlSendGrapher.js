@@ -23,7 +23,15 @@ class EmlSendGrapher {
             var toDate = $(bindTo + ' #to-date').val();
 
             // request data from server
-            var filters = [{"name": "SendID", "op": "eq", "val": sendId}];
+            var filters = [];
+            if(sendId){
+                // could be a list of sendids : expects a string representation of an array of strings like this = '['xss', 'sde', 'wer']'
+                if(sendId[0] == '['){
+                    filters.push({"name": "SendID", "op": "in", "val": sendId});
+                } else {
+                    filters.push({"name": "SendID", "op": "eq", "val": sendId});
+                }
+            }
             if(fromDate){ filters.push({"name": "EventDate", "op": "date_gt", "val": fromDate}); }
             if(toDate){ filters.push({"name": "EventDate", "op": "date_lt", "val": toDate}); }
 
