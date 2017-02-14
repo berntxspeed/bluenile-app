@@ -1,7 +1,7 @@
 from flask import jsonify
 
 from ...common.services import DbService
-from ...common.models import Artist, Customer, EmlSend, EmlOpen, EmlClick
+from ...common.models import Customer, EmlSend, EmlOpen, EmlClick
 from .classes.get_stats import StatsGetter
 
 class GetStatsService(DbService):
@@ -10,7 +10,6 @@ class GetStatsService(DbService):
         super(GetStatsService, self).__init__(config, db, logger)
         self._acceptable_tables = {
             'Customer': Customer,
-            'Artist': Artist,
             'EmlSend': EmlSend,
             'EmlOpen': EmlOpen,
             'EmlClick': EmlClick

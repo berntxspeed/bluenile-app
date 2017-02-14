@@ -2,14 +2,14 @@ from sqlalchemy import func
 
 from .classes.data_pusher import DataPusher
 from ...common.services import DbService
-from ...common.models import Artist, Customer, Purchase, EmlOpen, EmlClick, EmlSend, WebTrackingEcomm, WebTrackingPageView, WebTrackingEvent
+from ...common.models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, WebTrackingEcomm, WebTrackingPageView, WebTrackingEvent
 
 
 class DataPushService(DbService):
     def __init__(self, config, db, logger):
         super(DataPushService, self).__init__(config, db, logger)
         self._models = {
-            'artist': Artist,
+            # 'artist': Artist,
             'customer': Customer
         }
 

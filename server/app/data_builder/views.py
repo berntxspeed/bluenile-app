@@ -19,26 +19,40 @@ from .query_utils import get_customer_query_based_on_rules, extract_data,\
 @templated('data_builder')
 def data_builder(mongo, query_id):
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
-              WebTrackingEcomm, WebTrackingPageView, Artist]
+              WebTrackingEcomm, WebTrackingPageView]
 
     result = map_models_to_columns(models)
-
     status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
 
     return {'model': result, 'data': data, 'status': status}
 
 
+# @databuilder.route('/get-query/<query_id>')
+# @inject(mongo=MongoDB)
+# def get_query(mongo, query_id):
+#     status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+#     return Response(json.dumps(result), mimetype='application/json')
+
 @databuilder.route('/get-query/<query_id>')
 @inject(mongo=MongoDB)
 def get_query(mongo, query_id):
-    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
-    return Response(json.dumps(result), mimetype='application/json')
+    status, result = DataBuilderQuery(mongo.db).get_all_queries()
+    columns = [{
+        'field': 'name',
+        'title': 'Query Name'
+        },
+        {
+        'field': 'created',
+        'title': 'Created'
+        }]
+    return Response(json.dumps({'columns': columns, 'data': result}, default=alchemy_encoder),
+                    mimetype='application/json')
 
 
 @databuilder.route('/get-query/preview')
 @inject(mongo=MongoDB)
 def preview(mongo, query_id):
-    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+    status, _ = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
     return Response(json.dumps(result), mimetype='application/json')
 
 
@@ -55,11 +69,11 @@ def save_query(mongo, query_id):
         return error, 500
 
 
-@databuilder.route('/get-queries')
-@inject(mongo=MongoDB)
-def get_queries(mongo):
-    status, result = DataBuilderQuery(mongo.db).get_all_queries()
-    return json.dumps(result)
+# @databuilder.route('/get-queries')
+# @inject(mongo=MongoDB)
+# def get_queries(mongo):
+#     status, result = DataBuilderQuery(mongo.db).get_all_queries()
+#     return json.dumps(result)
 
 
 @databuilder.route('/query-preview', methods=['GET', 'POST'])

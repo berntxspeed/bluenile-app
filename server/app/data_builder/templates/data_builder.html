@@ -23,7 +23,7 @@
                     column_obj = model[table][column]
                     filters_result.push({
                         id: column_obj.expression,
-                        label: column_obj.expression,
+                        label: column_obj.label,
                         type: column_obj.type
                       })
                 }
@@ -81,4 +81,48 @@
         <h4>Data Preview</h4>
         <table id="preview-table"></table>
     </div>
+
+<!-- Modal Dialog For Save Query -->
+    <div class="modal fade" id="modalDialog" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:25px 50px;">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4><span class="glyphicon glyphicon-saved  "></span> Save Query</h4>
+                </div>
+                <div class="modal-body" style="padding:25px 50px;">
+                    <form role="form" id="save-query-form">
+                        <div class="form-group">
+                            <label for="query_name"><span class="glyphicon glyphicon-star"></span> Query Name</label>
+                            <input type="text" class="form-control" id="query_name" placeholder="enter query name">
+                        </div>
+                        <button type="submit" id="submit-save-query" class="btn btn-success btn-block"><span class="glyphicon glyphicon-thumbs-up"></span> Save</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="cancel" class="btn btn-danger btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<!-- Modal Table For Load Query -->
+    <div class="modal fade" id="modalTable" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:25px 50px;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4><span class="glyphicon glyphicon-menu-hamburger"></span> Saved Queries</h4>
+                </div>
+                <div class="modal-body">
+                    <table id="saved-queries-table"></table>
+                </div>
+                <div class="modal-footer">
+                    <button type="cancel" class="btn btn-danger btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 {% endblock %}

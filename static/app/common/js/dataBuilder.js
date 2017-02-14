@@ -46,8 +46,8 @@ $(document).ready(function() {
            return current_query
     };
 
-    var destroy_preview = function(){
-        $('#preview-table').bootstrapTable('destroy');
+    var destroy_table = function(table){
+        table.bootstrapTable('destroy');
     };
 
     var set_defaults = function(){
@@ -62,65 +62,84 @@ $(document).ready(function() {
     var init = function(){
         buildUI(g_rules);
     }
-//    console.log(g_rules)
     init();
 
 
-    $('#btn-get-sql').on('click', function() {
-        var result = $('#builder').queryBuilder('getSQL', false);
-        if (result.sql.length) {
-            alert(result.sql);
-        }
-    });
+//    $('#btn-get-sql').on('click', function() {
+//        var result = $('#builder').queryBuilder('getSQL', false);
+//        if (result.sql.length) {
+//            alert(result.sql);
+//        }
+//    });
+
+
     $('#btn-reset').on('click', function() {
         set_defaults();
-        destroy_preview();
+        destroy_table($('#preview-table'));
 
     });
     $('#btn-get-query').on('click', function() {
-       //fetch all the tables and their elements
-       var query_name=prompt('Enter Query Name');
-       // TODO: the ajax call needs to get names of all queries
-       // TODO: potentially build a clickable table? (columns: timestamp| name) hidden table? [CARD VIEW?]
-       // TODO: limit query_name mistake by the UI: with search box
-       destroy_preview();
-       $.ajax({
-                url: "/builder/get-query/"+query_name,
+//    TODO: when to reset preview_table
+
+        var saved_queries_table = $('#saved-queries-table');
+        destroy_table(saved_queries_table);
+        $("#modalTable").on('show.bs.modal', function () {
+            $.ajax({
+                url: "/builder/get-query/demo",
                 dataType: "json",
-                contentType: "application/json",
                 success: function(data) {
-                    buildUI(data);
+                    saved_queries_table.bootstrapTable(data);
+//                    buildUI(data);
                 },
                 error: function(err) {
-//                    TODO: handle the error
-                    //handle the error or retry
+//                    TODO: handle the error or retry
+                    console.log(err)
                 }
             });
+        });
+        $("#modalTable").modal("show")//{backdrop: "static"});
     });
+
+    $('#saved-queries-table').on('click-row.bs.table', function (e, row, $element) {
+        $("#modalTable").modal("hide")//{backdrop: "static"});
+        buildUI(row)
+        show_preview(row)
+    });
+
+
+    $("#modalDialog").on('show.bs.modal', function () {
+        document.getElementById("save-query-form").reset()
+    });
+
+    $("#submit-save-query").click(function(e) {
+        e.preventDefault();
+        $("#modalDialog").modal("hide")
+        var save_query = get_current_query()
+        query_name = $("#query_name").val().trim();
+        //TODO: check if valid query name; uniqueness?
+        save_query.name = query_name
+        $.ajax({
+                 url: "/builder/save-query/"+query_name,
+                 method: "POST",
+                 data: JSON.stringify(save_query),
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token);
+                 },
+                 success: function(data) {
+                     alert("Saved!");
+                 },
+                 error: function(err) {
+//                         //TODO: handle the error here
+                     //handle the error or retry
+                 }
+             });
+    });
+
     $('#btn-save-query').on('click', function() {
            //fetch all the tables and their elements
-           var save_query = get_current_query()
-           var query_name=prompt('Enter Query Name');
-//                   if(my_text) alert(query_name);
-//TODO: check if valid query name; uniqueness?
-           save_query.name = query_name
-           $.ajax({
-                    url: "/builder/save-query/"+query_name,
-                    method: "POST",
-                    data: JSON.stringify(save_query),
-                    contentType: 'application/json;charset=UTF-8',
-                    beforeSend: function(request) {
-                        request.setRequestHeader("X-CSRFToken", g_csrf_token);
-                    },
-                    success: function(data) {
-                        alert("Saved!");
-                    },
-                    error: function(err) {
-                        //TODO: handle the error here
-                        //handle the error or retry
-                    }
-                });
-        });
+           $("#modalDialog").modal('show');
+    });
 
     $("#tables input").each(function(i){
         // this should yield the input field
@@ -157,9 +176,7 @@ $(document).ready(function() {
       	clickToSelect: true,
     });
 
-    $('#btn-preview').on('click', function() {
-       //fetch all the tables and their elements
-       var preview_query = get_current_query()
+    var show_preview = function(preview_query) {
        $.ajax({
                 url: "/builder/query-preview",
                 method: "POST",
@@ -170,11 +187,10 @@ $(document).ready(function() {
                 },
                 success: function(data) {
                     visible_header = (data.data.length)
-                    destroy_preview()
+                    destroy_table($('#preview-table'))
                     $.extend($.fn.bootstrapTable.defaults, {
                                                 showHeader: visible_header
                                             });
-
                     $('#preview-table').bootstrapTable(data);
                 },
                 error: function(err) {
@@ -182,5 +198,13 @@ $(document).ready(function() {
                     //handle the error or retry
                 }
             });
+    };
+
+
+    $('#btn-preview').on('click', function() {
+       //fetch all the tables and their elements
+       var preview_query = get_current_query()
+       show_preview(preview_query)
     });
+
 });

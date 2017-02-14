@@ -348,24 +348,6 @@ def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
 
-class Artist(db.Model):
-    name = db.Column(db.String(128), primary_key=True)
-    popularity = db.Column(db.String(128))
-    uri = db.Column(db.String(256))
-    href = db.Column(db.String(256))
-    _last_updated = db.Column(TIMESTAMP)
-    _last_ext_sync = db.Column(TIMESTAMP)
-
-    def _update_last_ext_sync(self):
-        self._last_ext_sync = datetime.datetime.utcnow()
-
-    def __repr__(self):
-        return '<Artist %r>' % self.name
-
-@db.event.listens_for(Artist, 'before_update', retval=True)
-def on_update(mapper, connection, target):
-    target._last_updated = datetime.datetime.utcnow()
-    return target
 
 class WebTrackingEvent(db.Model):
     __tablename__ = 'web_tracking_event'
