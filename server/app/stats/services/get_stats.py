@@ -95,3 +95,24 @@ class GetStatsService(DbService):
             'sends_by_sendid': sends_by_sendid,
             'sends_by_emailname': sends_by_emailname
         }
+
+    def send_info(self, sendid):
+        if sendid is not None:
+            send = SendJob.query.filter(SendJob.SendID == sendid).first()
+            if send is not None:
+                return jsonify(emailName=send.EmailName,
+                               numSends=send.num_sends,
+                               numOpens=send.num_opens,
+                               numClicks=send.num_clicks,
+                               previewUrl=send.PreviewURL,
+                               schedTime=send.SchedTime,
+                               sentTime=send.SentTime,
+                               subject=send.Subject), 200
+            else:
+                error = 'couldnt find that sendid: ' + str(sendid)
+        else:
+            error = 'must specify a sendid'
+        return jsonify(error=error), 400
+
+
+

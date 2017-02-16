@@ -6,10 +6,35 @@ class EmlSendGrapher {
     init(bindTo, sendId) {
         var self = this;
         // clear drill down pane and replace with fresh html
-        var newHtml = '<label>Data to Search:</label>\n            <select id="data-selection">\n                <option value="EmlSend">Sent Emails</option>\n                <option value="EmlOpen">Opened Emails</option>\n                <option value="EmlClick">Clicked Emails</option>\n            </select>\n            <label>Group Data By:</label>\n            <select id="data-grouping">\n                <option value="Device">Device</option>\n                <option value="EmailClient">Email Client</option>\n                <option value="Browser">Web Browser</option>\n                <option value="OperatingSystem">Operating System</option>\n                <option value="City">City</option>\n                <option value="Region">State</option>\n                <option value="AreaCode">Special: Locations</option>\n                <option value="_day-_hour">Special: Day-Hour</option>\n                <!--\n                <option value="Region-City">region and city</option>\n                <option value="Country">Country</option>\n                <option value="AreaCode">County</option>\n                <option value="EventDate">EventTime</option>\n                <option value="URL">Link Clicked</option>\n                <option value="emaildomain">Email Provider (not working yet)</option>\n                -->\n            </select>\n            <label>Graph Type:</label>\n            <select id="graph-type">\n                <!--\n                <option value="line">Line</option>\n                <option value="scatter">Scatter</option>\n                -->\n                <option value="bar">Bar</option>\n                <option value="pie">Pie</option>\n                <option value="donut">Donut</option>\n                <option value="map-graph">Map-Graph</option>\n                <option value="day-hour">Day-Hour Heatmap</option>\n            </select>\n            <label>From Date:</label>\n            <input type="date" id="from-date">\n            <label>To Date:</label>\n            <input type="date" id="to-date">\n            <input type="button" value="Update" name="update" id="drill-down-button" class="updateView btn btn-default">\n<div id="drill-down-graph" style="background-color: ghostwhite"></div>';
+        var newHtml = '<label>Data to Search:</label>\n<select id="data-selection">\n    <option value="EmlSend">Sent Emails</option>\n    <option value="EmlOpen">Opened Emails</option>\n    <option value="EmlClick">Clicked Emails</option>\n</select>\n<label>Group Data By:</label>\n<select id="data-grouping">\n    <option value="Device">Device</option>\n    <option value="EmailClient">Email Client</option>\n    <option value="Browser">Web Browser</option>\n    <option value="OperatingSystem">Operating System</option>\n    <option value="City">City</option>\n    <option value="Region">State</option>\n    <option value="AreaCode">Special: Locations</option>\n    <option value="_day">Day (0=mon)</option>\n    <option value="_hour">Hour</option>\n    <option value="_day-_hour">Special: Day-Hour</option>\n    <!--\n    <option value="Region-City">region and city</option>\n    <option value="Country">Country</option>\n    <option value="AreaCode">County</option>\n    <option value="EventDate">EventTime</option>\n    <option value="URL">Link Clicked</option>\n    <option value="emaildomain">Email Provider (not working yet)</option>\n    -->\n</select>\n<label>Graph Type:</label>\n<select id="graph-type">\n    <!--\n    <option value="line">Line</option>\n    <option value="scatter">Scatter</option>\n    -->\n    <option value="bar">Bar</option>\n    <option value="pie">Pie</option>\n    <option value="donut">Donut</option>\n    <option value="map-graph">Map-Graph</option>\n    <option value="day-hour">Day-Hour Heatmap</option>\n</select>\n<br/>\n<label>From Date:</label>\n<input type="date" id="from-date">\n<label>To Date:</label>\n<input type="date" id="to-date">\n<input type="button" value="Update" name="update" id="drill-down-button" class="updateView btn btn-default">\n<div id="drill-down-graph" style="background-color: ghostwhite"></div>';
         $(bindTo)
             .empty()
             .append(newHtml);
+
+        // account for the multi-sendid case if a send grouped-by-emailaddress is chosen.
+        // in this case just grab the first send id as they will all have the same sendinfo (likely)
+        window.sendId = sendId;
+        var sendInfoId = sendId;
+        if(sendId[0] == '[') {
+            if(sendId.indexOf(',') > 0) {
+                sendInfoId = sendId.substring(1, sendId.indexOf(','));
+            } else {
+                // its just one sendId
+                sendInfoId = sendId.substring(1, sendId.length-1);
+            }
+
+        }
+        $.ajax({
+            url: '/send-info/' + sendInfoId,
+            success: function(data) {
+                var sendInfo = data;
+                window.sendInfo = data;
+                var openRate = Math.round(100 * (sendInfo.numOpens / sendInfo.numSends));
+                var clickRate = Math.round(100 * (sendInfo.numClicks / sendInfo.numSends));
+                var sendInfoHtml = '<div class="send-info">\n    <h4><a href="'+sendInfo.previewUrl+'" target="_blank" style="text-decoration:none;">'+sendInfo.emailName+'</a></h4>\n    <p><b>Subject:</b>'+sendInfo.subject+'\n    <br/><b>Scheduled Time:</b> '+sendInfo.schedTime+'\n    <br/><b>Sent Time:</b> '+sendInfo.sentTime+'\n    <br/><b>Sent:</b> '+sendInfo.numSends+' <b>Opens:</b> '+sendInfo.numOpens+' <b>Clicks:</b> '+sendInfo.numClicks+'\n    <br/><b>Open Rate:</b> '+openRate+'% <b>Click Rate:</b> '+clickRate+'%</p>\n</div>';
+                $(bindTo).prepend(sendInfoHtml);
+            }
+        });
 
         // handle button click to render visual based on retrieved statistics
         $(bindTo + ' #drill-down-button').click(function(){

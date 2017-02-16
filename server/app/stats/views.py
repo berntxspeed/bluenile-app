@@ -52,6 +52,12 @@ def send_view(get_stats_service):
     # passes all send ids to view
     return get_stats_service.send_view()
 
+@stats.route('/send-info/<sendid>')
+@inject(get_stats_service=GetStatsServ)
+def send_info(get_stats_service, sendid):
+    # sends info about a single email send
+    return get_stats_service.send_info(sendid)
+
 
 @stats.route('/celery-task-test')
 @templated('celery_updater')
