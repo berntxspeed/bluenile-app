@@ -11,33 +11,43 @@ from sqlalchemy.sql.operators import ColumnOperators,\
 from server.app.common.models import *
 
 
-def get_customer_query_based_on_rules(default_sql_query, rules_query):
+def get_customer_query_based_on_rules(sql_session, rules_query):
     if rules_query.get('rules', None):
-        filter_expression = get_joined_query_obj(default_sql_query, rules_query)
-        final_query = default_sql_query.filter(filter_expression)
+        joined_query_obj, filter_expression = get_joined_query_and_filter(sql_session, rules_query)
+        final_query = joined_query_obj.filter(filter_expression)
     else:
-        final_query = default_sql_query
+        final_query = sql_session.query(Customer)
 
     return final_query
 
 
-def get_joined_query_obj(basic_customer_query, query_rules):
+def get_joined_query_and_filter(sql_session, query_rules):
     models_map, class_relations = get_db_model_relations()
     model_relations = get_model_relations_from_rule(query_rules.get('rules', {}))
+    uniq_models = set([a_model.split('.')[0] for a_model in model_relations])
 
-    for a_relation in model_relations:
-        model, column = a_relation.split('.')
+    query_tables = [models_map[a_model]['class'] for a_model in uniq_models]
+    if 'Customer' not in uniq_models:
+        query_tables.insert(0, models_map['Customer']['class'])
+
+    tables = list(reversed(query_tables))
+    basic_customer_query = sql_session.query(*tables)
+
+    for a_relation in uniq_models:
+        model = a_relation.split('.')[0]
         if model == 'Customer': continue
         rel_class, rel_column = class_relations[model].split('.')
-        basic_customer_query.join(models_map[model]['class'],
+        basic_customer_query = basic_customer_query.join(models_map[model]['class'],
                                   getattr(models_map[rel_class]['class'], rel_column))
 
     filter_exp = get_all_filters(query_rules.get('rules', {}), models_map)
-    return filter_exp
+    return basic_customer_query, filter_exp
 
 
 def get_model_relations_from_rule(rules):
     model_relations = set()
+    if rules is None:
+        return model_relations
     for a_rule in rules.get('rules', []):
         if 'condition' in a_rule:
             model_relations = model_relations.union(get_model_relations_from_rule(a_rule))
@@ -53,7 +63,6 @@ def get_filter(rule, models_map):
     condition = rule['value']
 
     operator_lookup = {'equal': ColumnOperators.__eq__,
-                       #TODO: change like to ilike?
                        'contains': ColumnOperators.contains,
                        'not_contains': lambda col, cond: col.operate(notcontains_op, cond),
                        'begins_with': ColumnOperators.startswith,
@@ -134,12 +143,13 @@ def map_name_to_header(column_name):
         'purchase_count': 'Purchase Count',
         'total_spent_so_far': 'Total Spent'
     }
-    return column_header_map.get(column_name, '')
+    return column_header_map.get(column_name, column_name)
 
 
-def extract_data(results):
-    model_columns = inspect(Customer).columns
+def extract_data(results, query_rules):
+    # Get all Customer columns
     columns_list = []
+    model_columns = inspect(Customer).columns
     for column in model_columns:
         if column.key.startswith("_"): continue
         columns_list.append({
@@ -147,14 +157,40 @@ def extract_data(results):
             'title': map_name_to_header(column.name),
             'type': type_mapper(column.type)
         })
+
+    # Get other selected columns
+    models_map, _ = get_db_model_relations()
+    model_relations = get_model_relations_from_rule(query_rules.get('rules', {}))
+    # TODO: aggregate class names, e.g. to avoid multiple class inspection
+    # TODO: universalize column names, akin to filter name universalization
+    for model_relation in model_relations:
+        class_name, column_name = model_relation.split('.')
+        if class_name == 'Customer': continue
+        model_columns = inspect(models_map[class_name]['class']).columns
+        for column in model_columns:
+            if column.key != column_name: continue
+            columns_list.append({
+                'field': column.key,
+                'title': map_name_to_header(column.name),
+                'type': type_mapper(column.type)
+            })
+
+
+    # Get Data List
     data_list = []
-    for customer in results:
-        data_list.append(customer.__dict__)
+    for a_result in results:
+        data_dict = {}
+        if isinstance(a_result, tuple):
+            for data_row in a_result:
+                data_dict.update(data_row.__dict__)
+        else:
+            data_dict.update(a_result.__dict__)
+        data_list.append(data_dict)
 
     return columns_list, data_list
 
 
-def user_friendly_label(table_name, column_name):
+def user_friendly_filter_label(table_name, column_name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', table_name + ': ' + column_name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower().replace('_', ' ').title()
 
@@ -172,7 +208,7 @@ def map_models_to_columns(models):
                 'table': model.__name__,
                 'expression': model.__name__ + '.' + column.name,
                 'type': type_mapper(column.type),
-                'label': user_friendly_label(model.__name__, column.name)
+                'label': user_friendly_filter_label(model.__name__, column.name)
             }
 
         result[model.__name__] = field_dict

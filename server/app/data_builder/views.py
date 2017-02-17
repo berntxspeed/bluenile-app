@@ -68,10 +68,9 @@ def save_query(mongo, query_id):
 @inject(alchemy=SQLAlchemy)
 def query_preview(alchemy):
     rules_query = request.json
-    default_sql_query = alchemy.session.query(Customer)
-    final_query = get_customer_query_based_on_rules(default_sql_query, rules_query)
+    final_query = get_customer_query_based_on_rules(alchemy.session, rules_query)
 
     results = final_query.limit(100).all()
-    columns, data = extract_data(results)
+    columns, data = extract_data(results, rules_query)
     return Response(json.dumps({'columns': columns, 'data': data}, default=alchemy_encoder),
                     mimetype='application/json')

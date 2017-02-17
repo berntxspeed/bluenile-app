@@ -28,7 +28,7 @@ $(document).ready(function() {
 
         $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
         var rules = (data.rules) ? data.rules : l_empty_rules
-        console.log(rules)
+//        console.log(rules)
         $('#builder').queryBuilder('setRules', rules);
 
     };
@@ -48,6 +48,7 @@ $(document).ready(function() {
 
     var destroy_table = function(table){
         table.bootstrapTable('destroy');
+        table.attr('id') == 'preview-table' && hide_gotopage()
     };
 
     var set_defaults = function(){
@@ -59,9 +60,19 @@ $(document).ready(function() {
         $('#builder').queryBuilder('setRules', l_empty_rules);
     };
 
+    var hide_gotopage = function() {
+        $("#gotopage").hide()
+    };
+
+    var show_gotopage = function() {
+        $("#gotopage").css('display', 'inline')
+    };
+
     var init = function(){
         buildUI(g_rules);
-    }
+        hide_gotopage();
+    };
+
     init();
 
 
@@ -76,11 +87,9 @@ $(document).ready(function() {
     $('#btn-reset').on('click', function() {
         set_defaults();
         destroy_table($('#preview-table'));
-
     });
-    $('#btn-get-query').on('click', function() {
-//    TODO: when to reset preview_table
 
+    $('#btn-get-query').on('click', function() {
         var saved_queries_table = $('#saved-queries-table');
         destroy_table(saved_queries_table);
         $("#modalTable").on('show.bs.modal', function () {
@@ -88,8 +97,13 @@ $(document).ready(function() {
                 url: "/builder/get-queries",
                 dataType: "json",
                 success: function(data) {
+                    $.extend($.fn.bootstrapTable.defaults, {
+                        formatShowingRows: function(pageFrom, pageTo, totalRows){
+                            return 'Showing ' + pageFrom + ' to ' + pageTo + ' of ' + totalRows + ' queries'
+                        }
+
+                    })
                     saved_queries_table.bootstrapTable(data);
-//                    buildUI(data);
                 },
                 error: function(err) {
 //                    TODO: handle the error or retry
@@ -118,6 +132,8 @@ $(document).ready(function() {
         query_name = $("#query_name").val().trim();
         //TODO: check if valid query name; uniqueness?
         save_query.name = query_name
+        var d = new Date()
+        save_query.created = d.toISOString()
         $.ajax({
                  url: "/builder/save-query/"+query_name,
                  method: "POST",
@@ -160,6 +176,37 @@ $(document).ready(function() {
         });
     });
 
+//  Set event handling for query builder, example first
+//    $('#builder').on('validationError.queryBuilder', function(e, rule, error, value) {
+//       never display error for my custom filter
+//      if (rule.filter.id == 'my_custom_filter') {
+//        e.preventDefault();
+//      }
+//    });
+
+//   This signal handling(although correct) happens (multiple times) on group/filter applied on Load Query
+//    $('#builder').on('afterAddGroup.queryBuilder afterDeleteGroup.queryBuilder ' +
+//                     'afterAddRule.queryBuilder afterDeleteRule.queryBuilder', function(model) {
+//        destroy_table($("#preview-table"))
+//    });
+
+//afterUpdateRuleValue.queryBuilder
+//afterUpdateGroupCondition.queryBuilder
+//    $('#builder').on('afterUpdateRuleValue.queryBuilder',  function(rule) {
+//        var preview_query = get_current_query()
+//        show_preview(preview_query)
+//    });
+
+    $('#builder').on('validationError.queryBuilder', function(e, rule, error, value) {
+      // never display error for my custom filter
+//      if (rule.filter.id == 'my_custom_filter') {
+//TODO: show in pretty modal box
+        alert('No filter input: showing all Customers')
+        console.log($('#table').bootstrapTable('getOptions'))
+        e.preventDefault();
+//      }
+    });
+
 //  Set global defaults on bootstrap table columns
     $.extend($.fn.bootstrapTable.columnDefaults, {
       	sortable: true,
@@ -174,7 +221,13 @@ $(document).ready(function() {
       	search: true,
       	striped: true,
       	clickToSelect: true,
-    });
+      	pageSize: 10,
+      	paginationVAlign: 'bottom',
+      	paginationHAlign: 'right',
+      	paginationPreText: 'Previous',
+      	paginationNextText: 'Next'
+        })
+//      	showPaginationSwitch: true,
 
     var show_preview = function(preview_query) {
        $.ajax({
@@ -186,12 +239,16 @@ $(document).ready(function() {
                     request.setRequestHeader("X-CSRFToken", g_csrf_token);
                 },
                 success: function(data) {
-                    visible_header = (data.data.length)
+                    visible_header = (data.data.length > 0)
                     destroy_table($('#preview-table'))
                     $.extend($.fn.bootstrapTable.defaults, {
-                                                showHeader: visible_header
-                                            });
+                        showHeader: visible_header,
+                        formatShowingRows: function(pageFrom, pageTo, totalRows){
+                            return 'Found ' + totalRows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                        }
+                        });
                     $('#preview-table').bootstrapTable(data);
+                    visible_header && show_gotopage()
                 },
                 error: function(err) {
                     //TODO: handle the error here
@@ -200,6 +257,10 @@ $(document).ready(function() {
             });
     };
 
+    $('#page-button').click(function () {
+//        console.log($('#preview-table').bootstrapTable('getOptions'))
+        $('#preview-table').bootstrapTable('selectPage', +$('#page').val());
+    });
 
     $('#btn-preview').on('click', function() {
        //fetch all the tables and their elements
