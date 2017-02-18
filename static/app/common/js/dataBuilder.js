@@ -198,13 +198,9 @@ $(document).ready(function() {
 //    });
 
     $('#builder').on('validationError.queryBuilder', function(e, rule, error, value) {
-      // never display error for my custom filter
-//      if (rule.filter.id == 'my_custom_filter') {
-//TODO: show in pretty modal box
+      //TODO: show in pretty modal box
         alert('No filter input: showing all Customers')
-        console.log($('#table').bootstrapTable('getOptions'))
         e.preventDefault();
-//      }
     });
 
 //  Set global defaults on bootstrap table columns
@@ -244,21 +240,19 @@ $(document).ready(function() {
                     $.extend($.fn.bootstrapTable.defaults, {
                         showHeader: visible_header,
                         formatShowingRows: function(pageFrom, pageTo, totalRows){
-                            return 'Found ' + totalRows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                            return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
                         }
                         });
                     $('#preview-table').bootstrapTable(data);
-                    visible_header && show_gotopage()
+                    ($('#preview-table').bootstrapTable('getOptions').totalPages > 1) && show_gotopage()
                 },
                 error: function(err) {
-                    //TODO: handle the error here
-                    //handle the error or retry
+                    //TODO: handle the error or retry
                 }
             });
     };
 
     $('#page-button').click(function () {
-//        console.log($('#preview-table').bootstrapTable('getOptions'))
         $('#preview-table').bootstrapTable('selectPage', +$('#page').val());
     });
 

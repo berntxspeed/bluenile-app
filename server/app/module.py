@@ -55,6 +55,7 @@ def get_modules():
     from .auth.module import AuthModule
     from .stats.module import StatsModule
     from .data.module import DataModule
+    from .data_builder.module import SqlQueryModule
     from .emails.module import EmailModule
 
     return [
@@ -62,6 +63,7 @@ def get_modules():
         AuthModule(),
         StatsModule(),
         DataModule(),
+        SqlQueryModule(),
         EmailModule()
     ]
 
