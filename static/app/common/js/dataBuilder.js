@@ -157,6 +157,36 @@ $(document).ready(function() {
            $("#modalDialog").modal('show');
     });
 
+//    $('#btn-sync').on('click', function() {
+//        console.log(document.getElementById('modalDialog'))
+//        var query_name = prompt("Please enter query name")
+//        var sync_query = get_current_query()
+//        sync_query.name = query_name
+//        console.log(sync_query)
+//        //TODO: Automatically save the query in Mongo?
+//        //TODO: Track loaded query/saved query: only prompt for name then
+//        $.ajax({
+//                 url: "/builder/sync-query",
+//                 method: "POST",
+//                 data: JSON.stringify(sync_query),
+//                 contentType: 'application/json;charset=UTF-8',
+//                 beforeSend: function(request) {
+//                     request.setRequestHeader("X-CSRFToken", g_csrf_token);
+//                 },
+//                 success: function(data) {
+//                     console.log('received data!')
+//                     console.log(data)
+////                     return data
+//                     alert("Synced to MC!");
+//                 },
+//                 error: function(err) {
+////                         //TODO: handle the error here
+//                     //handle the error or retry
+//                 }
+//        });
+//    });
+
+
     $("#tables input").each(function(i){
         // this should yield the input field
         $(this).change(function(){
@@ -218,6 +248,7 @@ $(document).ready(function() {
       	striped: true,
       	clickToSelect: true,
       	pageSize: 10,
+      	pageList: [10, 25, 50, 100],
       	paginationVAlign: 'bottom',
       	paginationHAlign: 'right',
       	paginationPreText: 'Previous',
