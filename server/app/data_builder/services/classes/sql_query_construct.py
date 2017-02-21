@@ -8,29 +8,33 @@ from ....common.models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, We
 
 class SqlQueryConstructor(object):
 
-    def __init__(self, db, query):
+    def __init__(self, db, rules_query, customer_only=False):
         self.db = db
-        self.query = query
+        self.rules_query = rules_query
+        self.customer_only = customer_only
 
     def construct_sql_query(self):
-        if self.query.get('rules', None):
-            joined_query_obj, filter_expression = self.get_joined_query_and_filter(self.query)
+        if self.rules_query.get('rules', None):
+            joined_query_obj, filter_expression = self.get_joined_query_and_filter()
             final_query = joined_query_obj.filter(filter_expression)
         else:
             final_query = self.db.session.query(Customer)
 
         return final_query
 
-    def get_joined_query_and_filter(self, query_rules):
+    def get_joined_query_and_filter(self):
         models_map, class_relations = SqlQueryConstructor.get_db_model_relations()
-        model_relations = SqlQueryConstructor.get_model_relations_from_rule(query_rules.get('rules', {}))
+        model_relations = SqlQueryConstructor.get_model_relations_from_rule(self.rules_query.get('rules', {}))
         uniq_models = set([a_model.split('.')[0] for a_model in model_relations])
 
-        query_tables = [models_map[a_model]['class'] for a_model in uniq_models]
-        if 'Customer' not in uniq_models:
-            query_tables.insert(0, models_map['Customer']['class'])
+        if self.customer_only is True:
+            tables = [Customer]
+        else:
+            query_tables = [models_map[a_model]['class'] for a_model in uniq_models]
+            if 'Customer' not in uniq_models:
+                query_tables.insert(0, models_map['Customer']['class'])
+            tables = list(reversed(query_tables))
 
-        tables = list(reversed(query_tables))
         basic_customer_query = self.db.session.query(*tables)
 
         for a_relation in uniq_models:
@@ -40,7 +44,7 @@ class SqlQueryConstructor(object):
             basic_customer_query = basic_customer_query.join(models_map[model]['class'],
                                                              getattr(models_map[rel_class]['class'], rel_column))
 
-        filter_exp = self.get_all_filters(query_rules.get('rules', {}), models_map)
+        filter_exp = self.get_all_filters(self.rules_query.get('rules', {}), models_map)
         return basic_customer_query, filter_exp
 
     @staticmethod

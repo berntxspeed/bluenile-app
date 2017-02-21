@@ -67,7 +67,7 @@ class DataPushService(DbService):
 
         dp = DataPusher(self.db, self._models['customer'])
         resp = dp.sync_query(name=query_rules['name'],
-                             query=SqlQueryConstructor(self.db, query_rules).construct_sql_query())
+                             query=SqlQueryConstructor(self.db, query_rules, customer_only=True).construct_sql_query())
 
         if resp and hasattr(resp, 'code'):
             self.logger.info('sync result:' + str(resp.code))
