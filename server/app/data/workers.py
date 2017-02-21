@@ -16,7 +16,7 @@ def clean_sync_flags(table):
 
 
 @celery.task
-def sync_query_to_mc(query):
+def sync_query_to_mc(query_rules):
     with app.app_context():
         service = injector.get(DataPushServ)
-        service.sync_query_to_mc(query)
+        service.sync_query_to_mc(query_rules)
