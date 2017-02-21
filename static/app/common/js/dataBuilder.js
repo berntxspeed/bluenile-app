@@ -48,6 +48,7 @@ $(document).ready(function() {
 
     var destroy_table = function(table){
         table.bootstrapTable('destroy');
+
         table.attr('id') == 'preview-table' && hide_gotopage()
     };
 
@@ -87,13 +88,16 @@ $(document).ready(function() {
     $('#btn-reset').on('click', function() {
         set_defaults();
         destroy_table($('#preview-table'));
+
     });
 
     $('#btn-get-query').on('click', function() {
+
         var saved_queries_table = $('#saved-queries-table');
         destroy_table(saved_queries_table);
         $("#modalTable").on('show.bs.modal', function () {
             $.ajax({
+
                 url: "/builder/get-queries",
                 dataType: "json",
                 success: function(data) {
