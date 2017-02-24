@@ -35,7 +35,7 @@ class EventMgr(object):
                 continue
             changes[attr.key] = (hist.deleted, hist.added)
 
-        pp(changes)
+        # pp(changes)
 
         if changes is not {}:
             if self._event_defs is None:
