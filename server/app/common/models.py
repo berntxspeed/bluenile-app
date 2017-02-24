@@ -665,12 +665,3 @@ def on_update(mapper, connection, target):
 def on_update(mapper, connection, target):
     target.last_modified = datetime.datetime.utcnow()
     return target
-
-
-#TODO: move this out to app init so it can be used elsewhere - like to setup other EventDefs to listen for
-event_mgr = EventMgr(db, Event, EventDefinition)
-
-@db.event.listens_for(db.session, 'before_flush')
-def on_flush(session, flush_context, instances):
-    print('caught BEFORE_FLUSH event')
-    event_mgr.log_events(session)
