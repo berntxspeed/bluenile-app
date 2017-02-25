@@ -1,5 +1,7 @@
 #TODO: don't watch any changes on Event
 #TODO: build front end connection so users can input event defs and report on events
+#TODO: enable more deta-type sensitive checking to happen
+#handle the case where it goes from null to something (as opposed to <doesnt matter> to something)
 
 from pprint import pprint as pp
 
