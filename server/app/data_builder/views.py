@@ -22,7 +22,6 @@ def data_builder(mongo, query_id=None):
               WebTrackingEcomm, WebTrackingPageView]
 
     result = SqlQueryService.map_models_to_columns(models)
-
     status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
 
     return {'model': result, 'data': data, 'status': status}
@@ -33,9 +32,9 @@ def data_builder(mongo, query_id=None):
 def get_queries(mongo):
     status, result = DataBuilderQuery(mongo.db).get_all_queries()
     columns = [{
-        'field': 'name',
-        'title': 'Query Name'
-    },
+            'field': 'name',
+            'title': 'Query Name'
+        },
         {
             'field': 'created',
             'title': 'Created'
@@ -48,15 +47,23 @@ def get_queries(mongo):
 @inject(mongo=MongoDB)
 def get_query(mongo, query_id):
     status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
-
     return Response(json.dumps(result), mimetype='application/json')
+
+
+@databuilder.route('/delete-query/<query_id>', methods=['POST'])
+@inject(mongo=MongoDB)
+def delete_query(mongo, query_id):
+    success, error = DataBuilderQuery(mongo.db).remove_query(query_id)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
 
 
 @databuilder.route('/save-query/<query_id>', methods=['POST'])
 @inject(mongo=MongoDB)
 def save_query(mongo, query_id):
     # TODO: get user_id from session: for now saves only _csrf_token
-
     query = request.json
     success, error = DataBuilderQuery(mongo.db).save_query(query_id, query)
     if success:
