@@ -7,7 +7,14 @@ $(document).ready(function() {
                              empty: true
                            }
                          ]
-                       };
+                        };
+
+    g_current_query = {
+                        name: null,
+                        rules: l_empty_rules
+                      };
+
+    g_timeout = 1700
     var buildUI = function(data){
         reduced_model = {}
         for(var j in $('#tables input')){
@@ -30,6 +37,7 @@ $(document).ready(function() {
         var rules = (data.rules) ? data.rules : l_empty_rules
 //        console.log(rules)
         $('#builder').queryBuilder('setRules', rules);
+        $('#btn-save-query-as').hide()
 
     };
 
@@ -85,9 +93,17 @@ $(document).ready(function() {
 
 
     $('#btn-reset').on('click', function() {
-        set_defaults();
         destroy_table($('#preview-table'));
+        set_defaults();
+        resetQueryName('');
+        g_current_query.name = null
     });
+
+    var alertUser = function(alert_message, timeout=null) {
+        (timeout)? g_timeout = timeout: g_timeout = 1700
+        document.getElementById('modal-content').innerHTML = alert_message
+        $('#alertModal').modal({'backdrop': false, 'keyboard': true})
+    }
 
     $('#btn-get-query').on('click', function() {
         var saved_queries_table = $('#saved-queries-table');
@@ -114,10 +130,63 @@ $(document).ready(function() {
         $("#modalTable").modal("show")//{backdrop: "static"});
     });
 
-    $('#saved-queries-table').on('click-row.bs.table', function (e, row, $element) {
+  	$('#saved-queries-table').on('click-row.bs.table', function (e, row, $element) {
+    		$('.success').removeClass('success');
+    		$($element).addClass('success');
+  	});
+
+  	function getSelectedRow() {
+        var index = $('#saved-queries-table').find('tr.success').data('index');
+        return $('#saved-queries-table').bootstrapTable('getData')[index];
+    }
+
+    $('#load-saved-query').click(function () {
+        var row = getSelectedRow();
+        buildUI(row)
+        show_preview(row)
+        resetQueryName("Loaded Query: '" + row.name + "'")
+        g_current_query.name = row.name
+        g_current_query.rules = row.rules
+    });
+
+
+    $('#delete-saved-query').click(function () {
+        var row = getSelectedRow();
+        query_name = row.name
+        $.ajax({
+                 url: "/builder/delete-query/"+query_name,
+                 method: "POST",
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token);
+                 },
+                 success: function(data) {
+                    if (data == 'OK'){
+                        $('#saved-queries-table').bootstrapTable('remove', {
+                            field: 'name',
+                            values: [row.name]
+                        });
+                    }
+                 },
+                 error: function(err) {
+                     //TODO: handle the error or retry
+                 }
+        });
+
+    });
+
+    function resetQueryName(name) {
+        document.getElementById('data-preview-header').innerHTML = name
+    }
+
+
+    $("#saved-queries-table").on('dbl-click-row.bs.table', function (e, row, $element) {
         $("#modalTable").modal("hide")//{backdrop: "static"});
         buildUI(row)
         show_preview(row)
+        resetQueryName("Loaded Query: '" + row.name + "'")
+        g_current_query.name = row.name
+        g_current_query.rules = row.rules
     });
 
 
@@ -125,13 +194,7 @@ $(document).ready(function() {
         document.getElementById("save-query-form").reset()
     });
 
-    $("#submit-save-query").click(function(e) {
-        e.preventDefault();
-        $("#modalDialog").modal("hide")
-        var save_query = get_current_query()
-        query_name = $("#query_name").val().trim();
-        //TODO: check if valid query name; uniqueness?
-        save_query.name = query_name
+    function saveCurrentQuery(query_name, save_query) {
         var d = new Date()
         save_query.created = d.toISOString()
         $.ajax({
@@ -143,18 +206,47 @@ $(document).ready(function() {
                      request.setRequestHeader("X-CSRFToken", g_csrf_token);
                  },
                  success: function(data) {
-                     alert("Saved!");
+                    resetQueryName("Loaded Query: '" + query_name + "'")
+                    g_current_query.name = query_name
+                    g_current_query.rules = save_query.rules
+                    alertUser("Saved!");
                  },
                  error: function(err) {
 //                         //TODO: handle the error here
                      //handle the error or retry
                  }
              });
+    }
+
+    $("#submit-save-query").click(function(e) {
+        e.preventDefault();
+        $("#modalDialog").modal("hide")
+        var save_query = get_current_query()
+        query_name = $("#query_name").val().trim();
+        saveCurrentQuery(query_name, save_query)
     });
 
     $('#btn-save-query').on('click', function() {
-           //fetch all the tables and their elements
-           $("#modalDialog").modal('show');
+        current_query = get_current_query()
+        if (JSON.stringify(current_query.rules) == JSON.stringify(g_current_query.rules)) {
+            alertUser('Query Did Not Change', 1000)
+        }
+        else if (g_current_query.name) {
+            saveCurrentQuery(g_current_query.name, current_query)
+        }
+        else {
+            alertUser('Cannot Save Empty Query')
+        }
+    });
+
+    $('#btn-save-query-as').on('click', function() {
+        current_query = get_current_query()
+        if (g_current_query.name) {
+            $("#modalDialog").modal('show');
+        }
+        else {
+            alertUser('Cannot Save Empty Query')
+        }
     });
 
 //    $('#btn-sync').on('click', function() {
@@ -206,10 +298,17 @@ $(document).ready(function() {
     });
 
     $('#builder').on('validationError.queryBuilder', function(e, rule, error, value) {
-      //TODO: show in pretty modal box
-        alert('No filter input: showing all Customers')
         e.preventDefault();
     });
+
+    window.onbeforeunload = confirmExit;
+    function confirmExit(e) {
+        current_query = get_current_query()
+        changed = ((JSON.stringify(current_query.rules) != JSON.stringify(g_current_query.rules)) && (current_query.rules))
+        if (changed) {
+            return "You did not save, do you want to do it now?";
+        }
+    }
 
 //  Set global defaults on bootstrap table columns
     $.extend($.fn.bootstrapTable.columnDefaults, {
@@ -259,15 +358,29 @@ $(document).ready(function() {
                     //TODO: handle the error or retry
                 }
             });
+       $('#btn-save-query-as').show()
     };
 
     $('#page-button').click(function () {
         $('#preview-table').bootstrapTable('selectPage', +$('#page').val());
     });
 
+    $('#alertModal').on('show.bs.modal', function(){
+        var myModal = $(this);
+        clearTimeout(myModal.data('hideInterval'));
+        myModal.data('hideInterval', setTimeout(function(){
+            myModal.modal('hide');
+        }, g_timeout));
+    });
+
     $('#btn-preview').on('click', function() {
-       //fetch all the tables and their elements
-       var preview_query = get_current_query()
-       show_preview(preview_query)
+        //fetch all the tables and their elements
+        var preview_query = get_current_query()
+        console.log(preview_query)
+        if (!preview_query.rules) {
+            alertUser('Invalid or Empty Filters: Showing all Customers', 2000)
+            resetQueryName('All Customers')
+        }
+        show_preview(preview_query)
     });
 });

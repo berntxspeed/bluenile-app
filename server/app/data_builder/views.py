@@ -50,6 +50,16 @@ def get_query(mongo, query_id):
     return Response(json.dumps(result), mimetype='application/json')
 
 
+@databuilder.route('/delete-query/<query_id>', methods=['POST'])
+@inject(mongo=MongoDB)
+def delete_query(mongo, query_id):
+    success, error = DataBuilderQuery(mongo.db).remove_query(query_id)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
+
+
 @databuilder.route('/save-query/<query_id>', methods=['POST'])
 @inject(mongo=MongoDB)
 def save_query(mongo, query_id):
