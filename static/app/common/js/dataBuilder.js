@@ -166,6 +166,11 @@ $(document).ready(function() {
                             field: 'name',
                             values: [row.name]
                         });
+                        g_current_query.name = null
+                        g_current_query.rules = l_empty_rules
+                        destroy_table($('#preview-table'));
+                        buildUI(g_current_query)
+                        resetQueryName('')
                     }
                  },
                  error: function(err) {
