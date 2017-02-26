@@ -37,7 +37,7 @@ $(document).ready(function() {
         var rules = (data.rules) ? data.rules : l_empty_rules
 //        console.log(rules)
         $('#builder').queryBuilder('setRules', rules);
-        $('#btn-save-query-as').hide()
+        $('#btn-save-query-as').prop('disabled', true);
 
     };
 
@@ -95,7 +95,7 @@ $(document).ready(function() {
     $('#btn-reset').on('click', function() {
         destroy_table($('#preview-table'));
         set_defaults();
-        resetQueryName('');
+        resetQueryName('Default');
         g_current_query.name = null
     });
 
@@ -144,7 +144,7 @@ $(document).ready(function() {
         var row = getSelectedRow();
         buildUI(row)
         show_preview(row)
-        resetQueryName("Loaded Query: '" + row.name + "'")
+        resetQueryName("'" + row.name + "'")
         g_current_query.name = row.name
         g_current_query.rules = row.rules
     });
@@ -189,7 +189,7 @@ $(document).ready(function() {
         $("#modalTable").modal("hide")//{backdrop: "static"});
         buildUI(row)
         show_preview(row)
-        resetQueryName("Loaded Query: '" + row.name + "'")
+        resetQueryName("'" + row.name + "'")
         g_current_query.name = row.name
         g_current_query.rules = row.rules
     });
@@ -211,7 +211,7 @@ $(document).ready(function() {
                      request.setRequestHeader("X-CSRFToken", g_csrf_token);
                  },
                  success: function(data) {
-                    resetQueryName("Loaded Query: '" + query_name + "'")
+                    resetQueryName("'" + query_name + "'")
                     g_current_query.name = query_name
                     g_current_query.rules = save_query.rules
                     alertUser("Saved!");
@@ -366,7 +366,7 @@ $(document).ready(function() {
                     //TODO: handle the error or retry
                 }
             });
-       $('#btn-save-query-as').show()
+       $('#btn-save-query-as').prop('disabled', false);
     };
 
     $('#page-button').click(function () {

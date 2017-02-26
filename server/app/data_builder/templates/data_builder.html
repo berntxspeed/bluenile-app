@@ -38,37 +38,68 @@
 {% endblock %}
 
 {% block banner %}
-    <div class="banner banner-jumbotron banner-gray">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 center-block">
-                    <h1>&nbsp;</h1>
-                    <h3>Transform and Enrich Your Data</h3>
-                </div>
+    <div class="container banner banner-jumbotron banner-gray">
+        <div class="row">
+            <div class="center-block">
+                <h1>&nbsp;</h1>
+                <h3>Transform and Enrich Your Data</h3>
             </div>
         </div>
     </div>
 {% endblock %}
 
 {% block body_content %}
+    <div class="row" id="navbardiv">
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <!--<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">-->
+                        <!--<span class="sr-only">Toggle navigation</span>-->
+                    <!--</button>-->
+                    <a class="navbar-brand" id="data-preview-header">Default</a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <!--<li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>-->
+                        <!--<li><a href="#">Link</a></li>-->
+                        <li class="dropdown">
+                            <btn class="dropdown-toggle btn btn-default navbar-btn" data-toggle="dropdown" role="button"
+                               aria-haspopup="true" aria-expanded="false">Query <span class="caret"></span>
+                            </btn>
+                            <ul class="dropdown-menu">
+                                <li><button id="btn-save-query" class="btn btn-default">Save Query</button></li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <button id="btn-save-query-as" class="btn btn-default">Save Query AS</button>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li><button id="btn-reset" class="btn btn-default">Reset Defaults</button></li>
+                            </ul>
+                        </li>
+                        <li><button id="btn-get-query" class="btn btn-default navbar-btn">Manage Saved Queries</button></li>
+                    </ul>
+                    <ul class="nav">
+                        <li class="navbar-right"><button id="btn-preview" class="btn btn-default navbar-btn">Preview Results</button></li>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </div>
     <div class="row">
         <div id="queries">
-            <!--<button id="btn-get-sql" class="btn btn-primary parse-sql">SQL statement</button>-->
-            <button id="btn-get-query" class="btn btn-primary">Manage Saved Queries</button>
-            <button id="btn-reset" class="btn btn-primary">Reset Defaults</button>
-            <button id="btn-preview" class="btn btn-primary">Preview Results</button>
-            <button id="btn-save-query" class="btn btn-primary">Save Query</button>
-            <button id="btn-save-query-as" class="btn btn-primary">Save Query AS</button>
-        <!--</div>-->
-        <div id="tables" class="collapse">
-            {% for table in model %}
-                    <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
-            {% endfor %}
+            <div id="tables" class="collapse">
+                {% for table in model %}
+                        <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
+                {% endfor %}
+            </div>
         </div>
     </div>
     <div class="row">
         <h4>Filter your data</h4>
-        <div class="col-md-12 col-lg-10 col-lg-offset-1">
+        <div>
             <div id="builder" class="query-builder form-inline"></div>
             <script type="text/javascript">
                 $('#builder').queryBuilder({
@@ -79,10 +110,9 @@
         </div>
     </div>
     <div class="row">
-        <h4 id="data-preview-header"></h4>
+        <!--<h4 id="data-preview-header">not empty</h4>-->
         <table id="preview-table"></table>
     </div>
-
 <!-- Modal Dialog For Save Query -->
     <div class="modal fade" id="modalDialog" role="dialog">
         <div class="modal-dialog">
