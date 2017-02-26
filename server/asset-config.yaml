@@ -51,8 +51,8 @@ query-builder-js:
     contents:
         - bower_components/moment/moment.js
         - bower_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js
-        - app/common/js/dataBuilder.js
         - app/common/js/dataBuilderUtils.js
+        - app/common/js/dataBuilder.js
         - bower_components/bootstrap-table/dist/bootstrap-table.js
 
 query-builder-css:
