@@ -238,8 +238,12 @@ $(document).ready(function() {
         if (deepCompare(current_query.rules, g_current_query.rules)) {
             alertUser('Query Did Not Change', 1000)
         }
-        else if (g_current_query.name) {
-            saveCurrentQuery(g_current_query.name, current_query)
+        else if (current_query.rules) {
+            if (g_current_query.name){
+                saveCurrentQuery(g_current_query.name, current_query)
+            }
+            else
+                $("#modalDialog").modal('show');
         }
         else {
             alertUser('Cannot Save Empty Query')
@@ -248,7 +252,7 @@ $(document).ready(function() {
 
     $('#btn-save-query-as').on('click', function() {
         current_query = get_current_query()
-        if (g_current_query.name) {
+        if (g_current_query.name || (current_query.rules)) {
             $("#modalDialog").modal('show');
         }
         else {
@@ -384,7 +388,6 @@ $(document).ready(function() {
     $('#btn-preview').on('click', function() {
         //fetch all the tables and their elements
         var preview_query = get_current_query()
-        console.log(preview_query)
         if (!preview_query.rules) {
             alertUser('Invalid or Empty Filters: Showing all Customers', 2000)
             resetQueryName('All Customers')
