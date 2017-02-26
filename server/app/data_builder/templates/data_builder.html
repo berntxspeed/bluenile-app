@@ -54,7 +54,7 @@
             <div class="container-fluid">
                 <!-- Brand and toggle get grouped for better mobile display -->
                 <div class="navbar-header">
-                    <a class="navbar-brand" id="data-preview-header">Segment Builder</a>
+                    <a class="navbar-brand">Segment Builder</a>
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
@@ -65,13 +65,20 @@
                                aria-haspopup="true" aria-expanded="false">Query <span class="caret"></span>
                             </btn>
                             <ul class="dropdown-menu">
-                                <li><button id="btn-save-query" class="btn btn-default">Save Query</button></li>
-                                <li role="separator" class="divider"></li>
                                 <li>
-                                    <button id="btn-save-query-as" class="btn btn-default">Save Query AS</button>
+                                    <!--<button id="btn-save-query" class="btn btn-primary">Save Query</button>-->
+                                    <a href="#" id="btn-save-query" class="">Save Query</a>
                                 </li>
                                 <li role="separator" class="divider"></li>
-                                <li><button id="btn-reset" class="btn btn-default">Reset Defaults</button></li>
+                                <li>
+                                    <!--<button id="btn-save-query-as" class="btn btn-primary">Save Query AS</button>-->
+                                    <a id="btn-save-query-as" class="">Save Query AS</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <!--<button id="btn-reset" class="btn btn-primary">Reset Defaults</button>-->
+                                    <a id="btn-reset" class="">Reset Defaults</a>
+                                </li>
                             </ul>
                         </li>
                         <li><button id="btn-get-query" class="btn btn-default navbar-btn">Manage Saved Queries</button></li>
@@ -84,31 +91,38 @@
             </div><!-- /.container-fluid -->
         </nav>
     </div>
-    <div class="row">
-        <div id="queries">
-            <div id="tables" class="collapse">
-                {% for table in model %}
-                        <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
-                {% endfor %}
-            </div>
+    <div class="row panel panel-primary">
+        <div class="panel-heading">
+            <h4 id="data-preview-header" class="panel-title">Default</h4>
         </div>
-    </div>
-    <div class="row">
-        <h4>Filter your data</h4>
-        <div>
-            <div id="builder" class="query-builder form-inline"></div>
-            <script type="text/javascript">
+        <div class="panel-body">
+            <div class="row">
+                <div id="queries">
+                    <div id="tables" class="collapse">
+                        {% for table in model %}
+                        <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <!--<h4>Filter your data</h4>-->
+                <div>
+                    <div id="builder" class="query-builder form-inline"></div>
+                    <script type="text/javascript">
                 $('#builder').queryBuilder({
                   plugins: ['bt-tooltip-errors'],
                   filters: g_filters,
                 });
             </script>
+                </div>
+            </div>
+            <div class="row">
+                <table id="preview-table"></table>
+            </div>
         </div>
     </div>
-    <div class="row">
-        <!--<h4 id="data-preview-header">not empty</h4>-->
-        <table id="preview-table"></table>
-    </div>
+
 <!-- Modal Dialog For Save Query -->
     <div class="modal fade" id="modalDialog" role="dialog">
         <div class="modal-dialog">
