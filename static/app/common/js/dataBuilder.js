@@ -17,10 +17,14 @@ $(document).ready(function() {
     g_timeout = 1700
     var buildUI = function(data){
         reduced_model = {}
+        // There are hidden checkboxes that track which tables participate in the join
+        // Reset them all to false when loading new query
         for(var j in $('#tables input')){
             var input = $('#tables input')[j];
             input.checked = false;
         }
+        // Select the ones that are in the query
+        // TODO: this could be more resilient if the model has changed over time
         for(var i in data["selected_tables"]){
             tbl = data["selected_tables"][i]
             $("#" + tbl)[0].checked = true;
@@ -33,12 +37,28 @@ $(document).ready(function() {
             reduced_model = g_model;
         }
 
+        // The filters are the available set of fields to choose from
         $('#builder').queryBuilder('setFilters', get_filters(reduced_model));
+
+        // The rules are the selected criteria such as what is the value that we're comparing against, etc
         var rules = (data.rules) ? data.rules : l_empty_rules
-//        console.log(rules)
         $('#builder').queryBuilder('setRules', rules);
+        // Turn off the 'save as' in the beginning
         $('#btn-save-query-as').prop('disabled', true);
 
+        // Set the model on the value explorer widget
+        var explore_select = $('#selected-value-explore')[0];
+
+        for(var tn in g_model){
+            var t = g_model[tn];
+            console.log(t);
+            for(var k in t){
+                var v = t[k];
+                var o = new Option(v["label"], v["expression"]);
+                console.log(o);
+                explore_select.append(o)
+            }
+        }
     };
 
     var get_current_query = function(){
@@ -82,14 +102,6 @@ $(document).ready(function() {
     };
 
     init();
-
-
-//    $('#btn-get-sql').on('click', function() {
-//        var result = $('#builder').queryBuilder('getSQL', false);
-//        if (result.sql.length) {
-//            alert(result.sql);
-//        }
-//    });
 
 
     $('#btn-reset').on('click', function() {
@@ -230,7 +242,6 @@ $(document).ready(function() {
         query_name = $("#query_name").val().trim();
         saveCurrentQuery(query_name, save_query)
     });
-
 
     $('#btn-save-query').on('click', function() {
         current_query = get_current_query()
@@ -393,5 +404,9 @@ $(document).ready(function() {
             resetQueryName('All Customers')
         }
         show_preview(preview_query)
+    });
+
+    $('#btn-explore-data').click(function(){
+        $('#modalValuesExplorer').modal("show");
     });
 });
