@@ -200,7 +200,7 @@ class DataLoadService(DbService):
         # append sent/open/click counts to SendJob rows
         sends = SendJob.query.all()
         for send in sends:
-            send.get_stats()
+            send._get_stats()
 
     def load_mc_journeys(self):
         token = self.__get_mc_auth()

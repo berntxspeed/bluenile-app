@@ -107,13 +107,11 @@ def create_event_mgr(app):
     # process record updates
     @db.event.listens_for(db.session, 'before_flush')
     def on_flush(session, flush_context, instances):
-        print('caught BEFORE_FLUSH event')
         event_mgr.log_update_events(session)
 
     # process record inserts
     @db.event.listens_for(db.session, 'after_flush')
     def after_flush(session, flush_context):
-        print('caught AFTER_FLUSH event')
         event_mgr.log_insert_events(session)
 
     # update event defs loaded in event_mgr
