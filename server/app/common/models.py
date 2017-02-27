@@ -216,9 +216,9 @@ class EmlSend(db.Model):
     __tablename__ = 'eml_send'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
-    SubscriberKey = db.Column(db.String(255), unique=True)
+    SubscriberKey = db.Column(db.String(255))
     EmailAddress = db.Column(db.String(255))
-    _EventDate = db.Column(TIMESTAMP, unique=True)
+    _EventDate = db.Column(TIMESTAMP)
     TriggeredSendExternalKey = db.Column(db.String(255))
     _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
     _hour = db.Column(db.Integer)
@@ -261,9 +261,9 @@ class EmlOpen(db.Model):
     __tablename__ = 'eml_open'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
-    SubscriberKey = db.Column(db.String(255), unique=True)
+    SubscriberKey = db.Column(db.String(255))
     EmailAddress = db.Column(db.String(255))
-    _EventDate = db.Column(TIMESTAMP, unique=True)
+    _EventDate = db.Column(TIMESTAMP)
     TriggeredSendExternalKey = db.Column(db.String(255))
     IsUnique = db.Column(db.String(255))
     IpAddress = db.Column(db.String(255))
@@ -319,9 +319,9 @@ class EmlClick(db.Model):
     __tablename__ = 'eml_click'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
-    SubscriberKey = db.Column(db.String(255), unique=True)
+    SubscriberKey = db.Column(db.String(255))
     EmailAddress = db.Column(db.String(255))
-    _EventDate = db.Column(TIMESTAMP, unique=True)
+    _EventDate = db.Column(TIMESTAMP)
     SendURLID = db.Column(db.String(255))
     URLID = db.Column(db.String(255))
     URL = db.Column(db.String(1024))
