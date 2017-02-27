@@ -5,12 +5,14 @@ import datetime
 class StatsGetter(object):
 
     def __init__(self, db, tbl, acceptable_tbls, grp_by=None, filters=None):
+        # 'in' case expects a string representation of an array of strings like this = '['xss', 'sde', 'wer']'
         self._allowable_filter_ops = {
             'eq': lambda q, col, val: q.filter(col == val),
             'gt': lambda q, col, val: q.filter(col > val),
             'lt': lambda q, col, val: q.filter(col < val),
             'date_gt': lambda q, col, val: q.filter(col > datetime.datetime.strptime(val, '%Y-%m-%d')),
-            'date_lt': lambda q, col, val: q.filter(col < datetime.datetime.strptime(val, '%Y-%m-%d'))
+            'date_lt': lambda q, col, val: q.filter(col < datetime.datetime.strptime(val, '%Y-%m-%d')),
+            'in': lambda q, col, val: q.filter(col.in_(val[1: len(val)-1].split(', ')))
         }
         self._db = db
         self._tbl = tbl
