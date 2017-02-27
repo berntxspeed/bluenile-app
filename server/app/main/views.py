@@ -1,3 +1,4 @@
+from ..common.views import context_processors
 from . import main
 from ..common.views.decorators import templated
 
