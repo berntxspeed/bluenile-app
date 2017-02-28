@@ -88,3 +88,13 @@ def long_task(self):
         sleep(1)
         self.update_state(state='PROGRESS',
                           meta={'process_percent': process_percent})
+
+
+from celery.task.schedules import crontab
+from celery.decorators import periodic_task
+
+@periodic_task(run_every=(crontab(minute='*/1')), name="load_customers", ignore_result=True)
+def load_customers_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_customers()
