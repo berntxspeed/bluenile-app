@@ -14,10 +14,12 @@ class EventMgr(object):
         self._event_defs = None
 
     def log_insert_events(self, session):
+        self.refresh_event_defs()
         for target in session.new:
             self._log_event(target, 'insert')
 
     def log_update_events(self, session):
+        self.refresh_event_defs()
         for target in session.dirty:
             self._log_event(target, 'update')
 
