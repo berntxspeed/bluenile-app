@@ -104,3 +104,9 @@ def load_purchases_periodic():
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.load_purchases()
+
+@periodic_task(run_every=(crontab(hour='*/4')), name="load_web_tracking", ignore_result=True)
+def load_web_tracking_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_web_tracking()
