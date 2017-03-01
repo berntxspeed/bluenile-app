@@ -93,8 +93,14 @@ def long_task(self):
 from celery.task.schedules import crontab
 from celery.decorators import periodic_task
 
-@periodic_task(run_every=(crontab(minute='*/15')), name="load_customers", ignore_result=True)
+@periodic_task(run_every=(crontab(hour='*/4')), name="load_customers", ignore_result=True)
 def load_customers_periodic():
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.load_customers()
+
+@periodic_task(run_every=(crontab(hour='*/4')), name="load_purchases", ignore_result=True)
+def load_purchases_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_purchases()
