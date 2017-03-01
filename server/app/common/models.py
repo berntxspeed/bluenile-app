@@ -459,8 +459,8 @@ def on_update(mapper, connection, target):
 class WebTrackingEvent(db.Model):
     __tablename__ = 'web_tracking_event'
     id = db.Column(db.Integer, primary_key=True)
-    browser_id = db.Column(db.String(255), unique=True)
-    utc_millisecs = db.Column(db.String(255), unique=True)
+    browser_id = db.Column(db.String(255)) #primary key
+    utc_millisecs = db.Column(db.String(255)) #primary key
     hashed_email = db.Column(db.String(255))
     event_category = db.Column(db.String(255))
     event_action = db.Column(db.String(255))
@@ -490,8 +490,8 @@ class WebTrackingEvent(db.Model):
 class WebTrackingPageView(db.Model):
     __tablename__ = 'web_tracking_page_view'
     id = db.Column(db.Integer, primary_key=True)
-    browser_id = db.Column(db.String(255), unique=True)
-    utc_millisecs = db.Column(db.String(255), unique=True)
+    browser_id = db.Column(db.String(255)) #primary key
+    utc_millisecs = db.Column(db.String(255)) #primary key
     hashed_email = db.Column(db.String(255))
     page_path = db.Column(db.String(500))
     page_views = db.Column(db.Integer)
@@ -520,8 +520,8 @@ class WebTrackingPageView(db.Model):
 class WebTrackingEcomm(db.Model):
     __tablename__ = 'web_tracking_ecomm'
     id = db.Column(db.Integer, primary_key=True)
-    browser_id = db.Column(db.String(255), unique=True)
-    utc_millisecs = db.Column(db.String(255), unique=True)
+    browser_id = db.Column(db.String(255)) #primary key
+    utc_millisecs = db.Column(db.String(255)) #primary key
     hashed_email = db.Column(db.String(255))
     total_value = db.Column(db.Float)
     item_quantity = db.Column(db.Integer)
