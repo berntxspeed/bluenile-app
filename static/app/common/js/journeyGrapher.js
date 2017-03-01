@@ -49,7 +49,8 @@ class JourneyGrapher {
             sendId: sendId,
             activityType: activityType,
             position: {x: 0, y: 0},
-            size: {width: 160, height: 160},
+            //size: {width: 160, height: 160},
+            size: {width: 110, height: 110},
             label: label
         });
     }

@@ -24,9 +24,9 @@
 
 {% block body_content %}
     <div class="row">
-        <div class="col-md-6 center-block">
+        <div class="col-md-4 center-block">
             <div class="well form-well signup-info">
-                <strong>Here is the data: </strong>
+                <strong>Select a journey and click "GO!"</strong>
             </div>
             <div class="well form-well">
                 <select id="journey-select">
@@ -34,12 +34,32 @@
                         <option value="{{ journey._id }}">{{ journey.name }}</option>
                     {% endfor %}
                 </select>
-                <input type="button" class="btn" id="btn-layout" value="build directed graph"/>
+                <input type="button" class="btn" id="btn-layout" value="GO!"/>
+            </div>
+        </div>
+        <div class="col-md-4 center-block">
+            <div class="well form-well">
+                <p><strong>Legend:</strong></p>
+                <p><div width="30" height="30" style="display:inline;background-color:#1f77b4;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div> Didn't Open</p>
+                <p><div width="30" height="30" style="display:inline;background-color:#ff7f0e;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div> Opened but didn't Click</p>
+                <p><div width="30" height="30" style="display:inline;background-color:#2ca02c;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div> Clicked</p>
+            </div>
+        </div>
+        <div class="col-md-4 center-block">
+            <div class="well form-well">
+                <p>
+                    <strong>Use the checkboxes to drill down into a particular send.</strong>
+                    <br/> - Left checkbox -> Drill Down Area A
+                    <br/> - Right checkbox -> Drill Down Area B
+                </p>
+                <center>
+                    <img src="img/journeyBuilder/checkbox_detail.png"/>
+                </center>
             </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-10 center-block">
+        <div class="col-md-12 center-block">
             <div class="well" id="journey-well">
                 <div id="journey-paper" style="background-color: ghostwhite"></div>
             </div>
