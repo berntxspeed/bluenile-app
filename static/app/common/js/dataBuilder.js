@@ -15,6 +15,8 @@ $(document).ready(function() {
                       };
 
     g_timeout = 1700
+    g_explore_state = null
+    g_current_table = null
     var buildUI = function(data){
         reduced_model = {}
         // There are hidden checkboxes that track which tables participate in the join
@@ -55,13 +57,13 @@ $(document).ready(function() {
             for(var k in t){
                 var v = t[k];
                 var o = new Option(v["label"], v["expression"]);
-                console.log(o);
+//                console.log(o);
                 explore_select.append(o)
             }
         }
     };
 
-    var get_current_query = function(){
+    var getCurrentQuery = function(){
            current_query = {}
            current_query.rules = $('#builder').queryBuilder('getRules');
            current_query.selected_tables = []
@@ -74,12 +76,12 @@ $(document).ready(function() {
            return current_query
     };
 
-    var destroy_table = function(table){
+    var destroyTable = function(table){
         table.bootstrapTable('destroy');
-        table.attr('id') == 'preview-table' && hide_gotopage()
+        table.attr('id') == 'preview-table' && hideGotoPage()
     };
 
-    var set_defaults = function(){
+    var setDefaults = function(){
         for(var j in $('#tables input')){
             var input = $('#tables input')[j];
             input.checked = true;
@@ -88,25 +90,35 @@ $(document).ready(function() {
         $('#builder').queryBuilder('setRules', l_empty_rules);
     };
 
-    var hide_gotopage = function() {
+    var hideGotoPage = function() {
         $("#gotopage").hide()
     };
 
-    var show_gotopage = function() {
+    var showGotoPage = function() {
         $("#gotopage").css('display', 'inline')
     };
 
+    var showBackBtn = function() {
+        $("#back-explore-tables").css('display', 'inline')
+    };
+
+    var hideBackBtn = function() {
+        $("#back-explore-tables").hide()
+    };
+
+
     var init = function(){
         buildUI(g_rules);
-        hide_gotopage();
+        hideGotoPage();
     };
 
     init();
 
 
     $('#btn-reset').on('click', function() {
-        destroy_table($('#preview-table'));
-        set_defaults();
+//        console.log(g_model)
+        destroyTable($('#preview-table'));
+        setDefaults();
         resetQueryName('Default');
         g_current_query.name = null
     });
@@ -117,9 +129,101 @@ $(document).ready(function() {
         $('#alertModal').modal({'backdrop': false, 'keyboard': true})
     }
 
-    $('#btn-get-query').on('click', function() {
+    var changeModalHeader = function(title) {
+        document.getElementById('modal-table-header').innerHTML = '<span class="glyphicon glyphicon-hand-down"></span> ' + title
+    }
+
+    function showExploreColumns (table_id){
+        g_explore_state = 'column'
+        changeModalHeader(table_id + ': Choose A Field')
+        columns =  [{
+                        field: 'key',
+                        title: 'Field Name'
+                    },
+                    {
+                        field: 'type',
+                        title: 'Value Type'
+                    }
+                    ]
+        data = []
+//        console.log(g_model)
+        for (a_field in g_model[table_id]) {
+            data.push({
+                        'key': g_model[table_id][a_field].label.split(':')[1],
+                        'type': g_model[table_id][a_field].type,
+                        'expression': g_model[table_id][a_field].expression
+                     })
+        }
+        showExploreValuesTable(columns, data)
+        showBackBtn()
+    }
+
+  	$('#explore-values-table').on('click-row.bs.table', function (e, row, $element) {
+  	    if ('table_id' in row) {
+  	        g_current_table = row.table_id
+  	        showExploreColumns(row.table_id)
+        }
+        else {
+            columns =  [{
+                            field: 'info',
+                            title: 'Values Information'
+                        }]
+            data = [{'info': 'Brevity is the sister of talent'}]
+            showExploreValuesTable(columns, data)
+            changeModalHeader(row.key)
+            g_explore_state = 'info'
+        }
+  	});
+
+
+    var showExploreValuesTable = function(columns, data) {
+        var explore_values_table = $('#explore-values-table');
+        destroyTable(explore_values_table)
+        explore_values_table.bootstrapTable( {
+              	pagination: false,
+              	showRefresh: false,
+              	showToggle: false,
+              	showColumns: false,
+              	search: false,
+              	striped: true,
+              	clickToSelect: true,
+              	columns: columns,
+                data: data
+        });
+    }
+
+    $('#back-explore-tables').on('click', function() {
+        if (g_explore_state == 'info') {
+            showExploreColumns(g_current_table)
+        }
+        else {
+            $('#btn-explore-values').click()
+        }
+    })
+
+    $('#btn-explore-values').on('click', function() {
+        //TODO: change header, footer, adjust options
+        columns =  [{
+                        field: 'table_id',
+                        title: 'Table Name'
+                    }]
+        data = []
+        for (a_table in g_model) {
+            data.push({'table_id': a_table})
+        }
+
+        showExploreValuesTable(columns, data)
+        changeModalHeader('Click To Choose A Table')
+        hideBackBtn()
+        $("#modal2").modal("show")//{backdrop: "static"});
+
+    });
+
+    $('#btn-manage-queries').on('click', function() {
         var saved_queries_table = $('#saved-queries-table');
-        destroy_table(saved_queries_table);
+        var explore_values_table = $('#explore-values-table');
+        destroyTable(explore_values_table);
+        changeModalHeader('Saved Queries')
         $("#modalTable").on('show.bs.modal', function () {
             $.ajax({
                 url: "/builder/get-queries",
@@ -139,7 +243,7 @@ $(document).ready(function() {
                 }
             });
         });
-        $("#modalTable").modal("show")//{backdrop: "static"});
+        $("#modalTable").modal("toggle")//{backdrop: "static"});
     });
 
   	$('#saved-queries-table').on('click-row.bs.table', function (e, row, $element) {
@@ -153,9 +257,11 @@ $(document).ready(function() {
     }
 
     $('#load-saved-query').click(function () {
+        var saved_queries_table = $('#saved-queries-table');
+        destroyTable(saved_queries_table);
         var row = getSelectedRow();
         buildUI(row)
-        show_preview(row)
+        showPreview(row)
         resetQueryName("'" + row.name + "'")
         g_current_query.name = row.name
         g_current_query.rules = row.rules
@@ -180,7 +286,7 @@ $(document).ready(function() {
                         });
                         g_current_query.name = null
                         g_current_query.rules = l_empty_rules
-                        destroy_table($('#preview-table'));
+                        destroyTable($('#preview-table'));
                         buildUI(g_current_query)
                         resetQueryName('')
                     }
@@ -198,9 +304,11 @@ $(document).ready(function() {
 
 
     $("#saved-queries-table").on('dbl-click-row.bs.table', function (e, row, $element) {
-        $("#modalTable").modal("hide")//{backdrop: "static"});
+        var saved_queries_table = $('#saved-queries-table');
+        destroyTable(saved_queries_table);
+        $("#modalTable").modal("toggle")//{backdrop: "static"});
         buildUI(row)
-        show_preview(row)
+        showPreview(row)
         resetQueryName("'" + row.name + "'")
         g_current_query.name = row.name
         g_current_query.rules = row.rules
@@ -238,13 +346,13 @@ $(document).ready(function() {
     $("#submit-save-query").click(function(e) {
         e.preventDefault();
         $("#modalDialog").modal("hide")
-        var save_query = get_current_query()
+        var save_query = getCurrentQuery()
         query_name = $("#query_name").val().trim();
         saveCurrentQuery(query_name, save_query)
     });
 
     $('#btn-save-query').on('click', function() {
-        current_query = get_current_query()
+        current_query = getCurrentQuery()
 //        if (JSON.stringify(current_query.rules) == JSON.stringify(g_current_query.rules)) {
         if (deepCompare(current_query.rules, g_current_query.rules)) {
             alertUser('Query Did Not Change', 1000)
@@ -262,7 +370,7 @@ $(document).ready(function() {
     });
 
     $('#btn-save-query-as').on('click', function() {
-        current_query = get_current_query()
+        current_query = getCurrentQuery()
         if (g_current_query.name || (current_query.rules)) {
             $("#modalDialog").modal('show');
         }
@@ -274,7 +382,7 @@ $(document).ready(function() {
 //    $('#btn-sync').on('click', function() {
 //        console.log(document.getElementById('modalDialog'))
 //        var query_name = prompt("Please enter query name")
-//        var sync_query = get_current_query()
+//        var sync_query = getCurrentQuery()
 //        sync_query.name = query_name
 //        console.log(sync_query)
 //        //TODO: Automatically save the query in Mongo?
@@ -325,7 +433,7 @@ $(document).ready(function() {
 
     window.onbeforeunload = confirmExit;
     function confirmExit(e) {
-        current_query = get_current_query()
+        current_query = getCurrentQuery()
         changed = (!(deepCompare(current_query.rules, g_current_query.rules)) && (current_query.rules))
 //        changed = ((JSON.stringify(current_query.rules) != JSON.stringify(g_current_query.rules)) && (current_query.rules))
         if (changed) {
@@ -356,32 +464,32 @@ $(document).ready(function() {
         })
 //      	showPaginationSwitch: true,
 
-    var show_preview = function(preview_query) {
-       $.ajax({
-                url: "/builder/query-preview",
-                method: "POST",
-                data: JSON.stringify(preview_query),
-                contentType: 'application/json;charset=UTF-8',
-                beforeSend: function(request) {
-                    request.setRequestHeader("X-CSRFToken", g_csrf_token);
-                },
-                success: function(data) {
-                    visible_header = (data.data.length > 0)
-                    destroy_table($('#preview-table'))
-                    $.extend($.fn.bootstrapTable.defaults, {
-                        showHeader: visible_header,
-                        formatShowingRows: function(pageFrom, pageTo, totalRows){
-                            return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
-                        }
-                        });
-                    $('#preview-table').bootstrapTable(data);
-                    ($('#preview-table').bootstrapTable('getOptions').totalPages > 1) && show_gotopage()
-                },
-                error: function(err) {
-                    //TODO: handle the error or retry
-                }
-            });
-       $('#btn-save-query-as').prop('disabled', false);
+    var showPreview = function(preview_query) {
+        $.ajax({
+                 url: "/builder/query-preview",
+                 method: "POST",
+                 data: JSON.stringify(preview_query),
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token);
+                 },
+                 success: function(data) {
+                     visible_header = (data.data.length > 0)
+                     destroyTable($('#preview-table'))
+                     $.extend($.fn.bootstrapTable.defaults, {
+                         showHeader: visible_header,
+                         formatShowingRows: function(pageFrom, pageTo, totalRows){
+                             return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                         }
+                         });
+                     $('#preview-table').bootstrapTable(data);
+                     ($('#preview-table').bootstrapTable('getOptions').totalPages > 1) && showGotoPage()
+                 },
+                 error: function(err) {
+//                   TODO: handle the error or retry
+                 }
+             });
+        $('#btn-save-query-as').prop('disabled', false);
     };
 
     $('#page-button').click(function () {
@@ -398,12 +506,12 @@ $(document).ready(function() {
 
     $('#btn-preview').on('click', function() {
         //fetch all the tables and their elements
-        var preview_query = get_current_query()
+        var preview_query = getCurrentQuery()
         if (!preview_query.rules) {
             alertUser('Invalid or Empty Filters: Showing all Customers', 2000)
             resetQueryName('All Customers')
         }
-        show_preview(preview_query)
+        showPreview(preview_query)
     });
 
     $('#btn-explore-data').click(function(){

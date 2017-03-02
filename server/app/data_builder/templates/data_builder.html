@@ -81,8 +81,9 @@
                                 </li>
                             </ul>
                         </li>
-                        <li><button id="btn-get-query" class="btn btn-default navbar-btn">Manage Saved Queries</button></li>
+                        <li><button id="btn-manage-queries" class="btn btn-default navbar-btn">Manage Saved Queries</button></li>
                         <li><button id="btn-explore-data" class="btn btn-default navbar-btn">Explore Data</button></li>
+                        <li><button id="btn-explore-values" class="btn btn-default navbar-btn">Explore Values</button></li>
                     </ul>
                     <ul class="nav">
                         <li class="navbar-right"><button id="btn-preview" class="btn btn-default navbar-btn">Preview Results</button></li>
@@ -179,6 +180,25 @@
                     <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
                     <button type="submit" id='load-saved-query' class="btn btn-success btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Load</button>
                     <button type="submit" id='delete-saved-query' class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-thumbs-down"></span> Delete</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!-- Modal Table For Explore Values -->
+    <div id="modal2" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:25px 50px;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 id='modal-table-header'><span class="glyphicon glyphicon-menu-hamburger"></span></h4>
+                </div>
+                <div class="modal-body">
+                    <table id="explore-values-table"></table>
+                </div>
+                <div class="modal-footer">
+                    <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                    <button type="submit" id='back-explore-tables' class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
