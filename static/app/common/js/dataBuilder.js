@@ -78,7 +78,7 @@ $(document).ready(function() {
 
     var destroyTable = function(table){
         table.bootstrapTable('destroy');
-        table.attr('id') == 'preview-table' && hideGotoPage()
+        table.attr('id') == 'preview-table' && hideElement($("#gotopage"))
     };
 
     var setDefaults = function(){
@@ -90,30 +90,20 @@ $(document).ready(function() {
         $('#builder').queryBuilder('setRules', l_empty_rules);
     };
 
-    var hideGotoPage = function() {
-        $("#gotopage").hide()
-    };
+    showElement = function(element) {
+        element.css('display', 'inline')
+    }
 
-    var showGotoPage = function() {
-        $("#gotopage").css('display', 'inline')
-    };
-
-    var showBackBtn = function() {
-        $("#back-explore-tables").css('display', 'inline')
-    };
-
-    var hideBackBtn = function() {
-        $("#back-explore-tables").hide()
-    };
-
+    hideElement = function(element) {
+        element.hide()
+    }
 
     var init = function(){
         buildUI(g_rules);
-        hideGotoPage();
+        hideElement($("#gotopage"))
     };
 
     init();
-
 
     $('#btn-reset').on('click', function() {
 //        console.log(g_model)
@@ -121,6 +111,8 @@ $(document).ready(function() {
         setDefaults();
         resetQueryName('Default');
         g_current_query.name = null
+        showElement($('#builder1'))
+        showElement($('#builder2'))
     });
 
     var alertUser = function(alert_message, timeout=null) {
@@ -155,7 +147,7 @@ $(document).ready(function() {
                      })
         }
         showExploreValuesTable(columns, data)
-        showBackBtn()
+        showElement($("#back-explore-tables"))
     }
 
   	$('#explore-values-table').on('click-row.bs.table', function (e, row, $element) {
@@ -214,7 +206,7 @@ $(document).ready(function() {
 
         showExploreValuesTable(columns, data)
         changeModalHeader('Click To Choose A Table')
-        hideBackBtn()
+        hideElement($("#back-explore-tables"))
         $("#modal2").modal("show")//{backdrop: "static"});
 
     });
@@ -256,10 +248,13 @@ $(document).ready(function() {
         return $('#saved-queries-table').bootstrapTable('getData')[index];
     }
 
-    $('#load-saved-query').click(function () {
+    $('#btn-load-saved-query').click(function () {
+        showElement($('#builder1'))
+        showElement($('#builder2'))
+        var row = getSelectedRow();
         var saved_queries_table = $('#saved-queries-table');
         destroyTable(saved_queries_table);
-        var row = getSelectedRow();
+        console.log(row)
         buildUI(row)
         showPreview(row)
         resetQueryName("'" + row.name + "'")
@@ -268,7 +263,7 @@ $(document).ready(function() {
     });
 
 
-    $('#delete-saved-query').click(function () {
+    $('#btn-delete-saved-query').click(function () {
         var row = getSelectedRow();
         query_name = row.name
         $.ajax({
@@ -343,6 +338,42 @@ $(document).ready(function() {
              });
     }
 
+    $("#submit-custom-query").click(function(e) {
+        e.preventDefault();
+        sqlalchemy_query = $("#custom_query").val().trim();
+        $("#modalDefineQuery").modal("toggle")
+        resetQueryName('Custom Query: session.' + sqlalchemy_query)
+        $("#builder1").hide()
+        $("#builder2").hide()
+        $.ajax({
+                 url: "/builder/custom-query-preview/" + sqlalchemy_query,
+                 method: "POST",
+                 data: JSON.stringify(sqlalchemy_query),
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token);
+                 },
+                 success: function(data) {
+                     console.log(data)
+                     visible_header = (data.data.length > 0)
+                     destroyTable($('#preview-table'))
+                     $.extend($.fn.bootstrapTable.defaults, {
+                         showHeader: visible_header,
+                         formatShowingRows: function(pageFrom, pageTo, totalRows){
+                             return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                         }
+                         });
+                     $('#preview-table').bootstrapTable(data);
+                     ($('#preview-table').bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"))
+                 },
+                 error: function(err) {
+                     alert('error')
+//                   TODO: handle the error or retry
+                 }
+             });
+        $('#btn-save-query-as').prop('disabled', false);
+    });
+
     $("#submit-save-query").click(function(e) {
         e.preventDefault();
         $("#modalDialog").modal("hide")
@@ -377,6 +408,10 @@ $(document).ready(function() {
         else {
             alertUser('Cannot Save Empty Query')
         }
+    });
+
+    $('#btn-custom-query').on('click', function() {
+        $("#modalDefineQuery").modal('toggle');
     });
 
 //    $('#btn-sync').on('click', function() {
@@ -483,7 +518,7 @@ $(document).ready(function() {
                          }
                          });
                      $('#preview-table').bootstrapTable(data);
-                     ($('#preview-table').bootstrapTable('getOptions').totalPages > 1) && showGotoPage()
+                     ($('#preview-table').bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"))
                  },
                  error: function(err) {
 //                   TODO: handle the error or retry

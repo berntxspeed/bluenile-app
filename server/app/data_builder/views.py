@@ -72,6 +72,20 @@ def save_query(mongo, query_id):
         return error, 500
 
 
+@databuilder.route('/custom-query-preview/<query_sttmt>', methods=['POST'])
+@inject(alchemy=SQLAlchemy)
+def custom_query_preview(alchemy, query_sttmt):
+    results = eval('alchemy.session.' + query_sttmt +'.limit(100).all()')
+    rows_count = eval('alchemy.session.' + query_sttmt +'.count()')
+
+    columns, data = SqlQueryService.extract_data(results, {})
+    return Response(json.dumps({'columns': columns,
+                                'data': data,
+                                'no_of_rows': rows_count,
+                                }, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
+
+
 @databuilder.route('/query-preview', methods=['POST'])
 @inject(sql_query_service=SqlQueryServ)
 def query_preview(sql_query_service):
