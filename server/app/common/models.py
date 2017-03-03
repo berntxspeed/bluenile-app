@@ -345,7 +345,8 @@ def on_update(mapper, connection, target):
 
 class SendJob(db.Model):
     __tablename__ = 'send_job'
-    SendID = db.Column(db.Integer, primary_key=True) # SendID Field
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer, unique=True) # SendID Field
     SchedTime = db.Column(TIMESTAMP)
     SentTime = db.Column(TIMESTAMP)
     EmailName= db.Column(db.String(64))
