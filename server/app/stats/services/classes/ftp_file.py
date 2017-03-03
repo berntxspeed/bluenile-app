@@ -6,7 +6,7 @@ import csv
 import shutil
 
 from .db_data_loader import SqlDataLoader
-
+from ....common.utils.db_datatype_handler import set_db_instance_attr
 
 tmp_directory = 'tmp'
 if not os.path.isdir(tmp_directory):
@@ -120,7 +120,10 @@ class CsvFile(SqlDataLoader, FtpFile):
                     for row in csvfile_reader:
                         item = SqlDataLoader.db_model(self)
                         for csv_field, db_field in self._db_field_map.items():
-                            item.__setattr__(db_field, row[csv_field])
+                            item.__setattr__(db_field,
+                                             set_db_instance_attr(item,
+                                                                  db_field,
+                                                                  row[csv_field]))
                         # use a composite key to reference the records on the dict
                         composite_key = ''
                         for pk in self._primary_keys:

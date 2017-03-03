@@ -29,7 +29,7 @@ class DataLoadService(DbService):
                             marketing_allowed='accepts_marketing',
                             created_at='created_at',
                             purchase_count='orders_count',
-                            total_spend_so_far='total_spent')
+                            total_spent_so_far='total_spent')
         primary_keys = ['customer_id']
         json_data_keys = 'customers'
 
@@ -363,9 +363,9 @@ class DataLoadService(DbService):
                                                      utc_millisecs='dimensions[2]',
                                                      hashed_email='dimensions[1]',
                                                      page_path='dimensions[3]',
-                                                     country='dimensions[4]',
-                                                     region='dimensions[5]',
-                                                     metro='dimensions[6]',
+                                                     city='dimensions[4]',
+                                                     latitude='dimensions[5]',
+                                                     longitude='dimensions[6]',
                                                      sessions='metrics[0].values[0]',
                                                      page_value='metrics[0].values[1]',
                                                      page_views='metrics[0].values[2]'))

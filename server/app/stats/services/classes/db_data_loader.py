@@ -37,8 +37,7 @@ class SqlDataLoader(object):
             end_index = int((chunk * chunk_size))
             if end_index > len(composite_key_list):
                 end_index = len(composite_key_list)
-            print('processing chunk ' + str(chunk) + ' with start index ' + str(start_index) + ' and end index ' + str(
-                end_index))
+            print('processing chunk ' + str(chunk) + ' with start index ' + str(start_index) + ' and end index ' + str(end_index))
             for each in self._db_model.query.filter(model_composite_key.in_(composite_key_list[start_index:end_index])):
                 # use composite key to reference records on the items dict
                 composite_key = ''
