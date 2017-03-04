@@ -83,11 +83,11 @@ class CsvFile(SqlDataLoader, FtpFile):
         if not self._no_dl:
             FtpFile.download(self)
 
-        data = self._get_data(self._filename)
-        SqlDataLoader.load_to_db(self, data)
+        SqlDataLoader.load_to_db(self, self._get_data)
 
-    def _get_data(self, filename, delimiter=','):
-
+    def _get_data(self, chunk_size=500, delimiter=','):
+        num_recs = 0
+        filename = self._filename
         """Load csv file into the database
 
         Args:
@@ -130,14 +130,23 @@ class CsvFile(SqlDataLoader, FtpFile):
                             composite_key += str(getattr(item, pk))
                         # place item on dict, w key reference to composite key, and value of dbModel instance
                         import_items[composite_key] = item
+
+                        num_recs += 1
+                        if num_recs >= chunk_size:
+                            num_recs = 0
+                            yield (False, import_items)
+                            import_items = {}
+
             except FileNotFoundError as exc:
                 raise FileNotFoundError('could not locate file: {}, error: {}'.format(filename, str(exc)))
             except KeyError as exc:
                 raise KeyError(str(exc))
 
-            return import_items
-        finally:
             os.chdir('..')
+            yield (True, import_items)
+        except Exception as exc:
+            os.chdir('..')
+            raise exc
 
 
 class ZipFile(FtpFile):

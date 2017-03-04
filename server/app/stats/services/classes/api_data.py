@@ -98,10 +98,10 @@ class ApiDataToSql(ApiData, SqlDataLoader):
 
     def load_data(self, preload_data=None):
 
-        data = self._get_data(preload_data=preload_data)
-        SqlDataLoader.load_to_db(self, data)
+        SqlDataLoader.load_to_db(self, self._get_data)
 
-    def _get_data(self, preload_data=None):
+    def _get_data(self, chunk_size=500, preload_data=None):
+        num_recs = 0
 
         if preload_data is None:
             response = ApiData.get_data(self)
@@ -130,7 +130,13 @@ class ApiDataToSql(ApiData, SqlDataLoader):
                 comp_key += str(getattr(data_row, pk))
             data[comp_key] = data_row
 
-        return data
+            num_recs += 1
+            if num_recs >= chunk_size:
+                num_recs = 0
+                yield (False, data)
+                data = {}
+
+        yield (True, data)
 
     @staticmethod
     def _get_json_field(item, api_field):
