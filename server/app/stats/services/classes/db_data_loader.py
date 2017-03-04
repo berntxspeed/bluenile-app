@@ -15,14 +15,14 @@ class SqlDataLoader(object):
 
         return self._db_model(**kwargs)
 
-    def load_to_db(self, item_generator):
+    def load_to_db(self, item_generator, **kwargs):
 
         """
             primary_keys should be a list of strings of primary key field name to search for
             items should be a dict where key=str(primary key) value and value is the model instance
         """
 
-        for last_batch, items in item_generator():
+        for last_batch, items in item_generator(**kwargs):
 
             update_cnt = 0  # keep track of updated records
 

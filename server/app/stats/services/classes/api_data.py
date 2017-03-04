@@ -98,7 +98,7 @@ class ApiDataToSql(ApiData, SqlDataLoader):
 
     def load_data(self, preload_data=None):
 
-        SqlDataLoader.load_to_db(self, self._get_data)
+        SqlDataLoader.load_to_db(self, self._get_data, preload_data=preload_data)
 
     def _get_data(self, chunk_size=500, preload_data=None):
         num_recs = 0
