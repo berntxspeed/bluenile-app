@@ -22,6 +22,22 @@ $(document).ready(function() {
 
     var g_timeout = 1700
 
+    var default_queries = {
+                            'All Customers': "query(Customer)",
+//                            'Customers With Average Purchase Price Exceeding 100': "query(Customer)"+
+//                                                                                   ".join(Purchase,Customer.purchases)"+
+//                                                                                   ".group_by(Customer.customer_id)"+
+//                                                                                   ".having(func.avg(Purchase.price)>100)",
+                            'Customers With 2 or More Purchases': "query(Customer)"+
+                                                                  ".join(Purchase,Customer.purchases)"+
+                                                                  ".group_by(Customer.customer_id)"+
+                                                                  ".having(func.count(Customer.purchases)>=2)",
+                            'Customers Who Clicked Marketing Email': "query(Customer)"+
+                                                                     ".join(EmlClick,Customer.eml_clicks)"+
+                                                                     ".group_by(Customer.customer_id)"+
+                                                                     ".having(func.count(Customer.eml_clicks)>=1)"
+    }
+
     //Tables
 //    var $('#preview-table') = $('#preview-table')
     var saved_queries_table = $('#saved-queries-table')
@@ -99,12 +115,18 @@ $(document).ready(function() {
         $('#builder').queryBuilder('setRules', l_empty_rules)
     }
 
-    showElement = function(element) {
-        element.css('display', 'inline')
+    showElement = function() {
+        var args = Array.prototype.slice.call(arguments)
+        for (element in args){
+            args[element].css('display', 'inline')
+        }
     }
 
-    hideElement = function(element) {
-        element.hide()
+    hideElement = function() {
+        var args = Array.prototype.slice.call(arguments)
+        for (element in args){
+            args[element].hide()
+        }
     }
 
     var init = function(){
@@ -120,8 +142,8 @@ $(document).ready(function() {
         setDefaults()
         resetQueryName('Default')
         g_current_query.name = null
-        showElement($('#builder1'))
-        showElement($('#builder2'))
+        showElement($('#builder1'), $('#builder2'))
+        $('#btn-preview').prop('disabled', false)
     })
 
     var alertUser = function(alert_message, timeout=null) {
@@ -160,7 +182,11 @@ $(document).ready(function() {
     }
 
   	explore_values_table.on('click-row.bs.table', function (e, row, $element) {
-  	    if ('table_id' in row) {
+  	    if ('query_id' in row) {
+            $("#modal2").modal("toggle")
+  	        showCustomSqlPreview(default_queries[row.query_id], row.query_id)
+  	    }
+  	    else if ('table_id' in row) {
   	        g_explore.table = row.table_id
   	        showExploreColumns(row.table_id)
         }
@@ -193,6 +219,7 @@ $(document).ready(function() {
     }
 
     $('#back-explore-tables').on('click', function() {
+        console.log(g_explore.state)
         if (g_explore.state === 'info') {
             showExploreColumns(g_explore.table)
         }
@@ -201,8 +228,25 @@ $(document).ready(function() {
         }
     })
 
-    $('#btn-explore-values').on('click', function() {
+    $('#btn-preset-queries').on('click', function() {
         //TODO: change header, footer, adjust options
+        columns =  [{
+                        field: 'query_id',
+                        title: 'Query Description'
+                    }]
+        data = []
+        for (query_name in default_queries) {
+            data.push({'query_id': query_name})
+        }
+
+        showExploreValuesTable(columns, data)
+        changeModalHeader('Click To Preview Results')
+        hideElement($("#back-explore-tables"))
+        $("#modal2").modal({backdrop: false})
+
+    })
+
+    $('#btn-explore-values').on('click', function() {
         columns =  [{
                         field: 'table_id',
                         title: 'Table Name'
@@ -215,7 +259,7 @@ $(document).ready(function() {
         showExploreValuesTable(columns, data)
         changeModalHeader('Click To Choose A Table')
         hideElement($("#back-explore-tables"))
-        $("#modal2").modal("show")//{backdrop: "static"})
+        $("#modal2").modal("show")
 
     })
 
@@ -256,7 +300,7 @@ $(document).ready(function() {
         var row = getSelectedRow()
         g_current_query.name = row.name
         if (row.custom_sql) {
-            showCustomSqlPreview(row.custom_sql)
+            showCustomSqlPreview(row.custom_sql, 'Custom Query: session.' + row.custom_sql)
         }
         else {
             showBuilderQuery(row)
@@ -266,11 +310,11 @@ $(document).ready(function() {
     function showBuilderQuery(row) {
         g_current_query.rules = row.rules
         g_current_query.sqlalchemy = null
-        showElement($('#builder1'))
-        showElement($('#builder2'))
+        showElement($('#builder1'), $('#builder2'))
         buildUI(row)
         showPreview(row)
         resetQueryName("'" + row.name + "'")
+        $('#btn-preview').prop('disabled', false)
     }
 
     $('#btn-delete-saved-query').click(function () {
@@ -310,7 +354,7 @@ $(document).ready(function() {
     saved_queries_table.on('dbl-click-row.bs.table', function (e, row, $element) {
         $("#modalTable").modal("toggle")//{backdrop: "static"});
         if (row.custom_sql) {
-            showCustomSqlPreview(row.custom_sql)
+            showCustomSqlPreview(row.custom_sql, 'Custom Query: session.' + row.custom_sql)
         }
         else {
             showBuilderQuery(row)
@@ -349,7 +393,7 @@ $(document).ready(function() {
              })
     }
 
-    function showCustomSqlPreview(sqlalchemy_query) {
+    function showCustomSqlPreview(sqlalchemy_query, label) {
         $.ajax({
                  url: "/builder/custom-query-preview/" + sqlalchemy_query,
                  method: "POST",
@@ -359,11 +403,9 @@ $(document).ready(function() {
                      request.setRequestHeader("X-CSRFToken", g_csrf_token)
                  },
                  success: function(data) {
-                     resetQueryName('Custom Query: session.' + sqlalchemy_query)
-                     $("#builder1").hide()
-                     $("#builder2").hide()
+                     resetQueryName(label)
+                     hideElement($("#builder1"), $("#builder2") )
                      g_current_query.sqlalchemy = sqlalchemy_query
-                     console.log(data)
                      visible_header = (data.data.length > 0)
                      destroyTable($('#preview-table'))
                      data.showHeader = visible_header
@@ -386,7 +428,7 @@ $(document).ready(function() {
         $("#modalDefineQuery").modal("toggle")
         //TODO: only exec sttmts below if success
         sqlalchemy_query = $("#custom_query").val().trim()
-        showCustomSqlPreview(sqlalchemy_query)
+        showCustomSqlPreview(sqlalchemy_query, 'Custom Query: session.' + sqlalchemy_query)
     })
 
     $("#submit-save-query").click(function(e) {

@@ -75,6 +75,8 @@ def save_query(mongo, query_id):
 @databuilder.route('/custom-query-preview/<query_sttmt>', methods=['POST'])
 @inject(alchemy=SQLAlchemy)
 def custom_query_preview(alchemy, query_sttmt):
+    from sqlalchemy import func
+
     results = eval('alchemy.session.' + query_sttmt +'.limit(100).all()')
     rows_count = eval('alchemy.session.' + query_sttmt +'.count()')
 
