@@ -195,7 +195,7 @@ class DataLoadService(DbService):
                      })
         zf.clean_up() # delete downloaded files
 
-        # append county FIPS codes to open and click data
+        # TODO: append county FIPS codes to open and click data
 
         # append sent/open/click counts to SendJob rows
         sends = SendJob.query.all()

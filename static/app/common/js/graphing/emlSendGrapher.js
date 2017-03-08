@@ -14,18 +14,19 @@ class EmlSendGrapher {
         // account for the multi-sendid case if a send grouped-by-emailaddress is chosen.
         // in this case just grab the first send id as they will all have the same sendinfo (likely)
         window.sendId = sendId;
-        var sendInfoId = sendId;
-        if(sendId[0] == '[') {
-            if(sendId.indexOf(',') > 0) {
-                sendInfoId = sendId.substring(1, sendId.indexOf(','));
-            } else {
-                // its just one sendId
-                sendInfoId = sendId.substring(1, sendId.length-1);
-            }
 
+        var sendInfoOption;
+        if(sendId.indexOf(',') > 0) {
+            sendInfoOption = 'mult-send-id';
+        } else if (sendId.indexOf('-') > 0) {
+            // this is the special case of journey-based sends that are identified by their TriggeredSendExternalKey rather than their SendID
+            sendInfoOption = 'trig-send-id';
+        } else {
+            sendInfoOption = 'send-id';
         }
+
         $.ajax({
-            url: '/send-info/' + sendInfoId,
+            url: '/send-info/' + sendInfoOption + '/' + sendId,
             success: function(data) {
                 var sendInfo = data;
                 window.sendInfo = data;
@@ -52,8 +53,13 @@ class EmlSendGrapher {
             if(sendId){
                 // could be a list of sendids : expects a string representation of an array of strings like this = '['xss', 'sde', 'wer']'
                 if(sendId[0] == '['){
+                    // its a list of sendIds so us 'in' clause in filter
                     filters.push({"name": "SendID", "op": "in", "val": sendId});
+                } else if (sendId.indexOf('-') > 0) {
+                    // its a triggeredSendId, so use appropriate filter
+                    filters.push({"name": "TriggeredSendExternalKey", "op": "eq", "val": sendId});
                 } else {
+                    // its just a normal sendId
                     filters.push({"name": "SendID", "op": "eq", "val": sendId});
                 }
             }
