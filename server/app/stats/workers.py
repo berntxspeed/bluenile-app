@@ -110,3 +110,15 @@ def load_web_tracking_periodic():
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.load_web_tracking()
+
+@periodic_task(run_every=(crontab(hour='*/4')), name="load_mc_journeys", ignore_result=True)
+def load_mc_journeys_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_mc_journeys()
+
+@periodic_task(run_every=(crontab(day='*/1', hour=23, minute=50)), name="load_mc_email_data", ignore_result=True)
+def load_mc_email_data_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_mc_email_data()
