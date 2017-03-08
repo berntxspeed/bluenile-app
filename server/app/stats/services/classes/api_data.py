@@ -14,10 +14,9 @@ def json_select(json, selector):
 
     retval = json.get(field, None)
 
-    if retval is None:
-        raise ValueError('unable to access json at key: ' + str(field))
-
     if index is not None:
+        if retval is None:
+            raise ValueError('unable to access json at key: ' + str(field))
         retval = retval[int(index)]
 
     return retval
