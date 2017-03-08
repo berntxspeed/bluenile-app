@@ -6,7 +6,7 @@ class EmlSendGrapher {
     init(bindTo, sendId) {
         var self = this;
         // clear drill down pane and replace with fresh html
-        var newHtml = '<label>Data to Search:</label>\n<select id="data-selection">\n    <option value="EmlSend">Sent Emails</option>\n    <option value="EmlOpen">Opened Emails</option>\n    <option value="EmlClick">Clicked Emails</option>\n</select>\n<label>Group Data By:</label>\n<select id="data-grouping">\n    <option value="Device">Device</option>\n    <option value="EmailClient">Email Client</option>\n    <option value="Browser">Web Browser</option>\n    <option value="OperatingSystem">Operating System</option>\n    <option value="City">City</option>\n    <option value="Region">State</option>\n    <option value="AreaCode">Special: Locations</option>\n    <option value="_day">Day (0=mon)</option>\n    <option value="_hour">Hour</option>\n    <option value="_day-_hour">Special: Day-Hour</option>\n    <!--\n    <option value="Region-City">region and city</option>\n    <option value="Country">Country</option>\n    <option value="AreaCode">County</option>\n    <option value="EventDate">EventTime</option>\n    <option value="URL">Link Clicked</option>\n    <option value="emaildomain">Email Provider (not working yet)</option>\n    -->\n</select>\n<label>Graph Type:</label>\n<select id="graph-type">\n    <!--\n    <option value="line">Line</option>\n    <option value="scatter">Scatter</option>\n    -->\n    <option value="bar">Bar</option>\n    <option value="pie">Pie</option>\n    <option value="donut">Donut</option>\n    <option value="map-graph">Map-Graph</option>\n    <option value="day-hour">Day-Hour Heatmap</option>\n</select>\n<br/>\n<label>From Date:</label>\n<input type="date" id="from-date">\n<label>To Date:</label>\n<input type="date" id="to-date">\n<input type="button" value="Update" name="update" id="drill-down-button" class="updateView btn btn-default">\n<div id="drill-down-graph" style="background-color: ghostwhite"></div>';
+        var newHtml = '<label>Data to Search:</label>\n<select id="data-selection">\n    <option value="">-- select one --</option>\n    <option value="EmlSend">Sent Emails</option>\n    <option value="EmlOpen">Opened Emails</option>\n    <option value="EmlClick">Clicked Emails</option>\n</select>\n<label>Group Data By:</label>\n<select id="data-grouping" disabled>\n    <option value="">-- select one --</option>\n</select>\n<label>Graph Type:</label>\n<select id="graph-type" disabled>\n    <option value="">-- select one --</option>\n</select>\n<br/>\n<label>From Date:</label>\n<input type="date" id="from-date">\n<label>To Date:</label>\n<input type="date" id="to-date">\n<input type="button" value="Update" name="update" id="drill-down-button" class="updateView btn btn-default">\n<div id="drill-down-graph" style="background-color: ghostwhite"></div>';
         $(bindTo)
             .empty()
             .append(newHtml);
@@ -37,16 +37,65 @@ class EmlSendGrapher {
             }
         });
 
+        // eventhandlers to control the option selection
+        // limits Group by and Graph type depending on Data to Search value
+        // also updates Graph type options based on group by selected
+        $(bindTo + ' #data-selection').change(function(){
+            $(bindTo + ' #data-grouping').removeAttr('disabled')
+                .find('option').remove().end()
+                .append('<option value="">-- select one --</option>');
+            $(bindTo + ' #graph-type').attr('disabled', 'disabled');
+            if($(this).val() == 'EmlSend') {
+                $(bindTo + ' #data-grouping').append('<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Special: Day-Hour</option>');
+            } else if ($(this).val() == 'EmlOpen') {
+                $(bindTo + ' #data-grouping').append('<option value="Device">Device</option>\n<option value="EmailClient">Email Client</option>\n<option value="OperatingSystem">Operating System</option>\n<option value="City">City</option>\n<option value="Region">State</option>\n<option value="Country">Country</option>\n<option value="AreaCode">Special: Locations</option>\n<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Special: Day-Hour</option>');
+            } else if ($(this).val() == 'EmlClick') {
+                $(bindTo + ' #data-grouping').append('<option value="Device">Device</option>\n<option value="EmailClient">Email Client</option>\n<option value="OperatingSystem">Operating System</option>\n<option value="City">City</option>\n<option value="Region">State</option>\n<option value="Country">Country</option>\n<option value="AreaCode">Special: Locations</option>\n<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Special: Day-Hour</option>');
+            }
+        });
+
+        $(bindTo + ' #data-grouping').change(function(){
+            $(bindTo + ' #graph-type').removeAttr('disabled')
+                .find('option').remove().end()
+                .append('<option value="">-- select one --</option>');
+            if($(this).val() == 'Device'
+                || $(this).val() == 'EmailClient'
+                || $(this).val() == 'OperatingSystem'
+                || $(this).val() == 'City'
+                || $(this).val() == 'Region'
+                || $(this).val() == 'Country'
+                || $(this).val() == '_day'
+                || $(this).val() == '_hour')
+            {
+                $(bindTo + ' #graph-type').append('<option value="bar">Bar</option>\n<option value="pie">Pie</option>\n<option value="donut">Donut</option>\n<option value="line">Line</option>\n<option value="scatter">Scatter</option>');
+            } else if ($(this).val() == 'AreaCode') {
+                $(bindTo + ' #graph-type').append('<option value="map-graph">Map-Graph</option>');
+            } else if ($(this).val() == '_day-_hour') {
+                $(bindTo + ' #graph-type').append('<option value="day-hour">Day-Hour Heatmap</option>');
+            }
+        });
+
+        $(bindTo + ' #graph-type').change(function(){
+            // if val not "", enable update button
+        });
+
         // handle button click to render visual based on retrieved statistics
         $(bindTo + ' #drill-down-button').click(function(){
-            //alert('caught press of #drill-down-button');
-
             // interpret settings, and determine how to request data from server
             var dataSelect = $(bindTo + ' #data-selection').val();
             var dataGrouping = $(bindTo + ' #data-grouping').val();
             var graphType = $(bindTo + ' #graph-type').val();
             var fromDate = $(bindTo + ' #from-date').val();
             var toDate = $(bindTo + ' #to-date').val();
+
+            // ensure all options have values
+            if (!dataSelect) {
+                return alert('must select from "Data to Search"');
+            } else if (!dataGrouping) {
+                return alert('must select from "Group Data By"');
+            } else if (!graphType) {
+                return alert('must select from "Group Type"');
+            }
 
             // request data from server
             var filters = [];
