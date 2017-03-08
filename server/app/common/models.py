@@ -347,6 +347,8 @@ class SendJob(db.Model):
     __tablename__ = 'send_job'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer, unique=True) # SendID Field
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    SendDefinitionExternalKey = db.Column(db.String(255))
     SchedTime = db.Column(TIMESTAMP)
     SentTime = db.Column(TIMESTAMP)
     EmailName= db.Column(db.String(64))
