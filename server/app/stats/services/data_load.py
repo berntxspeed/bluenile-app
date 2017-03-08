@@ -119,6 +119,8 @@ class DataLoadService(DbService):
                      primary_keys=['SendID'],
                      db_field_map={
                          'SendID': 'SendID',
+                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey',
+                         'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
                          'EmailName': 'EmailName',
                          'SchedTime': 'SchedTime',
                          'SentTime': 'SentTime',
