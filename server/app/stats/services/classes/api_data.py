@@ -12,7 +12,10 @@ def json_select(json, selector):
     if len(selector.split('[')) > 1:
         index = selector.split('[')[1][:-1]
 
-    retval = json[field]
+    retval = json.get(field, None)
+
+    if retval is None:
+        raise ValueError('unable to access json at key: ' + str(field))
 
     if index is not None:
         retval = retval[int(index)]
