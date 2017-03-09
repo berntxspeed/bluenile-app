@@ -232,25 +232,31 @@ class EmlSendGrapher {
                     rows: data,
                     type: graphType
                 },
-                legend: { position: 'right' },
-                axis: { x: { type: xAxisType, label: secondGrouping }, y: { label: 'count' } },
-                grid: { x: { show: true }, y: { show: true } }
-            });
-            return;
-        } else if(graphType == 'bar'){
-            var xAxisType = 'indexed';
-            if(isNaN(data[0][0])){ xAxisType = 'category'; }
-            data.unshift(['x', dataGrouping]);
-            c3.generate({
-                bindto: bindTo,
-                data: {
-                    x: 'x',
-                    rows: data,
-                    type: graphType
+                point: {
+                    r: '4'
                 },
-                axis: { x: { type: xAxisType }, y: { label: 'count' }  },
+                legend: { position: 'right' },
+                axis: {
+                    x: {
+                        type: xAxisType,
+                        label: {
+                            text: secondGrouping,
+                            position: 'outer-center'
+                        }
+                    },
+                    y: {
+                        label: {
+                            text: 'count',
+                            position: 'outer-middle'
+                        }
+                    }
+                },
                 grid: { x: { show: true }, y: { show: true } }
             });
+
+            $(bindTo + ' .c3-circle').attr('r', '4');
+            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 18px;\n    }\n</style>');
+            return;
         } else if(graphType == 'pie' || graphType == 'donut') {
             c3.generate({
                 bindto: bindTo,
