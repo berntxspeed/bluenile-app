@@ -46,11 +46,11 @@ class EmlSendGrapher {
                 .append('<option value="">-- select one --</option>');
             $(bindTo + ' #graph-type').attr('disabled', 'disabled');
             if($(this).val() == 'EmlSend') {
-                $(bindTo + ' #data-grouping').append('<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Special: Day-Hour</option>');
+                $(bindTo + ' #data-grouping').append('<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Day (0=mon) and Hour</option>');
             } else if ($(this).val() == 'EmlOpen') {
-                $(bindTo + ' #data-grouping').append('<option value="Device">Device</option>\n<option value="EmailClient">Email Client</option>\n<option value="OperatingSystem">Operating System</option>\n<option value="City">City</option>\n<option value="Region">State</option>\n<option value="Country">Country</option>\n<option value="AreaCode">Special: Locations</option>\n<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Special: Day-Hour</option>');
+                $(bindTo + ' #data-grouping').append('<option value="Device">Device</option>\n<option value="EmailClient">Email Client</option>\n<option value="OperatingSystem">Operating System</option>\n<option value="City">City</option>\n<option value="Region">State</option>\n<option value="Country">Country</option>\n<option value="Region-City">State and City</option>\n<option value="AreaCode">Counties</option>\n<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Day (0=mon) and Hour</option>');
             } else if ($(this).val() == 'EmlClick') {
-                $(bindTo + ' #data-grouping').append('<option value="Device">Device</option>\n<option value="EmailClient">Email Client</option>\n<option value="OperatingSystem">Operating System</option>\n<option value="City">City</option>\n<option value="Region">State</option>\n<option value="Country">Country</option>\n<option value="AreaCode">Special: Locations</option>\n<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Special: Day-Hour</option>');
+                $(bindTo + ' #data-grouping').append('<option value="Device">Device</option>\n<option value="EmailClient">Email Client</option>\n<option value="OperatingSystem">Operating System</option>\n<option value="City">City</option>\n<option value="Region">State</option>\n<option value="Country">Country</option>\n<option value="Region-City">State and City</option>\n<option value="AreaCode">Counties</option>\n<option value="_day">Day (0=mon)</option>\n<option value="_hour">Hour</option>\n<option value="_day-_hour">Day (0=mon) and Hour</option>');
             }
         });
 
@@ -67,16 +67,14 @@ class EmlSendGrapher {
                 || $(this).val() == '_day'
                 || $(this).val() == '_hour')
             {
-                $(bindTo + ' #graph-type').append('<option value="bar">Bar</option>\n<option value="pie">Pie</option>\n<option value="donut">Donut</option>\n<option value="line">Line</option>\n<option value="scatter">Scatter</option>');
+                $(bindTo + ' #graph-type').append('<option value="bar">Bar</option>\n<option value="pie">Pie</option>\n<option value="donut">Donut</option>\n<option value="line">Line</option>\n<option value="spline">Spline</option>\n<option value="scatter">Scatter</option>');
             } else if ($(this).val() == 'AreaCode') {
-                $(bindTo + ' #graph-type').append('<option value="map-graph">Map-Graph</option>');
+                $(bindTo + ' #graph-type').append('<option value="map-graph">Map-Graph</option>\n<option value="bar">Bar</option>\n<option value="line">Line</option>\n<option value="spline">Spline</option>\n<option value="scatter">Scatter</option>');
             } else if ($(this).val() == '_day-_hour') {
-                $(bindTo + ' #graph-type').append('<option value="day-hour">Day-Hour Heatmap</option>');
+                $(bindTo + ' #graph-type').append('<option value="day-hour">Day-Hour Heatmap</option>\n<option value="bar">Bar</option>\n<option value="line">Line</option>\n<option value="spline">Spline</option>\n<option value="scatter">Scatter</option>');
+            } else if ($(this).val() == 'Region-City') {
+                $(bindTo + ' #graph-type').append('<option value="bar">Bar</option>\n<option value="line">Line</option>\n<option value="spline">Spline</option>\n<option value="scatter">Scatter</option>');
             }
-        });
-
-        $(bindTo + ' #graph-type').change(function(){
-            // if val not "", enable update button
         });
 
         // handle button click to render visual based on retrieved statistics
@@ -121,35 +119,157 @@ class EmlSendGrapher {
               dataType: "json",
               contentType: "application/json",
               success: function(data) {
-                  console.log(data);
-                  self.renderGraph(bindTo + ' #drill-down-graph', graphType, data.results);
+                  window.data = data;
+                  self.renderGraph(self, bindTo + ' #drill-down-graph', graphType, data.results, dataGrouping);
               }
             });
         });
     }
 
-    renderGraph(bindTo, graphType, data) {
+    formatDualGroupedData(data, secondGrouping) {
+        /*
+        changes data from this:
+        [0, 3, x],
+        [0, 14, x],
+        [0, 4, x],
+        [0, 12, x],
+        [1, 3, x],
+        [1, 14, x],
+        [1, 4, x],
+        [1, 12, x],
+        [2, 3, x],
+        [2, 14, x],
+        [2, 4, x],
+        [2, 12, x],
+        [3, 3, x],
+        [3, 14, x],
+        [3, 4, x],
+        [3, 12, x],
+        [4, 3, x],
+        [4, 14, x],
+        [4, 4, x],
+        [4, 12, x],
+
+        into this:
+        [0, 1, 2, 3, 4, 'hour'],
+        [x, x, x, x, x, 3],
+        [x, x, x, x, x, 14],
+        [x, x, x, x, x, 4],
+        [x, x, x, x, x, 12]
+        */
+
+        //make the top row
+        var fdata = [[secondGrouping]];
+        data.forEach(function(item){
+            if(fdata[0].indexOf(item[0])<0){
+                fdata[0].unshift(item[0]);
+            }
+        });
+
+        //make the right column (and fill zeros in body)
+        var sGrpVals = [];
+        data.forEach(function(item){
+          if(sGrpVals.indexOf(item[1])<0){
+            sGrpVals.push(item[1]);
+          }
+        });
+        sGrpVals.forEach(function(item){
+          var rowToPush = [];
+          fdata[0].forEach(function(item){
+            rowToPush.push(0);
+          });
+          rowToPush[rowToPush.length-1] = item;
+          fdata.push(rowToPush);
+        });
+
+        //put the counts in place of the zeros
+        data.forEach(function(item){
+          var colIndex = fdata[0].indexOf(item[0]);
+          var rowIndex = fdata.findIndex(function(itm){
+            return itm[itm.length-1] == item[1];
+          });
+          fdata[rowIndex][colIndex] = item[2];
+        });
+
+        return fdata;
+    }
+
+    renderGraph(self, bindTo, graphType, data, dataGrouping) {
         // if it's map-graph, render custom map graph instead
-        if(graphType == 'map-graph'){
+        if(graphType == 'map-graph') {
             $(bindTo).html('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="960" height="600"></svg>\n<p>MAP GRAPH!</p>');
             var mapGraph = new MapGraph();
             mapGraph.init(bindTo + ' svg', data);
             return;
-        }
-        if(graphType == 'day-hour'){
+        } else if(graphType == 'day-hour'){
             $(bindTo).html('<style>\n  rect.bordered {\n    stroke: #E6E6E6;\n    stroke-width:2px;   \n  }\n\n  text.mono {\n    font-size: 9pt;\n    font-family: Consolas, courier;\n    fill: #aaa;\n  }\n\n  text.axis-workweek {\n    fill: #000;\n  }\n\n  text.axis-worktime {\n    fill: #000;\n  }\n</style>\n<div class="day-hour"></div>\n<p>HEAT MAP!</p>');
             var dayHourPlot = new DayHourPlot();
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
+        } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar'){
+            var secondGrouping = dataGrouping;
+            var firstGrouping = '';
+            if (dataGrouping.indexOf('-') > 0){
+                // double grouping
+                firstGrouping = dataGrouping.substring(0, dataGrouping.indexOf('-'));
+                secondGrouping = dataGrouping.substring(dataGrouping.indexOf('-')+1, dataGrouping.length);
+                data = self.formatDualGroupedData(data, secondGrouping);
+                var xAxisKey = secondGrouping;
+                var xAxisType = 'indexed';
+                if(isNaN(data[1][data[1].length-1])){ xAxisType = 'category'; }
+            } else {
+                // single grouping
+                var xAxisKey = 'x';
+                var xAxisType = 'indexed';
+                if(isNaN(data[0][0])){ xAxisType = 'category'; }
+                data.unshift(['x', dataGrouping]);
+            }
+
+            c3.generate({
+                bindto: bindTo,
+                data: {
+                    x: xAxisKey,
+                    rows: data,
+                    type: graphType
+                },
+                legend: { position: 'right' },
+                axis: { x: { type: xAxisType, label: secondGrouping }, y: { label: 'count' } },
+                grid: { x: { show: true }, y: { show: true } }
+            });
+            return;
+        } else if(graphType == 'bar'){
+            var xAxisType = 'indexed';
+            if(isNaN(data[0][0])){ xAxisType = 'category'; }
+            data.unshift(['x', dataGrouping]);
+            c3.generate({
+                bindto: bindTo,
+                data: {
+                    x: 'x',
+                    rows: data,
+                    type: graphType
+                },
+                axis: { x: { type: xAxisType }, y: { label: 'count' }  },
+                grid: { x: { show: true }, y: { show: true } }
+            });
+        } else if(graphType == 'pie' || graphType == 'donut') {
+            c3.generate({
+                bindto: bindTo,
+                data: {
+                    columns: data,
+                    type: graphType
+                },
+                legend: { hide: true }
+            });
+        } else {
+            // render C3 graph here
+            c3.generate({
+                bindto: bindTo,
+                data: {
+                    columns: data,
+                    type: graphType
+                },
+                legend: { hide: true }
+            });
         }
-        // render C3 graph here
-        c3.generate({
-            bindto: bindTo,
-            data: {
-                columns: data,
-                type: graphType
-            },
-            legend: { hide: true }
-        });
     }
 };
