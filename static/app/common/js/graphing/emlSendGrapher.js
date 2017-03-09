@@ -209,18 +209,20 @@ class EmlSendGrapher {
         } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar'){
             var secondGrouping = dataGrouping;
             var firstGrouping = '';
+            var xAxisKey = 'x';
+            var xAxisType = 'indexed';
             if (dataGrouping.indexOf('-') > 0){
                 // double grouping
                 firstGrouping = dataGrouping.substring(0, dataGrouping.indexOf('-'));
                 secondGrouping = dataGrouping.substring(dataGrouping.indexOf('-')+1, dataGrouping.length);
                 data = self.formatDualGroupedData(data, secondGrouping);
-                var xAxisKey = secondGrouping;
-                var xAxisType = 'indexed';
+                xAxisKey = secondGrouping;
+                xAxisType = 'indexed';
                 if(isNaN(data[1][data[1].length-1])){ xAxisType = 'category'; }
             } else {
                 // single grouping
-                var xAxisKey = 'x';
-                var xAxisType = 'indexed';
+                xAxisKey = 'x';
+                xAxisType = 'indexed';
                 if(isNaN(data[0][0])){ xAxisType = 'category'; }
                 data.unshift(['x', dataGrouping]);
             }
