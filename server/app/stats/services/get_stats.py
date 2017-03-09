@@ -72,7 +72,7 @@ class GetStatsService(DbService):
         sends_by_sendid = []
 
         for send in sends:
-            print('processing sendid: ' + str(send.SendID))
+            # print('processing sendid: ' + str(send.SendID))
 
             if send.num_sends is not None and send.num_sends > 0:
                 sends_by_sendid.append({
