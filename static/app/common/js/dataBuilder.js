@@ -79,7 +79,7 @@ $(document).ready(function() {
 
         for(var tn in g_model){
             var t = g_model[tn]
-            console.log(t)
+//            console.log(t)
             for(var k in t){
                 var v = t[k]
                 var o = new Option(v["label"], v["expression"])
@@ -142,7 +142,8 @@ $(document).ready(function() {
         setDefaults()
         resetQueryName('Default')
         g_current_query.name = null
-        showElement($('#builder1'), $('#builder2'))
+        g_current_query.sqlalchemy = null
+        showElement($('#builder1'), $('#builder2'), $('#btn-save-query-element'), $('#save-query-separator'))
         $('#btn-preview').prop('disabled', false)
     })
 
@@ -182,9 +183,10 @@ $(document).ready(function() {
     }
 
   	explore_values_table.on('click-row.bs.table', function (e, row, $element) {
-  	    if ('query_id' in row) {
+  	    if ('name' in row) {
             $("#modal2").modal("toggle")
-  	        showCustomSqlPreview(default_queries[row.query_id], row.query_id)
+            showBuilderQuery(row)
+            hideElement($('#btn-save-query-element'), $('#save-query-separator'))
   	    }
   	    else if ('table_id' in row) {
   	        g_explore.table = row.table_id
@@ -219,7 +221,6 @@ $(document).ready(function() {
     }
 
     $('#back-explore-tables').on('click', function() {
-        console.log(g_explore.state)
         if (g_explore.state === 'info') {
             showExploreColumns(g_explore.table)
         }
@@ -229,19 +230,25 @@ $(document).ready(function() {
     })
 
     $('#btn-preset-queries').on('click', function() {
-        //TODO: change header, footer, adjust options
         columns =  [{
-                        field: 'query_id',
+                        field: 'name',
                         title: 'Query Description'
                     }]
-        data = []
-        for (query_name in default_queries) {
-            data.push({'query_id': query_name})
-        }
-
-        showExploreValuesTable(columns, data)
-        changeModalHeader('Click To Preview Results')
-        hideElement($("#back-explore-tables"))
+        $("#modal2").on('show.bs.modal', function () {
+            $.ajax({
+                url: "/builder/get-default-queries",
+                dataType: "json",
+                success: function(data) {
+                    showExploreValuesTable(data.columns, data.data)
+                    changeModalHeader('Click To Preview Results')
+                    hideElement($("#back-explore-tables"))
+                },
+                error: function(err) {
+//                    TODO: handle the error or retry
+                    console.log(err)
+                }
+            })
+        })
         $("#modal2").modal({backdrop: false})
 
     })
@@ -299,8 +306,9 @@ $(document).ready(function() {
     $('#btn-load-saved-query').click(function () {
         var row = getSelectedRow()
         g_current_query.name = row.name
+        showElement($('#btn-save-query-element'), $('#save-query-separator'))
         if (row.custom_sql) {
-            showCustomSqlPreview(row.custom_sql, 'Custom Query: session.' + row.custom_sql)
+            showCustomSqlPreview(row.custom_sql, row.name + ': ' + row.custom_sql)
         }
         else {
             showBuilderQuery(row)
@@ -353,8 +361,10 @@ $(document).ready(function() {
 
     saved_queries_table.on('dbl-click-row.bs.table', function (e, row, $element) {
         $("#modalTable").modal("toggle")//{backdrop: "static"});
+        g_current_query.name = row.name
+        showElement($('#btn-save-query-element'), $('#save-query-separator'))
         if (row.custom_sql) {
-            showCustomSqlPreview(row.custom_sql, 'Custom Query: session.' + row.custom_sql)
+            showCustomSqlPreview(row.custom_sql, row.name + ': ' + row.custom_sql)
         }
         else {
             showBuilderQuery(row)
@@ -367,11 +377,14 @@ $(document).ready(function() {
     })
 
     function saveCurrentQuery(query_name, save_query) {
+        label = "'" + query_name + "'"
         if (g_current_query.sqlalchemy){
             save_query.custom_sql = g_current_query.sqlalchemy
+            label = query_name + ': ' + g_current_query.sqlalchemy
         }
         var d = new Date()
         save_query.created = d.toISOString()
+        save_query.preset = true
         $.ajax({
                  url: "/builder/save-query/"+query_name,
                  method: "POST",
@@ -381,7 +394,7 @@ $(document).ready(function() {
                      request.setRequestHeader("X-CSRFToken", g_csrf_token)
                  },
                  success: function(data) {
-                    resetQueryName("'" + query_name + "'")
+                    resetQueryName(label)
                     g_current_query.name = query_name
                     g_current_query.rules = save_query.rules
                     alertUser("Saved!")
@@ -403,17 +416,24 @@ $(document).ready(function() {
                      request.setRequestHeader("X-CSRFToken", g_csrf_token)
                  },
                  success: function(data) {
-                     resetQueryName(label)
-                     hideElement($("#builder1"), $("#builder2") )
-                     g_current_query.sqlalchemy = sqlalchemy_query
-                     visible_header = (data.data.length > 0)
-                     destroyTable($('#preview-table'))
-                     data.showHeader = visible_header
-                     data.formatShowingRows = function(pageFrom, pageTo, totalRows){
-                             return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
-                         }
-                     $('#preview-table').bootstrapTable(data);
-                     ($('#preview-table').bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
+                     if (data.error_msg) {
+                         error_msg_arr = data.error_msg.split("\n")
+                         alertUser(error_msg_arr[error_msg_arr.length - 2] + '\n: See console for Full Traceback',4000)
+                         console.log(data.error_msg)
+                     }
+                     else {
+                         resetQueryName(label)
+                         hideElement($("#builder1"), $("#builder2") )
+                         g_current_query.sqlalchemy = sqlalchemy_query
+                         destroyTable($('#preview-table'))
+                         visible_header = (data.data.length > 0)
+                         data.showHeader = visible_header
+                         data.formatShowingRows = function(pageFrom, pageTo, totalRows){
+                                 return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                             }
+                         $('#preview-table').bootstrapTable(data);
+                         ($('#preview-table').bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
+                     }
                  },
                  error: function(err) {
                      alert('Error in SqlQuery Statement')
@@ -531,7 +551,7 @@ $(document).ready(function() {
         changed = (!(deepCompare(current_query.rules, g_current_query.rules)) && (current_query.rules))
 //        changed = ((JSON.stringify(current_query.rules) != JSON.stringify(g_current_query.rules)) && (current_query.rules))
         if (changed) {
-            return "You did not save, do you want to do it now?"
+            return "Current query has not been saved"
         }
     }
 

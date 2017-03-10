@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from flask import Response
 from flask import request
@@ -43,6 +44,18 @@ def get_queries(mongo):
                     mimetype='application/json')
 
 
+@databuilder.route('/get-default-queries')
+@inject(mongo=MongoDB)
+def get_default_queries(mongo):
+    status, result = DataBuilderQuery(mongo.db).get_all_queries(default=True)
+    columns = [{
+        'field': 'name',
+        'title': 'Query Name'
+        }]
+    return Response(json.dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
+
+
 @databuilder.route('/get-query/<query_id>')
 @inject(mongo=MongoDB)
 def get_query(mongo, query_id):
@@ -77,16 +90,20 @@ def save_query(mongo, query_id):
 def custom_query_preview(alchemy, query_sttmt):
     from sqlalchemy import func
 
-    results = eval('alchemy.session.' + query_sttmt +'.limit(100).all()')
-    rows_count = eval('alchemy.session.' + query_sttmt +'.count()')
+    try:
+        results = eval('alchemy.session.' + query_sttmt +'.limit(100).all()')
+        rows_count = eval('alchemy.session.' + query_sttmt +'.count()')
+        columns, data = SqlQueryService.extract_data(results, {})
+        return Response(json.dumps({'columns': columns,
+                                    'data': data,
+                                    'no_of_rows': rows_count,
+                                    }, default=SqlQueryService.alchemy_encoder),
+                        mimetype='application/json')
 
-    columns, data = SqlQueryService.extract_data(results, {})
-    return Response(json.dumps({'columns': columns,
-                                'data': data,
-                                'no_of_rows': rows_count,
-                                }, default=SqlQueryService.alchemy_encoder),
-                    mimetype='application/json')
-
+    except Exception:
+        return Response(json.dumps({'error_msg': traceback.format_exc(),
+                                    }, default=SqlQueryService.alchemy_encoder),
+                        mimetype='application/json')
 
 @databuilder.route('/query-preview', methods=['POST'])
 @inject(sql_query_service=SqlQueryServ)
