@@ -59,6 +59,7 @@ query-builder-css:
     contents:
         - bower_components/jQuery-QueryBuilder/dist/css/query-builder.default.min.css
         - bower_components/bootstrap-table/dist/bootstrap-table.css
+        - app/common/css/query_builder.css
 
 base-css:
     contents:
