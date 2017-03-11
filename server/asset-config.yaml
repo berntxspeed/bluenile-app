@@ -38,6 +38,7 @@ graphing-js:
         - contents:
           - app/common/js/graphing/pieChartEmlStats.js
           - app/common/js/graphing/emlSendGrapher.js
+          - app/common/js/graphing/dataGrapher.js
           - app/common/js/graphing/day_hour.js
           - app/common/js/graphing/map_graph.js
           filters: babeljs

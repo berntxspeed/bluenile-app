@@ -24,6 +24,41 @@
 
 {% block body_content %}
     <div class="row">
+        <div class="col-md-12 center-block" id="c-side">
+            <strong>Drill Down into any data (C SIDE)</strong>
+            <div class="well" id="drill-down-well">
+                <div id="drill-down-areaC" style="background-color: ghostwhite">
+                    <select id="data-selection">
+                        <option value="">--select an table--</option>
+                        {% for table in tables %}
+                            <option value="{{ table }}">{{ table }} </option>
+                        {% endfor %}
+                    </select>
+                    <label>Limit data by:</label>
+                    <select id="limit-by-field" disabled>
+                        <option value="">-- select one --</option>
+                    </select>
+                    <label>Value:</label>
+                    <input type="text" id="limit-by-value" disabled/>
+                    <br/>
+
+                    <label>Group Data By:</label>
+                    <select id="data-grouping" disabled>
+                        <option value="">-- select one --</option>
+                    </select>
+                    <label>Graph Type:</label>
+                    <select id="graph-type" disabled>
+                        <option value="">-- select one --</option>
+                    </select>
+                    <br/>
+                    <input type="button" value="Update" name="update" id="drill-down-button" class="updateView btn btn-default">
+                    <div id="drill-down-graph" style="background-color: ghostwhite"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col-md-6 center-block">
             <div class="well form-well signup-info">
                 <strong>Select a send</strong>
@@ -87,6 +122,7 @@
             </div>
         </div>
     </div>
+
     {% assets "send-view-js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}

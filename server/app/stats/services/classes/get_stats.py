@@ -17,7 +17,12 @@ class StatsGetter(object):
         self._db = db
         self._tbl = tbl
         self._acceptable_tables = acceptable_tbls
-        self._grp_by = grp_by.split('-')
+
+        if grp_by is not None:
+            self._grp_by = grp_by.split('-')
+        else:
+            self._grp_by = None
+
         self._filters = filters
         if self._tbl not in self._acceptable_tables.keys():
             raise ValueError('illegal table selection of: ' + self._tbl + '. This is not in the list of allowable tables')
@@ -72,9 +77,13 @@ class StatsGetter(object):
     def get_columns(self):
         """
         Returns: a list of columns within the selected table
+        and their data types
         """
         cols = []
         for column, _ in self._model.__dict__.items():
-            if column[0] != '_':
-                cols.append(column)
+            try:
+                cols.append(dict(name=column,
+                                 type=str(self._model.__table__.c[column].type)))
+            except:
+                pass
         return cols

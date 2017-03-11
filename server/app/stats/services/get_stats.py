@@ -2,7 +2,7 @@ from flask import jsonify
 from sqlalchemy import func
 
 from ...common.services import DbService
-from ...common.models import Artist, Customer, EmlSend, EmlOpen, EmlClick, SendJob
+from ...common.models import Artist, Customer, Purchase, EmlSend, EmlOpen, EmlClick, SendJob, Event, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 from .classes.get_stats import StatsGetter
 
 class GetStatsService(DbService):
@@ -11,10 +11,16 @@ class GetStatsService(DbService):
         super(GetStatsService, self).__init__(config, db, logger)
         self._acceptable_tables = {
             'Customer': Customer,
+            'Purchase': Purchase,
             'Artist': Artist,
             'EmlSend': EmlSend,
             'EmlOpen': EmlOpen,
-            'EmlClick': EmlClick
+            'EmlClick': EmlClick,
+            'WebTrackingPageView': WebTrackingPageView,
+            'WebTrackingEvent': WebTrackingEvent,
+            'WebTrackingEcomm': WebTrackingEcomm,
+            'Event': Event,
+            'SendJob': SendJob
         }
 
     def get_columns(self, tbl):
@@ -65,6 +71,7 @@ class GetStatsService(DbService):
         return jsonify(results=results)
 
     def send_view(self):
+        tables = self._acceptable_tables.keys()
 
         sends = SendJob.query.all()
 
@@ -95,7 +102,8 @@ class GetStatsService(DbService):
 
         return {
             'sends_by_sendid': sends_by_sendid,
-            'sends_by_emailname': sends_by_emailname
+            'sends_by_emailname': sends_by_emailname,
+            'tables': tables
         }
 
     def send_info(self, option, sendid):

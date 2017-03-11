@@ -16,6 +16,9 @@ $(function(){
             var emlSendGrapher = new EmlSendGrapher();
             emlSendGrapher.init('#drill-down-areaB', sendId);
         });
+
+        var dataGrapher = new DataGrapher();
+        dataGrapher.init('#drill-down-areaC');
     });
 });
 
