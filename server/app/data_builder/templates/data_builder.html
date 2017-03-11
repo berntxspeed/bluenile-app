@@ -81,10 +81,24 @@
                                 </li>
                             </ul>
                         </li>
-                        <li><button id="btn-manage-queries" class="btn btn-default navbar-btn">Manage Saved Queries</button></li>
-                        <li><button id="btn-custom-query" class="btn btn-default navbar-btn">SQLAlchemy Query</button></li>
-                        <li><button id="btn-preset-queries" class="btn btn-default navbar-btn">Default Queries</button></li>
-                        <!--<li><button id="btn-explore-data" class="btn btn-default navbar-btn">Explore Data</button></li>-->
+                        <li class="dropdown">
+                            <btn class="dropdown-toggle btn btn-default navbar-btn" data-toggle="dropdown" role="button"
+                                 aria-haspopup="true" aria-expanded="false">Manage <span class="caret"></span>
+                            </btn>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="#" id="btn-manage-queries" class="">Manage Saved Queries</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a href="#" id="btn-custom-query" class="">SQLAlchemy Query</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a href="#" id="btn-preset-queries" class="">Default Queries</a>
+                                </li>
+                            </ul>
+                        </li>
                         <li><button id="btn-explore-values" class="btn btn-default navbar-btn">Explore Values</button></li>
                     </ul>
                     <ul class="nav">
