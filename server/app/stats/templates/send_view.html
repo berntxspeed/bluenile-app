@@ -28,24 +28,50 @@
             <strong>Drill Down into any data (C SIDE)</strong>
             <div class="well" id="drill-down-well">
                 <div id="drill-down-areaC" style="background-color: ghostwhite">
+                    <label>Data:</label>
                     <select id="data-selection">
                         <option value="">--select an table--</option>
                         {% for table in tables %}
                             <option value="{{ table }}">{{ table }} </option>
                         {% endfor %}
                     </select>
+                    <br/>
+
                     <label>Limit data by:</label>
                     <select id="limit-by-field" disabled>
                         <option value="">-- select one --</option>
                     </select>
+                    <select id="limit-by-op" disabled>
+                        <option value="">-- select one --</option>
+                    </select>
                     <label>Value:</label>
-                    <input type="text" id="limit-by-value" disabled/>
+                    <input type="text" id="limit-by-val1" disabled/>
+                    <input type="text" id="limit-by-val2" disabled hidden/>
                     <br/>
 
                     <label>Group Data By:</label>
                     <select id="data-grouping" disabled>
                         <option value="">-- select one --</option>
                     </select>
+                    <label>and</label>
+                    <select id="data-grouping2" disabled>
+                        <option value="">-- optional --</option>
+                    </select>
+
+                    <br/>
+                    <label>Calculate:</label>
+                    <select id="aggregate-op">
+                        <option value="count">Count</option>
+                        <option value="average">Average</option>
+                        <option value="max">Maximum</option>
+                        <option value="min">Minimum</option>
+                        <option value="sum">Sum</option>
+                    </select>
+                    <select id="aggregate-field" disabled>
+                        <option value="">-- select one--</option>
+                    </select>
+
+                    <br/>
                     <label>Graph Type:</label>
                     <select id="graph-type" disabled>
                         <option value="">-- select one --</option>
@@ -59,66 +85,88 @@
     </div>
 
     <div class="row">
-        <div class="col-md-6 center-block">
-            <div class="well form-well signup-info">
-                <strong>Select a send</strong>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 center-block" id="a-side">
-            <strong>Drill Down into One Email (A SIDE)</strong>
-            <div class="well form-well">
-                By Specific Send Job:
-                <select class="send-select">
-                    <option value="">--select an send--</option>
-                    <option value="">All Sends</option>
-                    {% for send in sends_by_sendid %}
-                        {% if send['num_sent'] > 0 %}
-                            <option value="{{ send['sendid'] }}">{{ send['email_name'] }} [{{ send['sendid'] }}] with {{ send['num_sent'] }} sent</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                By Email Name:
-                <select class="email-select">
-                    <option value="">--select an emailname--</option>
-                    {% for send in sends_by_emailname.items() %}
-                        {% if send[1]['num_sent'] > 0 %}
-                            <option value="{{ send[1]['sendids'] }}">{{ send[0] }} with {{ send[1]['num_sendids'] }} send jobs and {{ send[1]['num_sent'] }} sent</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
+        <div class="col-md-12 center-block" id="email-side">
+            <strong>Drill Down into email data</strong>
             <div class="well" id="drill-down-well">
-                <div id="drill-down-areaA" style="background-color: ghostwhite"></div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 center-block" id="b-side">
-            <strong>Drill Down into One Email (B SIDE)</strong>
-            <div class="well form-well">
-                <select class="send-select">
-                    <option value="">--select an send--</option>
-                    <option value="">All Sends</option>
-                    {% for send in sends_by_sendid %}
-                        {% if send['num_sent'] > 0 %}
-                            <option value="{{ send['sendid'] }}">{{ send['email_name'] }} [{{ send['sendid'] }}] with {{ send['num_sent'] }} sent</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                By Email Name:
-                <select class="email-select">
-                    <option value="">--select an emailname--</option>
-                    {% for send in sends_by_emailname.items() %}
-                        {% if send[1]['num_sent'] > 0 %}
-                            <option value="{{ send[1]['sendids'] }}">{{ send[0] }} with {{ send[1]['num_sendids'] }} send jobs and {{ send[1]['num_sent'] }} sent</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="well" id="drill-down-well">
-                <div id="drill-down-areaB" style="background-color: ghostwhite"></div>
+                <div id="drill-down-areaEMAIL" style="background-color: ghostwhite">
+                    <div class="well form-well">
+                        By Specific Send Job:
+                        <select id="send-select">
+                            <option value="">--select an send--</option>
+                            <option value="">All Sends</option>
+                            {% for send in sends_by_sendid %}
+                                {% if send['num_sent'] > 0 %}
+                                    <option value="{{ send['sendid'] }}">{{ send['email_name'] }} [{{ send['sendid'] }}] with {{ send['num_sent'] }} sent</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        By Email Name:
+                        <select id="email-select">
+                            <option value="">--select an emailname--</option>
+                            {% for send in sends_by_emailname.items() %}
+                                {% if send[1]['num_sent'] > 0 %}
+                                    <option value="{{ send[1]['sendids'] }}">{{ send[0] }} with {{ send[1]['num_sendids'] }} send jobs and {{ send[1]['num_sent'] }} sent</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <br/>
+                    <div id="send-info"></div>
+
+                    <br/>
+                    <label>Data:</label>
+                    <select id="data-selection">
+                        <option value="">--select an table--</option>
+                        <option value="EmlSend">Email Sends</option>
+                        <option value="EmlOpen">Email Opens</option>
+                        <option value="EmlClick">Email Clicks</option>
+                    </select>
+                    <br/>
+
+                    <label>Limit data by:</label>
+                    <select id="limit-by-field" disabled>
+                        <option value="">-- select one --</option>
+                    </select>
+                    <select id="limit-by-op" disabled>
+                        <option value="">-- select one --</option>
+                    </select>
+                    <label>Value:</label>
+                    <input type="text" id="limit-by-val1" disabled/>
+                    <input type="text" id="limit-by-val2" disabled hidden/>
+                    <br/>
+
+                    <label>Group Data By:</label>
+                    <select id="data-grouping" disabled>
+                        <option value="">-- select one --</option>
+                    </select>
+                    <label>and</label>
+                    <select id="data-grouping2" disabled>
+                        <option value="">-- optional --</option>
+                    </select>
+
+                    <br/>
+                    <label>Calculate:</label>
+                    <select id="aggregate-op">
+                        <option value="count">Count</option>
+                        <option value="average">Average</option>
+                        <option value="max">Maximum</option>
+                        <option value="min">Minimum</option>
+                        <option value="sum">Sum</option>
+                    </select>
+                    <select id="aggregate-field" disabled>
+                        <option value="">-- select one--</option>
+                    </select>
+
+                    <br/>
+                    <label>Graph Type:</label>
+                    <select id="graph-type" disabled>
+                        <option value="">-- select one --</option>
+                    </select>
+                    <br/>
+                    <input type="button" value="Update" name="update" id="drill-down-button" class="updateView btn btn-default">
+                    <div id="drill-down-graph" style="background-color: ghostwhite"></div>
+                </div>
             </div>
         </div>
     </div>

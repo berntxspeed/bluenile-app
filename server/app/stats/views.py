@@ -114,9 +114,9 @@ def get_columns(get_stats_service, tbl):
     return get_stats_service.get_columns(tbl)
 
 
-@stats.route('/metrics-grouped-by/<grp_by>/<tbl>')
+@stats.route('/metrics-grouped-by/<grp_by>/<tbl>/<agg_op>/<agg_field>')
 @inject(get_stats_service=GetStatsServ)
-def metrics_grouped_by(get_stats_service, grp_by, tbl):
+def metrics_grouped_by(get_stats_service, grp_by, tbl, agg_op, agg_field):
     """
     tbl = 'EmlOpen' # a table to query
     grp_by = 'Device' # a db field name to group by
@@ -145,7 +145,9 @@ def metrics_grouped_by(get_stats_service, grp_by, tbl):
         q = loads(q)
         filters = q.get('filters')
         print(filters)
-    return get_stats_service.get_grouping_counts(tbl, grp_by, filters)
+    if agg_field == 'none':
+        agg_field = None
+    return get_stats_service.get_grouping_counts(tbl, grp_by, agg_op, agg_field, filters)
 
 
 @stats.route('/map-graph')

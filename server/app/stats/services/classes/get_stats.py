@@ -1,18 +1,26 @@
 from sqlalchemy import func
 import datetime
 
+from ....common.utils.db_datatype_handler import convert_to_attr_datatype
+
 
 class StatsGetter(object):
 
     def __init__(self, db, tbl, acceptable_tbls, grp_by=None, filters=None):
         # 'in' case expects a string representation of an array of strings like this = '['xss', 'sde', 'wer']'
         self._allowable_filter_ops = {
-            'eq': lambda q, col, val: q.filter(col == val),
-            'gt': lambda q, col, val: q.filter(col > val),
-            'lt': lambda q, col, val: q.filter(col < val),
-            'date_gt': lambda q, col, val: q.filter(col > datetime.datetime.strptime(val, '%Y-%m-%d')),
-            'date_lt': lambda q, col, val: q.filter(col < datetime.datetime.strptime(val, '%Y-%m-%d')),
-            'in': lambda q, col, val: q.filter(col.in_(val[1: len(val)-1].split(', ')))
+            'eq': lambda q, col, val: q.filter(col == convert_to_attr_datatype(col, val)),
+            'neq': lambda q, col, val: q.filter(col != convert_to_attr_datatype(col,val)),
+            'gt': lambda q, col, val: q.filter(col > convert_to_attr_datatype(col, val)),
+            'gte': lambda q, col, val: q.filter(col >= convert_to_attr_datatype(col, val)),
+            'lt': lambda q, col, val: q.filter(col < convert_to_attr_datatype(col, val)),
+            'lte': lambda q, col, val: q.filter(col <= convert_to_attr_datatype(col, val)),
+            'contains': lambda q, col, val: q.filter(col.contains(convert_to_attr_datatype(col, val))),
+            'startswith': lambda q, col, val: q.filter(col.startswith(convert_to_attr_datatype(col,val))),
+            'endswith': lambda q, col, val: q.filter(col.endsswith(convert_to_attr_datatype(col, val))),
+            'isnull': lambda q, col, val: q.filter(col == None),
+            'notnull': lambda q, col, val: q.filter(col != None),
+            'in': lambda q, col, val: q.filter(col.in_([convert_to_attr_datatype(col, x) for x in val[1: len(val)-1].split(', ')]))
         }
         self._db = db
         self._tbl = tbl
@@ -37,13 +45,11 @@ class StatsGetter(object):
     def _apply_filters_to_query(self, q):
         if self._filters is not None:
             for filter in self._filters:
-                if filter.get('name') in self.get_columns():
+                if filter.get('name') in [column['name'] for column in self.get_columns()]:
                     if filter.get('op') in self._allowable_filter_ops.keys():
-                        if filter.get('val') != None:
-                            column = getattr(self._model, filter.get('name'))
-                            q = self._allowable_filter_ops.get(filter.get('op'))(q, column, filter.get('val'))
-                            continue
-                        raise ValueError('invalid data for filter definition: val')
+                        column = getattr(self._model, filter.get('name'))
+                        q = self._allowable_filter_ops.get(filter.get('op'))(q, column, filter.get('val'))
+                        continue
                     raise ValueError('invalid data for filter definition: op')
                 raise ValueError('invalid data for filter definition: name')
         return q
@@ -55,7 +61,7 @@ class StatsGetter(object):
                 q = q.add_columns(column).group_by(column)
             return q
 
-    def get(self):
+    def get(self, aggregate_op, aggregate_field):
         """
         Executes query and returns result
         """
@@ -70,7 +76,29 @@ class StatsGetter(object):
         q = self._apply_group_bys_to_query(q)
         q = self._apply_filters_to_query(q)
 
-        q = q.add_columns(func.count())
+        if aggregate_op != 'count' and aggregate_field is None:
+            raise ValueError('must supply a field to aggregate by if agg-operation is other than count')
+
+        if aggregate_field is not None:
+            agg_field = getattr(self._model, aggregate_field)
+        else:
+            agg_field = '*'
+
+        agg_ops = {
+            'sum': func.sum(agg_field),
+            'average': func.avg(agg_field),
+            'max': func.max(agg_field),
+            'min': func.min(agg_field),
+            'count': func.count(agg_field)
+        }
+
+        agg_op = agg_ops.get(aggregate_op, None)
+
+        if agg_op is None:
+            raise ValueError('invalid aggregate operation specified: '+aggregate_op)
+
+        # sum, count, max, min, avg
+        q = q.add_columns(agg_op)
 
         return q.all()
 

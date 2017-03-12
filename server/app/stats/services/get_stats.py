@@ -37,7 +37,7 @@ class GetStatsService(DbService):
 
         return jsonify(columns=st.get_columns())
 
-    def get_grouping_counts(self, tbl, grp_by, filters=None):
+    def get_grouping_counts(self, tbl, grp_by, aggregate_op, aggregate_field, filters=None):
         """
         tbl = 'EmlOpen' # a table to query
         grp_by = 'Device' # a db field name to group by
@@ -64,7 +64,7 @@ class GetStatsService(DbService):
                              acceptable_tbls=self._acceptable_tables,
                              grp_by=grp_by,
                              filters=filters)
-            results = st.get()
+            results = st.get(aggregate_op, aggregate_field)
         except ValueError as exc:
             return jsonify(error=str(exc)), 400
 

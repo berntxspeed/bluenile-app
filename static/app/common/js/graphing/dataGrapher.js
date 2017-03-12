@@ -1,26 +1,36 @@
-
+// todo: load a few dropdowns up top for sends, emails
+// todo: pull a list of premade reports from server, and show a dropdown to pick them (select one preconfigs options)
+// todo: consider how to access data across relationships
 
 class DataGrapher {
     constructor(){}
 
-    init(bindTo) {
+    init(bindTo, preFilter) {
         var self = this;
         var table;
-        var groupings = {};
-        var grouping = {};
+        var columns = {};
+        var typeOfLimitByField = 'text';
+
+        var grouping = {
+            grouping1: null,
+            grouping2: null,
+            type: null,
+            special: false
+        };
+
         var graphType;
 
         var specialGroupings = {
             EmlSend: [
-                { name: 'Day (0=monday) and Hour', value: '_day-_hour', type: 'numeric' }
+                { grouping1: '_day', grouping2: '_hour' }
             ],
             EmlOpen: [
-                { name: 'Day (0=monday) and Hour', value: '_day-_hour', type: 'numeric' },
-                { name: 'State and City', value: 'Region-City', type: 'string' }
+                { grouping1: '_day', grouping2: '_hour' },
+                { grouping1: 'AreaCode', grouping2: null }
             ],
             EmlClick: [
-                { name: 'Day (0=monday) and Hour', value: '_day-_hour', type: 'numeric' },
-                { name: 'State and City', value: 'Region-City', type: 'string' }
+                { grouping1: '_day', grouping2: '_hour' },
+                { grouping1: 'AreaCode', grouping2: null }
             ]
         };
 
@@ -41,16 +51,59 @@ class DataGrapher {
                 { name: 'Pie Chart', value: 'pie' },
                 { name: 'Donut Chart', value: 'donut' }
             ],
-            datetime: [],
-            boolean: [],
+            datetime: [
+                //todo add graph types for date time
+            ],
+            boolean: [
+                //todo add graph types for boolean
+            ],
             special: {
-                'Region-City': [
+                'AreaCode': [
                     { name: 'Map Graph', value: 'map-graph' }
                 ],
-                '_day-_hour': [
+                '_day_hour': [
                     { name: 'Day Hour Heatmap', value: 'day-hour' }
                 ]
             }
+        };
+
+        //todo add to string: 'doesnt contain' and implement on server
+        var limitByOps = {
+            string: [
+                { name: 'Equals', value: 'eq' },
+                { name: 'Not Equals', value: 'neq' },
+                { name: 'Contains', value: 'contains' },
+                { name: 'Is Empty', value: 'isnull' },
+                { name: 'Is Not Empty', value: 'notnull' },
+                { name: 'In This List', value: 'in' }
+            ],
+            numeric: [
+                { name: 'Equals', value: 'eq' },
+                { name: 'Not Equals', value: 'neq' },
+                { name: 'Is Empty', value: 'isnull' },
+                { name: 'Is Not Empty', value: 'notnull' },
+                { name: 'Greater Than', value: 'gt' },
+                { name: 'Greater Than or Equal To', value: 'gte' },
+                { name: 'Less Than', value: 'lt' },
+                { name: 'Less Than or Equal To', value: 'lte' },
+                { name: 'Between', value: 'between' },
+                { name: 'In This List', value: 'in' }
+            ],
+            datetime: [
+                { name: 'Equals', value: 'eq' },
+                { name: 'Not Equals', value: 'neq' },
+                { name: 'Is Empty', value: 'isnull' },
+                { name: 'Is Not Empty', value: 'notnull' },
+                { name: 'Greater Than', value: 'gt' },
+                { name: 'Less Than', value: 'lt' },
+                { name: 'Between', value: 'between' }
+            ],
+            boolean: [
+                { name: 'Equals', value: 'eq' },
+                { name: 'Not Equals', value: 'neq' },
+                { name: 'Is Empty', value: 'isnull' },
+                { name: 'Is Not Empty', value: 'notnull' }
+            ]
         };
 
         // eventhandlers to control the option selection
@@ -64,16 +117,27 @@ class DataGrapher {
             $(bindTo + ' #data-grouping').removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- select one --</option>');
+            $(bindTo + ' #data-grouping2').removeAttr('disabled')
+                .find('option').remove().end()
+                .append('<option value="">-- optional --</option>');
 
             // clear data limiting options
             $(bindTo + ' #limit-by-field').removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- select one --</option>');
-            $(bindTo + ' #limit-by-value').removeAttr('disabled');
+            $(bindTo + ' #limit-by-op').attr('disabled', 'disabled');
+            $(bindTo + ' #limit-by-val1').attr('disabled', 'disabled');
+            $(bindTo + ' #limit-by-val2').attr('disabled', 'disabled')
+                .attr('hidden', 'hidden');
 
             // clear graph type options
             $(bindTo + ' #graph-type').find('option').remove().end()
                 .attr('disabled', 'disabled');
+
+            // clear aggregate field options
+            $(bindTo + ' #aggregate-field').removeAttr('disabled')
+                .find('option').remove().end()
+                .append('<option value="">-- optional --</option>');
 
             // get columns and add data grouping options (one for each column)
             $.ajax({
@@ -81,7 +145,7 @@ class DataGrapher {
               success: function(data) {
                   window.data = data;
                   // set options for #data-grouping
-                  groupings = {};
+                  columns = {};
                   data.columns.forEach(function(column){
                       var columnType = 'unknown';
                       if (column.type.indexOf('VARCHAR') > -1) {
@@ -93,14 +157,20 @@ class DataGrapher {
                       } else if (column.type.indexOf('BOOLEAN') > -1) {
                           columnType = 'boolean';
                       }
-                      groupings[column.name] = { type: columnType, special: false };
+                      columns[column.name] = { type: columnType, special: false };
                       $(bindTo + ' #data-grouping').append('<option value="'+column.name+'">'+column.name+'</option>');
+                      $(bindTo + ' #data-grouping2').append('<option value="'+column.name+'">'+column.name+'</option>');
                       $(bindTo + ' #limit-by-field').append('<option value"'+column.name+'">'+column.name+'</option>');
+
+                      // only add the numeric / datetime / boolean fields to the aggregate-field options
+                      if (columnType == 'numeric' || columnType == 'datetime' || columnType == 'boolean') {
+                          $(bindTo + ' #aggregate-field').append('<option value"'+column.name+'">'+column.name+'</option>');
+                      }
                   });
                   var tempGroupings = specialGroupings[table];
                   if(tempGroupings){
                       tempGroupings.forEach(function(grouping){
-                          groupings[grouping.value] = { type: grouping.type, special: true };
+                          columns[grouping.value] = { type: grouping.type, special: true };
                           $(bindTo + ' #data-grouping').append('<option value="'+grouping.value+'">'+grouping.name+'</option>');
                       });
                   }
@@ -113,9 +183,16 @@ class DataGrapher {
 
             var graphTypesToAdd = [];
 
-            grouping.name = $(this).val();
-            grouping.type = groupings[grouping.name].type;
-            grouping.special = groupings[grouping.name].special;
+            grouping.grouping1 = $(this).val();
+            grouping.type = columns[grouping.grouping1].type;
+
+            if (specialGroupings[table] && specialGroupings[table].find(function(sg){
+                    return sg.grouping1 == grouping.grouping1 && sg.grouping2 == grouping.grouping2;
+                })) {
+                grouping.special = true;
+            } else {
+                grouping.special = false;
+            }
 
             // clear existing graph-type options
             $(bindTo + ' #graph-type').removeAttr('disabled')
@@ -123,7 +200,11 @@ class DataGrapher {
                 .append('<option value="">-- select one --</option>');
 
             if (grouping.special) {
-                graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[grouping.name]);
+                var tempkey = grouping.grouping1;
+                if (grouping.grouping2) {
+                    tempkey = tempkey + grouping.grouping2;
+                }
+                graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[tempkey]);
             }
 
             graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
@@ -134,12 +215,121 @@ class DataGrapher {
 
         });
 
+        $(bindTo + ' #data-grouping2').change(function(){
+
+            var graphTypesToAdd = [];
+
+            grouping.grouping2 = $(this).val();
+
+            if (specialGroupings[table] && specialGroupings[table].find(function(sg){
+                    return sg.grouping1 == grouping.grouping1 && sg.grouping2 == grouping.grouping2;
+                })) {
+                grouping.special = true;
+            } else {
+                grouping.special = false;
+                //must reset graphTypes to get rid of special ones
+                $(bindTo + ' #graph-type').find('option').remove().end()
+                    .append('<option value="">-- select one --</option>');
+                graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
+            }
+
+            if (grouping.special) {
+                var tempkey = grouping.grouping1;
+                if (grouping.grouping2) {
+                    tempkey = tempkey + grouping.grouping2;
+                }
+                graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[tempkey]);
+            }
+
+            graphTypesToAdd.forEach(function(graphTypeToAdd){
+                $(bindTo + ' #graph-type').append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
+            });
+
+        });
+
+        $(bindTo + ' #limit-by-field').change(function(){
+
+            if ($(this).val()) {
+                var limitByField = {
+                    name: $(this).val(),
+                    type: columns[$(this).val()].type
+                };
+
+                // set 'op' options
+                $(bindTo + ' #limit-by-op').removeAttr('disabled')
+                    .find('option').remove().end()
+                    .append('<option value="">-- select one --</option>');
+
+                limitByOps[limitByField.type].forEach(function(op){
+                    $(bindTo + ' #limit-by-op').append('<option value="'+op.value+'">'+op.name+'</option>');
+                });
+
+                // configure 'value' input field(s)
+                if (limitByField.type == 'string') {
+                    typeOfLimitByField = 'text';
+                } else if (limitByField.type == 'numeric') {
+                    typeOfLimitByField = 'number';
+                } else if (limitByField.type == 'datetime') {
+                    typeOfLimitByField = 'date';
+                } else if (limitByField.type == 'boolean') {
+                    typeOfLimitByField = 'number';
+                }
+
+                $(bindTo + ' #limit-by-val1').removeAttr('disabled')
+                    .attr('type', typeOfLimitByField);
+                $(bindTo + ' #limit-by-val2').removeAttr('disabled')
+                    .attr('type', typeOfLimitByField);
+            } else {
+                $(bindTo + ' #limit-by-op').val(null);
+                $(bindTo + ' #limit-by-val1').val(null);
+            }
+
+        });
+
+        $(bindTo + ' #limit-by-op').change(function(){
+
+            var limitByOp = $(this).val();
+
+            if (limitByOp == 'between') {
+                $(bindTo + ' #limit-by-val2').removeAttr('hidden');
+            } else {
+                $(bindTo + ' #limit-by-val2').attr('hidden', 'hidden');
+            }
+
+            if (limitByOp == 'in') {
+                $(bindTo + ' #limit-by-val1').replaceWith('<textarea id="limit-by-val1" placeholder="separate values with comma"></textarea>');
+            } else {
+                $(bindTo + ' #limit-by-val1').replaceWith('<input type="'+typeOfLimitByField+'" id="limit-by-val1"/>');
+            }
+
+        });
+
         // handle button click to render visual based on retrieved statistics
         $(bindTo + ' #drill-down-button').click(function(){
             // interpret settings, and determine how to request data from server
             var dataSelect = $(bindTo + ' #data-selection').val();
-            var dataGrouping = $(bindTo + ' #data-grouping').val();
+
+            var dataGrouping;
+            var dataGrouping1 = $(bindTo + ' #data-grouping').val();
+            var dataGrouping2 = $(bindTo + ' #data-grouping2').val();
+            if (dataGrouping2) {
+                dataGrouping = dataGrouping1 + '-' + dataGrouping2;
+            } else {
+                dataGrouping = dataGrouping1;
+            }
+
             var graphType = $(bindTo + ' #graph-type').val();
+
+            var filterColumn = $(bindTo + ' #limit-by-field').val();
+            var filterOp = $(bindTo + ' #limit-by-op').val();
+            var filterVal1of2 = $(bindTo + ' #limit-by-val1').val();
+            var filterVal2of2 = $(bindTo + ' #limit-by-val2').val();
+
+            var aggregateOp = $(bindTo + ' #aggregate-op').val();
+            var aggregateField = $(bindTo + ' #aggregate-field').val();
+            if (aggregateOp == 'count' && !aggregateField) {
+                aggregateField = 'none';
+            }
 
             // ensure all options have values
             if (!dataSelect) {
@@ -147,23 +337,71 @@ class DataGrapher {
             } else if (!dataGrouping) {
                 return alert('must select from "Group Data By"');
             } else if (!graphType) {
-                return alert('must select from "Group Type"');
+                return alert('must select from "Graph Type"');
+            } else if (filterColumn) {
+                filterColumn = {
+                    name: filterColumn,
+                    type: columns[filterColumn].type
+                };
+                if (!filterOp) {
+                    return alert('must select from "Limit By Operation"');
+                }
+                if (!filterVal1of2) {
+                    if (filterOp != 'notnull' && filterOp != 'isnull'){
+                        return alert('must select from "Limit By Value (1 of 2)"');
+                    }
+                }
+                if (filterOp == 'between') {
+                    if (!filterVal2of2) {
+                        return alert('must select from "Limit By Value (2 of 2"');
+                    }
+                }
+            } else if (aggregateOp != 'count') {
+                if (!aggregateField) {
+                    return alert('must select a field to aggregate by if aggregate operation is NOT count');
+                }
             }
 
             // build filters
             var filters = [];
-            // filters.push({"name": "xx", "op": "eq", "val": "xx"});
-            // if(fromDate){ filters.push({"name": "EventDate", "op": "date_gt", "val": fromDate}); }
-            // if(toDate){ filters.push({"name": "EventDate", "op": "date_lt", "val": toDate}); }
+            if (preFilter) {
+                filters.push(preFilter);
+            }
+            if (filterColumn) {
+                if (filterOp == 'eq') {
+                    filters.push({ "name": filterColumn.name, "op": "eq", "val": filterVal1of2 });
+                } else if (filterOp == 'neq') {
+                    filters.push({ "name": filterColumn.name, "op": "neq", "val": filterVal1of2 });
+                } else if (filterOp == 'contains') {
+                    filters.push({ "name": filterColumn.name, "op": "contains", "val": filterVal1of2 });
+                } else if (filterOp == 'isnull') {
+                    filters.push({ "name": filterColumn.name, "op": "isnull", "val": filterVal1of2 });
+                } else if (filterOp == 'notnull') {
+                    filters.push({ "name": filterColumn.name, "op": "notnull", "val": filterVal1of2 });
+                } else if (filterOp == 'gt') {
+                    filters.push({ "name": filterColumn.name, "op": "gt", "val": filterVal1of2 });
+                } else if (filterOp == 'gte') {
+                    filters.push({ "name": filterColumn.name, "op": "gte", "val": filterVal1of2 });
+                } else if (filterOp == 'lt') {
+                    filters.push({ "name": filterColumn.name, "op": "lt", "val": filterVal1of2 });
+                } else if (filterOp == 'lte') {
+                    filters.push({ "name": filterColumn.name, "op": "lte", "val": filterVal1of2 });
+                } else if (filterOp == 'between') {
+                    filters.push({ "name": filterColumn.name, "op": "gt", "val": filterVal1of2 });
+                    filters.push({ "name": filterColumn.name, "op": "lt", "val": filterVal2of2 });
+                } else if (filterOp == 'in') {
+                    filters.push({ "name": filterColumn.name, "op": "in", "val": "["+filterVal1of2+"]" });
+                }
+            }
 
             $.ajax({
-              url: '/metrics-grouped-by/'+dataGrouping+'/'+dataSelect,
+              url: '/metrics-grouped-by/'+dataGrouping+'/'+dataSelect+'/'+aggregateOp+'/'+aggregateField,
               data: {"q": JSON.stringify({'filters': filters})},
               dataType: "json",
               contentType: "application/json",
               success: function(data) {
                   window.data = data;
-                  self.renderGraph(self, bindTo + ' #drill-down-graph', graphType, data.results, dataGrouping);
+                  self.renderGraph(self, bindTo + ' #drill-down-graph', graphType, data.results, dataGrouping, aggregateOp, aggregateField);
               }
             });
         });
@@ -237,7 +475,7 @@ class DataGrapher {
         return fdata;
     }
 
-    renderGraph(self, bindTo, graphType, data, dataGrouping) {
+    renderGraph(self, bindTo, graphType, data, dataGrouping, aggregateOp, aggregateField) {
         // if it's map-graph, render custom map graph instead
         if(graphType == 'map-graph') {
             $(bindTo).html('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="960" height="600"></svg>\n<p>MAP GRAPH!</p>');
@@ -261,14 +499,14 @@ class DataGrapher {
                 secondGrouping = dataGrouping.substring(dataGrouping.indexOf('-')+1, dataGrouping.length);
                 data = self.formatDualGroupedData(data, secondGrouping);
                 xAxisKey = secondGrouping;
-                xAxisType = 'indexed';
+                xAxisType = 'category';
                 if(data.length > 30){ xAxisShow = false; }
-                if(isNaN(data[1][data[1].length-1])){ xAxisType = 'category'; }
+                //if(!isNaN(data[1][data[1].length-1])){ xAxisType = 'indexed'; }
             } else {
                 // single grouping
                 xAxisKey = 'x';
-                xAxisType = 'indexed';
-                if(isNaN(data[0][0])){ xAxisType = 'category'; }
+                xAxisType = 'category';
+                //if(!isNaN(data[0][0])){ xAxisType = 'indexed'; }
                 data.unshift(['x', dataGrouping]);
             }
 
@@ -282,7 +520,7 @@ class DataGrapher {
                 point: {
                     r: '4'
                 },
-                legend: { position: 'right' },
+                legend: { position: 'bottom' },
                 axis: {
                     x: {
                         show: xAxisShow,
@@ -294,7 +532,7 @@ class DataGrapher {
                     },
                     y: {
                         label: {
-                            text: 'count',
+                            text: aggregateOp + ' ' + aggregateField,
                             position: 'outer-middle'
                         }
                     }
