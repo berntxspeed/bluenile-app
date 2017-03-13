@@ -33,7 +33,7 @@
 
         var g_model = {{ model|tojson|safe }};
         var g_filters = get_filters(g_model);
-    </script>
+</script>
 
 {% endblock %}
 
@@ -103,6 +103,7 @@
                     </ul>
                     <ul class="nav">
                         <li class="navbar-right"><button id="btn-preview" class="btn btn-default navbar-btn">Preview Results</button></li>
+                        <button id="btn-export-data" type="submit" class= "btn btn-default navbar-btn pull-right">Export All Data</button>
                     </ul>
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->

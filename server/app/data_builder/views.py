@@ -1,7 +1,10 @@
+import csv
 import json
 import traceback
+from io import StringIO
 
 from flask import Response
+from flask import make_response
 from flask import request
 from injector import inject
 
@@ -104,6 +107,40 @@ def custom_query_preview(alchemy, query_sttmt):
         return Response(json.dumps({'error_msg': traceback.format_exc(),
                                     }, default=SqlQueryService.alchemy_encoder),
                         mimetype='application/json')
+
+
+@databuilder.route('/export/<query_name>', methods=['GET'])
+@inject(alchemy=SQLAlchemy, mongo=MongoDB, sql_query_service=SqlQueryServ)
+def export_query_result(alchemy, mongo, sql_query_service, query_name):
+
+    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
+    if status is not True:
+        #TODO: handle error
+        pass
+    if 'custom_sql' in result.keys():
+        from sqlalchemy import func
+        results = eval('alchemy.session.' + result['custom_sql'] + '.all()')
+        columns, data = SqlQueryService.extract_data(results, {})
+    else:
+        final_query = sql_query_service.get_customer_query_based_on_rules(result)
+        results = final_query.all()
+        columns, data = sql_query_service.extract_data(results, result)
+
+    ordered_column_titles = [column['title'] for column in columns]
+    ordered_column_fields = [column['field'] for column in columns]
+
+    csv_list = [ordered_column_titles]
+    for row in data:
+        csv_list.append([row.get(field) for field in ordered_column_fields])
+
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerows(csv_list)
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=" + query_name + "_Customer_Data.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
+
 
 @databuilder.route('/query-preview', methods=['POST'])
 @inject(sql_query_service=SqlQueryServ)
