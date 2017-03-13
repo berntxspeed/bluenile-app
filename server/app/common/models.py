@@ -10,12 +10,13 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import TIMESTAMP, JSON, TEXT
 from sqlalchemy.types import Text
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import synonym, relationship, backref
+from sqlalchemy.orm import synonym, relationship, backref, sessionmaker
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
-db = SQLAlchemy()
+from .utils.event_mgr import EventMgr
 
+db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -83,6 +84,9 @@ class KeyValue(db.Model):
     __tablename__ = 'key_value'
     key = db.Column(db.String(64), primary_key=True)
     value = db.Column(db.String(255))
+    price = db.Column(db.Float)
+    done = db.Column(db.Boolean)
+    count = db.Column(db.Integer)
     created_at = db.Column(TIMESTAMP)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
@@ -122,13 +126,58 @@ def on_update(mapper, connection, target):
     return target
 
 
+class Event(db.Model):
+    __tablename__ = 'event'
+    id = db.Column(db.BigInteger, primary_key=True)
+    def_id = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(TIMESTAMP)
+    rec_id = db.Column(db.Integer, nullable=False)
+    old_val = db.Column(db.String(255))
+    new_val = db.Column(db.String(255))
+
+    # metadata for later us as this feature evolves past just old/new val
+    meta = db.Column(JSON)
+
+@db.event.listens_for(Event, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target.timestamp = datetime.datetime.utcnow()
+    return target
+
+
+class EventDefinition(db.Model):
+    __tablename__ = 'event_def'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), unique=True)
+    desc = db.Column(db.String(1024))
+    created_at = db.Column(TIMESTAMP)
+    table = db.Column(db.String(255))
+    dml_op = db.Column(db.String(255)) # should only be 'insert' or 'update'
+    column = db.Column(db.String(255)) # refers to the column to watch
+    old_val = db.Column(db.String(255)) # blank signifies not caring what the old val is - track all events where val is changed to new_val value
+    new_val = db.Column(db.String(255)) # blank signifies not caring what the new val is - just track all changes
+
+    # event_config for later use as this feature evolves past just old/new val = x/y
+    event_config = db.Column(JSON) # might need JSON(astext_type=Text())
+
+    events = relationship(Event, backref='event_def',
+                             primaryjoin='EventDefinition.id==Event.def_id',
+                             foreign_keys=[Event.def_id],
+                             passive_deletes='all')
+
+@db.event.listens_for(EventDefinition, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target.created_at = datetime.datetime.utcnow()
+    return target
+
+
 class Purchase(db.Model):
     __tablename__ = 'purchase'
-    purchase_id = db.Column(db.String(255), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    purchase_id = db.Column(db.String(255), unique=True)
     customer_id = db.Column(db.String(255))
-    _created_at = db.Column(TIMESTAMP)
-    price = db.Column(db.String(255))
-    is_paid = db.Column(db.String(255))
+    created_at = db.Column(TIMESTAMP)
+    price = db.Column(db.Float)
+    is_paid = db.Column(db.Boolean)
     referring_site = db.Column(db.String(255))
     landing_site = db.Column(db.String(255))
     browser_ip = db.Column(db.String(255))
@@ -136,23 +185,17 @@ class Purchase(db.Model):
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
-    @hybrid_property
-    def created_at(self):
-        return self._created_at
-
-    @created_at.setter
-    def created_at(self, created_at):
-        if isinstance(created_at, str):
-            self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
-
-    #created_at = synonym('_created_at', descriptor=created_at)
+    events = relationship(Event, backref='purchase',
+                          primaryjoin='Purchase.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
 @db.event.listens_for(Purchase, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
-    target._created_at = datetime.datetime.utcnow()
+    target.created_at = datetime.datetime.utcnow()
     return target
 
 @db.event.listens_for(Purchase, 'before_update', retval=True)
@@ -161,66 +204,23 @@ def on_update(mapper, connection, target):
     return target
 
 
-class SendJob(db.Model):
-    __tablename__ = 'send_job'
-    SendID = db.Column(db.Integer, primary_key=True) # SendID Field
-    SchedTime = db.Column(db.String(255))
-    SentTime = db.Column(db.String(255))
-    EmailName= db.Column(db.String(64))
-    Subject = db.Column(db.String(1024))
-    PreviewURL = db.Column(db.String(1024))
-    _last_updated = db.Column(TIMESTAMP)
-    _last_ext_sync = db.Column(TIMESTAMP)
-
-    """"@hybrid_property
-    def SchedTime(self):
-        return self._SchedTime
-
-    @SchedTime.setter
-    def SchedTime(self, sched_time):
-        if isinstance(sched_time, str):
-            self._SchedTime = datetime.datetime.strptime(sched_time, '%m/%d/%Y %H:%M:%S %p')
-
-    @hybrid_property
-    def SentTime(self):
-        return self._SentTime
-
-    @SentTime.setter
-    def SentTime(self, sent_time):
-        if isinstance(sent_time, str):
-            self._SentTime = datetime.datetime.strptime(sent_time, '%m/%d/%Y %H:%M:%S %p')"""
-
-    def _update_last_ext_sync(self):
-        self._last_ext_sync = datetime.datetime.utcnow()
-
-    def __repr__(self):
-        return '<SendJob %r>' % self.SendID
-
-@db.event.listens_for(SendJob, 'before_update', retval=True)
-def on_update(mapper, connection, target):
-    target._last_updated = datetime.datetime.utcnow()
-    return target
-
 class EmlSend(db.Model):
     __tablename__ = 'eml_send'
+    id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
-    SubscriberKey = db.Column(db.String(255), primary_key=True)
+    SubscriberKey = db.Column(db.String(255))
     EmailAddress = db.Column(db.String(255))
-    _EventDate = db.Column(TIMESTAMP, primary_key=True)
+    EventDate = db.Column(TIMESTAMP)
     TriggeredSendExternalKey = db.Column(db.String(255))
     _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
     _hour = db.Column(db.Integer)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
-    @hybrid_property
-    def EventDate(self):
-        return self._EventDate
-
-    @EventDate.setter
-    def EventDate(self, event_date):
-        if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
+    events = relationship(Event, backref='eml_send',
+                          primaryjoin='EmlSend.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -242,18 +242,19 @@ def on_update(mapper, connection, target):
 
 class EmlOpen(db.Model):
     __tablename__ = 'eml_open'
+    id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
-    SubscriberKey = db.Column(db.String(255), primary_key=True)
+    SubscriberKey = db.Column(db.String(255))
     EmailAddress = db.Column(db.String(255))
-    _EventDate = db.Column(TIMESTAMP, primary_key=True)
+    EventDate = db.Column(TIMESTAMP)
     TriggeredSendExternalKey = db.Column(db.String(255))
-    IsUnique = db.Column(db.String(255))
+    IsUnique = db.Column(db.Boolean)
     IpAddress = db.Column(db.String(255))
     Country = db.Column(db.String(255))
     Region = db.Column(db.String(255))
     City = db.Column(db.String(255))
-    Latitude = db.Column(db.String(255))
-    Longitude = db.Column(db.String(255))
+    Latitude = db.Column(db.Float)
+    Longitude = db.Column(db.Float)
     MetroCode = db.Column(db.String(255))
     AreaCode = db.Column(db.String(255))
     Browser = db.Column(db.String(255))
@@ -265,14 +266,10 @@ class EmlOpen(db.Model):
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
-    @hybrid_property
-    def EventDate(self):
-        return self._EventDate
-
-    @EventDate.setter
-    def EventDate(self, event_date):
-        if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
+    events = relationship(Event, backref='eml_open',
+                          primaryjoin='EmlOpen.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -294,22 +291,23 @@ def on_update(mapper, connection, target):
 
 class EmlClick(db.Model):
     __tablename__ = 'eml_click'
+    id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
-    SubscriberKey = db.Column(db.String(255), primary_key=True)
+    SubscriberKey = db.Column(db.String(255))
     EmailAddress = db.Column(db.String(255))
-    _EventDate = db.Column(TIMESTAMP, primary_key=True)
+    EventDate = db.Column(TIMESTAMP)
     SendURLID = db.Column(db.String(255))
     URLID = db.Column(db.String(255))
     URL = db.Column(db.String(1024))
     Alias = db.Column(db.String(255))
     TriggeredSendExternalKey = db.Column(db.String(255))
-    IsUnique = db.Column(db.String(255))
+    IsUnique = db.Column(db.Boolean)
     IpAddress = db.Column(db.String(255))
     Country = db.Column(db.String(255))
     Region = db.Column(db.String(255))
     City = db.Column(db.String(255))
-    Latitude = db.Column(db.String(255))
-    Longitude = db.Column(db.String(255))
+    Latitude = db.Column(db.Float)
+    Longitude = db.Column(db.Float)
     MetroCode = db.Column(db.String(255))
     AreaCode = db.Column(db.String(255))
     Browser = db.Column(db.String(255))
@@ -321,14 +319,11 @@ class EmlClick(db.Model):
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
 
-    @hybrid_property
-    def EventDate(self):
-        return self._EventDate
+    events = relationship(Event, backref='eml_click',
+                          primaryjoin='EmlClick.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
 
-    @EventDate.setter
-    def EventDate(self, event_date):
-        if isinstance(event_date, str):
-            self._EventDate = datetime.datetime.strptime(event_date, '%m/%d/%Y %I:%M:%S %p')
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -348,11 +343,78 @@ def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
 
+class SendJob(db.Model):
+    __tablename__ = 'send_job'
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer, unique=True) # SendID Field
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    SendDefinitionExternalKey = db.Column(db.String(255))
+    SchedTime = db.Column(TIMESTAMP)
+    SentTime = db.Column(TIMESTAMP)
+    EmailName= db.Column(db.String(64))
+    Subject = db.Column(db.String(1024))
+    PreviewURL = db.Column(db.String(1024))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+    eml_sends = relationship(EmlSend, backref='send_job',
+                             primaryjoin='SendJob.SendID==EmlSend.SendID',
+                             foreign_keys=[EmlSend.SendID],
+                             passive_deletes='all')
+    eml_opens = relationship(EmlOpen, backref='send_job',
+                             primaryjoin='SendJob.SendID==EmlOpen.SendID',
+                             foreign_keys=[EmlOpen.SendID],
+                             passive_deletes='all')
+    eml_clicks = relationship(EmlClick, backref='send_job',
+                              primaryjoin='SendJob.SendID==EmlClick.SendID',
+                              foreign_keys=[EmlClick.SendID],
+                              passive_deletes='all')
+    num_sends = db.Column(db.Integer)
+    num_opens = db.Column(db.Integer)
+    num_clicks = db.Column(db.Integer)
+
+    def _get_stats(self):
+        self.num_sends = db.session.object_session(self).query(EmlSend).with_parent(self, "eml_sends").count()
+        self.num_opens = db.session.object_session(self).query(EmlOpen).with_parent(self, "eml_opens").count()
+        self.num_clicks = db.session.object_session(self).query(EmlClick).with_parent(self, "eml_clicks").count()
+        db.session.add(self)
+        db.session.commit()
+
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+    def __repr__(self):
+        return '<SendJob %r>' % self.SendID
+
+@db.event.listens_for(SendJob, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
+
+class Artist(db.Model):
+    name = db.Column(db.String(128), primary_key=True)
+    popularity = db.Column(db.String(128))
+    uri = db.Column(db.String(256))
+    href = db.Column(db.String(256))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+    def __repr__(self):
+        return '<Artist %r>' % self.name
+
+@db.event.listens_for(Artist, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target._last_updated = datetime.datetime.utcnow()
+    return target
 
 class WebTrackingEvent(db.Model):
     __tablename__ = 'web_tracking_event'
-    browser_id = db.Column(db.String(255), primary_key=True)
-    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    browser_id = db.Column(db.String(255)) #primary key
+    utc_millisecs = db.Column(TIMESTAMP) #primary key
     hashed_email = db.Column(db.String(255))
     event_category = db.Column(db.String(255))
     event_action = db.Column(db.String(255))
@@ -367,17 +429,23 @@ class WebTrackingEvent(db.Model):
     mobile_device_branding = db.Column(db.String(255))
     mobile_device_model = db.Column(db.String(255))
 
-    country = db.column(db.String(255))
+    country = db.Column(db.String(255))
     region = db.Column(db.String(255))
     metro = db.Column(db.String(255))
     city = db.Column(db.String(255))
-    latitude = db.Column(db.String(255))
-    longitude = db.Column(db.String(255))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+
+    events = relationship(Event, backref='web_tracking_event',
+                          primaryjoin='WebTrackingEvent.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
 
 class WebTrackingPageView(db.Model):
     __tablename__ = 'web_tracking_page_view'
-    browser_id = db.Column(db.String(255), primary_key=True)
-    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    browser_id = db.Column(db.String(255)) #primary key
+    utc_millisecs = db.Column(TIMESTAMP) #primary key
     hashed_email = db.Column(db.String(255))
     page_path = db.Column(db.String(500))
     page_views = db.Column(db.Integer)
@@ -391,17 +459,23 @@ class WebTrackingPageView(db.Model):
     mobile_device_branding = db.Column(db.String(255))
     mobile_device_model = db.Column(db.String(255))
 
-    country = db.column(db.String(255))
+    country = db.Column(db.String(255))
     region = db.Column(db.String(255))
     metro = db.Column(db.String(255))
     city = db.Column(db.String(255))
-    latitude = db.Column(db.String(255))
-    longitude = db.Column(db.String(255))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+
+    events = relationship(Event, backref='web_tracking_page_view',
+                          primaryjoin='WebTrackingPageView.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
 
 class WebTrackingEcomm(db.Model):
     __tablename__ = 'web_tracking_ecomm'
-    browser_id = db.Column(db.String(255), primary_key=True)
-    utc_millisecs = db.Column(db.String(255), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    browser_id = db.Column(db.String(255)) #primary key
+    utc_millisecs = db.Column(TIMESTAMP) #primary key
     hashed_email = db.Column(db.String(255))
     total_value = db.Column(db.Float)
     item_quantity = db.Column(db.Integer)
@@ -414,25 +488,31 @@ class WebTrackingEcomm(db.Model):
     mobile_device_branding = db.Column(db.String(255))
     mobile_device_model = db.Column(db.String(255))
 
-    country = db.column(db.String(255))
+    country = db.Column(db.String(255))
     region = db.Column(db.String(255))
     metro = db.Column(db.String(255))
     city = db.Column(db.String(255))
-    latitude = db.Column(db.String(255))
-    longitude = db.Column(db.String(255))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+
+    events = relationship(Event, backref='web_tracking_ecomm',
+                          primaryjoin='WebTrackingEcomm.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
 
 
 class Customer(db.Model):
     __tablename__ = 'customer'
-    customer_id = db.Column(db.String(255), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.String(255), unique=True)
     email_address = db.Column(db.String(255))
     hashed_email = db.Column(db.String(255))
     fname = db.Column(db.String(255))
     lname = db.Column(db.String(255))
-    marketing_allowed = db.Column(db.String(255))
-    _created_at = db.Column('created_at', TIMESTAMP)
+    marketing_allowed = db.Column(db.Boolean)
+    created_at = db.Column(TIMESTAMP)
     purchase_count = db.Column(db.Integer)
-    total_spent_so_far = db.Column(db.String(255))
+    total_spent_so_far = db.Column(db.Float)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
     purchases = relationship(Purchase, backref='customer',
@@ -466,16 +546,11 @@ class Customer(db.Model):
                                        foreign_keys=[WebTrackingEcomm.hashed_email],
                                        passive_deletes='all')
 
-    @hybrid_property
-    def created_at(self):
-        return self._created_at
+    events = relationship(Event, backref='customer',
+                          primaryjoin='Customer.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
 
-    @created_at.setter
-    def created_at(self, created_at):
-        if isinstance(created_at, str):
-            self._created_at = datetime.datetime.strptime(created_at[:19], '%Y-%m-%dT%H:%M:%S')
-
-    created_at = synonym('_created_at', descriptor=created_at)
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
@@ -485,7 +560,7 @@ class Customer(db.Model):
 
 @db.event.listens_for(Customer, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
-    target._created_at = datetime.datetime.utcnow()
+    target.created_at = datetime.datetime.utcnow()
     target.hashed_email = base64.b64encode(hmac.new(HASH_SECRET,
                                                     msg=target.email_address.encode('utf-8'),
                                                     digestmod=hashlib.sha256).digest()).hex()
@@ -495,6 +570,7 @@ def on_update(mapper, connection, target):
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
 
 class Upload(db.Model):
     __tablename__ = 'upload'
@@ -547,3 +623,5 @@ def on_update(mapper, connection, target):
 def on_update(mapper, connection, target):
     target.last_modified = datetime.datetime.utcnow()
     return target
+
+

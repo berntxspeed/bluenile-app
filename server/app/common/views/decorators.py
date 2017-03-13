@@ -4,6 +4,7 @@ from flask import Response
 from flask_login import current_user
 from functools import wraps
 from json import dumps
+from . import context_processors
 
 
 def templated(template=None, type='html'):

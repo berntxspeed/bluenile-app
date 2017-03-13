@@ -29,7 +29,7 @@ class DataLoadService(DbService):
                             marketing_allowed='accepts_marketing',
                             created_at='created_at',
                             purchase_count='orders_count',
-                            total_spend_so_far='total_spent')
+                            total_spent_so_far='total_spent')
         primary_keys = ['customer_id']
         json_data_keys = 'customers'
 
@@ -119,6 +119,8 @@ class DataLoadService(DbService):
                      primary_keys=['SendID'],
                      db_field_map={
                          'SendID': 'SendID',
+                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey',
+                         'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
                          'EmailName': 'EmailName',
                          'SchedTime': 'SchedTime',
                          'SentTime': 'SentTime',
@@ -194,6 +196,13 @@ class DataLoadService(DbService):
                          'Device': 'Device'
                      })
         zf.clean_up() # delete downloaded files
+
+        # TODO: append county FIPS codes to open and click data
+
+        # append sent/open/click counts to SendJob rows
+        sends = SendJob.query.all()
+        for send in sends:
+            send._get_stats()
 
     def load_mc_journeys(self):
         token = self.__get_mc_auth()
@@ -313,7 +322,7 @@ class DataLoadService(DbService):
                                                     page_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingPageView,
                                    dims=('ga:pagePath', 'ga:deviceCategory', 'ga:mobileDeviceBranding', 'ga:mobileDeviceModel'),
@@ -330,7 +339,7 @@ class DataLoadService(DbService):
                                                      page_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingPageView,
                                    dims=('ga:pagePath', 'ga:country', 'ga:region', 'ga:metro'),
@@ -347,7 +356,7 @@ class DataLoadService(DbService):
                                                      page_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingPageView,
                                    dims=('ga:pagePath', 'ga:city', 'ga:latitude', 'ga:longitude'),
@@ -356,15 +365,15 @@ class DataLoadService(DbService):
                                                      utc_millisecs='dimensions[2]',
                                                      hashed_email='dimensions[1]',
                                                      page_path='dimensions[3]',
-                                                     country='dimensions[4]',
-                                                     region='dimensions[5]',
-                                                     metro='dimensions[6]',
+                                                     city='dimensions[4]',
+                                                     latitude='dimensions[5]',
+                                                     longitude='dimensions[6]',
                                                      sessions='metrics[0].values[0]',
                                                      page_value='metrics[0].values[1]',
                                                      page_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:eventLabel', 'ga:eventCategory', 'ga:browser'),
@@ -380,7 +389,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:browser', 'ga:browserSize', 'ga:operatingSystem'),
@@ -396,7 +405,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:deviceCategory', 'ga:mobileDeviceBranding', 'ga:mobileDeviceModel'),
@@ -412,7 +421,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:country', 'ga:region', 'ga:metro'),
@@ -428,7 +437,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:city', 'ga:latitude', 'ga:longitude'),
@@ -444,7 +453,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingEcomm,
                                    dims=('ga:browser', 'ga:browserSize', 'ga:operatingSystem', 'ga:deviceCategory'),
@@ -461,7 +470,7 @@ class DataLoadService(DbService):
                                                      product_detail_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingEcomm,
                                    dims=('ga:mobileDeviceBranding', 'ga:mobileDeviceModel', 'ga:country', 'ga:region'),
@@ -478,7 +487,7 @@ class DataLoadService(DbService):
                                                      product_detail_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
         try:
             load_web_tracking_data(WebTrackingEcomm,
                                    dims=('ga:metro', 'ga:city', 'ga:latitude', 'ga:longitude'),
@@ -495,7 +504,7 @@ class DataLoadService(DbService):
                                                      product_detail_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups')
+            print('failed one of the web tracking lookups: '+ str(exc))
 
     # this works with the fips_codes_website.csv file - which has the right FIPS values to match
     # - up with the ids of the us-10m.v1.json data from D3

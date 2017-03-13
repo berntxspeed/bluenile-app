@@ -6,7 +6,7 @@ from flask_script import Server
 from flask_script import Shell
 from flask_migrate import Migrate, MigrateCommand
 
-from server.app import create_injector, create_app
+from server.app import create_injector, create_app, create_event_mgr
 from celery_source import provide_celery
 from server.app.common import models
 from server.app.injector_keys import Config, SQLAlchemy, MongoDB
@@ -19,6 +19,7 @@ mongo = injector.get(MongoDB)
 manager = Manager(app)
 celery = provide_celery(app)
 migrate = Migrate(app, db)
+event_mgr = create_event_mgr(app)
 
 
 def make_shell_context():
@@ -29,7 +30,8 @@ def make_shell_context():
         'mongo': mongo,
         'injector': injector,
         'models': models,
-        'celery': celery
+        'celery': celery,
+        'event_mgr': event_mgr
     }
 
 
