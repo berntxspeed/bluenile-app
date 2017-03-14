@@ -50,7 +50,7 @@ def get_queries(mongo):
 @databuilder.route('/get-default-queries')
 @inject(mongo=MongoDB)
 def get_default_queries(mongo):
-    status, result = DataBuilderQuery(mongo.db).get_all_queries(default=True)
+    status, result = DataBuilderQuery(mongo.db).get_all_queries(type='default')
     columns = [{
         'field': 'name',
         'title': 'Query Name'

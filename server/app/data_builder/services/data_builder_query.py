@@ -15,10 +15,12 @@ class DataBuilderQuery(object):
             if a_query.get('created'):
                 a_query['created'] = str(a_query['created']).replace('T', ' at ')[:-5]
 
-    def get_all_queries(self, default=None):
+    def get_all_queries(self, type=None):
         all_queries = []
-        if default is True:
+        if type == 'default':
             filter_func = lambda q: 'preset' in q
+        elif type == 'all':
+            filter_func = None
         else:
             filter_func = lambda q: 'preset' not in q
 
