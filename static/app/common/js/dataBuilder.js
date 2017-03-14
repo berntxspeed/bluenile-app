@@ -403,6 +403,7 @@ $(document).ready(function() {
     })
 
     function saveCurrentQuery(query_name, save_query) {
+        save_query.preset='true'
         label = "'" + query_name + "'"
         if (g_current_query.sqlalchemy){
             save_query.custom_sql = g_current_query.sqlalchemy

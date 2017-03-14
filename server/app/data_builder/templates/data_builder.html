@@ -21,11 +21,22 @@
             for(table in model){
                 for(column in model[table]){
                     column_obj = model[table][column]
-                    filters_result.push({
+                    filter = {
                         id: column_obj.expression,
                         label: column_obj.label,
-                        type: column_obj.type
-                      })
+                        type: column_obj.type,
+                        placeholder: ('Enter' + column_obj.label.split(':')[1]).toLowerCase()
+                    }
+                    if (column_obj.type == 'boolean'){
+                        filter.operators = ['equal']
+                        filter.input = 'radio'
+                        filter.values = {1 :'true', 0: 'false'}
+                        filter.colors = {1 :'success', 0: 'danger'}
+                        filter.default_value = 1
+                        filter.description = 'Optional Filter Description'
+                        filter.vertical = 'Optional Filter Description'
+                    }
+                    filters_result.push(filter)
                 }
             }
             return filters_result;
@@ -129,7 +140,11 @@
                     <div id="builder" class="query-builder form-inline"></div>
                         <script type="text/javascript">
                             $('#builder').queryBuilder({
-                              plugins: ['bt-tooltip-errors'],
+                              plugins: ['bt-tooltip-errors',
+                                        'filter-description',
+                                        'unique-filter',
+                                        'bt-checkbox'
+                                       ],
                               filters: g_filters,
                                 });
                         </script>
