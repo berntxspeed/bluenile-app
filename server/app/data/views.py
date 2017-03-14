@@ -21,7 +21,7 @@ def before_request():
 @inject(mongo=MongoDB)
 @templated('data_pusher')
 def data_pusher(mongo):
-    status, result = DataBuilderQuery(mongo.db).get_all_queries()
+    status, result = DataBuilderQuery(mongo.db).get_all_queries(type='all')
     return dict(query_names=[ a_query['name'] for a_query in result ])
 
 
@@ -45,7 +45,7 @@ def clr_ext_sync_flags(table):
 @inject(mongo=MongoDB)
 @templated('data_pusher')
 def sync_query_to_mc(mongo, query_name):
-    all_q_status, all_q_result = DataBuilderQuery(mongo.db).get_all_queries()
+    all_q_status, all_q_result = DataBuilderQuery(mongo.db).get_all_queries(type='all')
     status, query_rules = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
 
     from .workers import sync_query_to_mc
