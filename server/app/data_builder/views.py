@@ -1,6 +1,10 @@
+import csv
 import json
+import traceback
+from io import StringIO
 
 from flask import Response
+from flask import make_response
 from flask import request
 from injector import inject
 
@@ -43,6 +47,18 @@ def get_queries(mongo):
                     mimetype='application/json')
 
 
+@databuilder.route('/get-default-queries')
+@inject(mongo=MongoDB)
+def get_default_queries(mongo):
+    status, result = DataBuilderQuery(mongo.db).get_all_queries(default=True)
+    columns = [{
+        'field': 'name',
+        'title': 'Query Name'
+        }]
+    return Response(json.dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
+
+
 @databuilder.route('/get-query/<query_id>')
 @inject(mongo=MongoDB)
 def get_query(mongo, query_id):
@@ -70,6 +86,60 @@ def save_query(mongo, query_id):
         return 'OK', 200
     else:
         return error, 500
+
+
+@databuilder.route('/custom-query-preview/<query_sttmt>', methods=['POST'])
+@inject(alchemy=SQLAlchemy)
+def custom_query_preview(alchemy, query_sttmt):
+    from sqlalchemy import func
+
+    try:
+        results = eval('alchemy.session.' + query_sttmt +'.limit(100).all()')
+        rows_count = eval('alchemy.session.' + query_sttmt +'.count()')
+        columns, data = SqlQueryService.extract_data(results, {})
+        return Response(json.dumps({'columns': columns,
+                                    'data': data,
+                                    'no_of_rows': rows_count,
+                                    }, default=SqlQueryService.alchemy_encoder),
+                        mimetype='application/json')
+
+    except Exception:
+        return Response(json.dumps({'error_msg': traceback.format_exc(),
+                                    }, default=SqlQueryService.alchemy_encoder),
+                        mimetype='application/json')
+
+
+@databuilder.route('/export/<query_name>', methods=['GET'])
+@inject(alchemy=SQLAlchemy, mongo=MongoDB, sql_query_service=SqlQueryServ)
+def export_query_result(alchemy, mongo, sql_query_service, query_name):
+
+    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
+    if status is not True:
+        #TODO: handle error
+        pass
+    if 'custom_sql' in result.keys():
+        from sqlalchemy import func
+        results = eval('alchemy.session.' + result['custom_sql'] + '.all()')
+        columns, data = SqlQueryService.extract_data(results, {})
+    else:
+        final_query = sql_query_service.get_customer_query_based_on_rules(result)
+        results = final_query.all()
+        columns, data = sql_query_service.extract_data(results, result)
+
+    ordered_column_titles = [column['title'] for column in columns]
+    ordered_column_fields = [column['field'] for column in columns]
+
+    csv_list = [ordered_column_titles]
+    for row in data:
+        csv_list.append([row.get(field) for field in ordered_column_fields])
+
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerows(csv_list)
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=" + query_name + "_Customer_Data.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 
 @databuilder.route('/query-preview', methods=['POST'])
