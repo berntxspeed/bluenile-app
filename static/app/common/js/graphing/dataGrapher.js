@@ -122,6 +122,9 @@ class DataGrapher {
                 .append('<option value="">-- optional --</option>');
 
             // clear data limiting options
+            var limitByItemHtml = $(bindTo + ' .limit-by-item:first-child').html();
+            $(bindTo + ' #limit-by-items').find('.limit-by-item').remove().end()
+                .append('<div class="limit-by-item">'+limitByItemHtml+'</div>');
             $(bindTo + ' #limit-by-field').removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- select one --</option>');
@@ -129,6 +132,69 @@ class DataGrapher {
             $(bindTo + ' #limit-by-val1').attr('disabled', 'disabled');
             $(bindTo + ' #limit-by-val2').attr('disabled', 'disabled')
                 .attr('hidden', 'hidden');
+
+            $(bindTo + ' #limit-by-field').change(function(){
+
+                var self = this;
+                var typeOfLimitByField;
+
+                if ($(this).val()) {
+
+                    var limitByField = {
+                        name: $(self).val(),
+                        type: columns[$(self).val()].type
+                    };
+
+                    // set 'op' options
+                    $(self).parent().find('#limit-by-op').removeAttr('disabled')
+                        .find('option').remove().end()
+                        .append('<option value="">-- select one --</option>');
+
+                    limitByOps[limitByField.type].forEach(function(op){
+                        $(self).parent().find('#limit-by-op').append('<option value="'+op.value+'">'+op.name+'</option>');
+                    });
+
+                    // configure 'value' input field(s)
+                    if (limitByField.type == 'string') {
+                        typeOfLimitByField = 'text';
+                    } else if (limitByField.type == 'numeric') {
+                        typeOfLimitByField = 'number';
+                    } else if (limitByField.type == 'datetime') {
+                        typeOfLimitByField = 'date';
+                    } else if (limitByField.type == 'boolean') {
+                        typeOfLimitByField = 'number';
+                    }
+
+                    $(self).parent().find('#limit-by-val1').removeAttr('disabled')
+                        .attr('type', typeOfLimitByField);
+                    $(self).parent().find('#limit-by-val2').removeAttr('disabled')
+                        .attr('type', typeOfLimitByField);
+                } else {
+                    $(self).parent().find('#limit-by-op').val(null);
+                    $(self).parent().find('#limit-by-val1').val(null);
+                }
+
+            });
+
+            $(bindTo + ' #limit-by-op').change(function(){
+
+                var self = this;
+                var typeOfLimitByField = $(self).parent().find('#limit-by-val1').attr('type');
+                var limitByOp = $(self).val();
+
+                if (limitByOp == 'between') {
+                    $(self).parent().find('#limit-by-val2').removeAttr('hidden');
+                } else {
+                    $(self).parent().find('#limit-by-val2').attr('hidden', 'hidden');
+                }
+
+                if (limitByOp == 'in') {
+                    $(self).parent().find('#limit-by-val1').replaceWith('<textarea id="limit-by-val1" placeholder="separate values with comma"></textarea>');
+                } else {
+                    $(self).parent().find('#limit-by-val1').replaceWith('<input type="'+typeOfLimitByField+'" id="limit-by-val1"/>');
+                }
+
+            });
 
             // clear graph type options
             $(bindTo + ' #graph-type').find('option').remove().end()
@@ -247,21 +313,98 @@ class DataGrapher {
 
         });
 
+        $(bindTo + ' #limit-by-add').click(function(){
+
+            $(bindTo + ' #limit-by-items').append('<div class="limit-by-item">'+$(bindTo + ' .limit-by-item').html()+'<input type="button" value="delete" name="delete" id="limit-by-delete" class="updateView btn btn-default btn-xs"></div>');
+
+            $(bindTo + ' #limit-by-delete').click(function(){
+                $(this).parent().remove();
+            });
+
+            $(bindTo + ' #limit-by-field').change(function(){
+
+                var self = this;
+                var typeOfLimitByField;
+
+                if ($(this).val()) {
+
+                    var limitByField = {
+                        name: $(self).val(),
+                        type: columns[$(self).val()].type
+                    };
+
+                    // set 'op' options
+                    $(self).parent().find('#limit-by-op').removeAttr('disabled')
+                        .find('option').remove().end()
+                        .append('<option value="">-- select one --</option>');
+
+                    limitByOps[limitByField.type].forEach(function(op){
+                        $(self).parent().find('#limit-by-op').append('<option value="'+op.value+'">'+op.name+'</option>');
+                    });
+
+                    // configure 'value' input field(s)
+                    if (limitByField.type == 'string') {
+                        typeOfLimitByField = 'text';
+                    } else if (limitByField.type == 'numeric') {
+                        typeOfLimitByField = 'number';
+                    } else if (limitByField.type == 'datetime') {
+                        typeOfLimitByField = 'date';
+                    } else if (limitByField.type == 'boolean') {
+                        typeOfLimitByField = 'number';
+                    }
+
+                    $(self).parent().find('#limit-by-val1').removeAttr('disabled')
+                        .attr('type', typeOfLimitByField);
+                    $(self).parent().find('#limit-by-val2').removeAttr('disabled')
+                        .attr('type', typeOfLimitByField);
+                } else {
+                    $(self).parent().find('#limit-by-op').val(null);
+                    $(self).parent().find('#limit-by-val1').val(null);
+                }
+
+            });
+
+            $(bindTo + ' #limit-by-op').change(function(){
+
+                var self = this;
+                var typeOfLimitByField = $(self).parent().find('#limit-by-val1').attr('type');
+                var limitByOp = $(self).val();
+
+                if (limitByOp == 'between') {
+                    $(self).parent().find('#limit-by-val2').removeAttr('hidden');
+                } else {
+                    $(self).parent().find('#limit-by-val2').attr('hidden', 'hidden');
+                }
+
+                if (limitByOp == 'in') {
+                    $(self).parent().find('#limit-by-val1').replaceWith('<textarea id="limit-by-val1" placeholder="separate values with comma"></textarea>');
+                } else {
+                    $(self).parent().find('#limit-by-val1').replaceWith('<input type="'+typeOfLimitByField+'" id="limit-by-val1"/>');
+                }
+
+            });
+
+        });
+
         $(bindTo + ' #limit-by-field').change(function(){
 
+            var self = this;
+            var typeOfLimitByField;
+
             if ($(this).val()) {
+
                 var limitByField = {
-                    name: $(this).val(),
-                    type: columns[$(this).val()].type
+                    name: $(self).val(),
+                    type: columns[$(self).val()].type
                 };
 
                 // set 'op' options
-                $(bindTo + ' #limit-by-op').removeAttr('disabled')
+                $(self).parent().find('#limit-by-op').removeAttr('disabled')
                     .find('option').remove().end()
                     .append('<option value="">-- select one --</option>');
 
                 limitByOps[limitByField.type].forEach(function(op){
-                    $(bindTo + ' #limit-by-op').append('<option value="'+op.value+'">'+op.name+'</option>');
+                    $(self).parent().find('#limit-by-op').append('<option value="'+op.value+'">'+op.name+'</option>');
                 });
 
                 // configure 'value' input field(s)
@@ -275,34 +418,37 @@ class DataGrapher {
                     typeOfLimitByField = 'number';
                 }
 
-                $(bindTo + ' #limit-by-val1').removeAttr('disabled')
+                $(self).parent().find('#limit-by-val1').removeAttr('disabled')
                     .attr('type', typeOfLimitByField);
-                $(bindTo + ' #limit-by-val2').removeAttr('disabled')
+                $(self).parent().find('#limit-by-val2').removeAttr('disabled')
                     .attr('type', typeOfLimitByField);
             } else {
-                $(bindTo + ' #limit-by-op').val(null);
-                $(bindTo + ' #limit-by-val1').val(null);
+                $(self).parent().find('#limit-by-op').val(null);
+                $(self).parent().find('#limit-by-val1').val(null);
             }
 
         });
 
         $(bindTo + ' #limit-by-op').change(function(){
 
-            var limitByOp = $(this).val();
+            var self = this;
+            var typeOfLimitByField = $(self).parent().find('#limit-by-val1').attr('type');
+            var limitByOp = $(self).val();
 
             if (limitByOp == 'between') {
-                $(bindTo + ' #limit-by-val2').removeAttr('hidden');
+                $(self).parent().find('#limit-by-val2').removeAttr('hidden');
             } else {
-                $(bindTo + ' #limit-by-val2').attr('hidden', 'hidden');
+                $(self).parent().find('#limit-by-val2').attr('hidden', 'hidden');
             }
 
             if (limitByOp == 'in') {
-                $(bindTo + ' #limit-by-val1').replaceWith('<textarea id="limit-by-val1" placeholder="separate values with comma"></textarea>');
+                $(self).parent().find('#limit-by-val1').replaceWith('<textarea id="limit-by-val1" placeholder="separate values with comma"></textarea>');
             } else {
-                $(bindTo + ' #limit-by-val1').replaceWith('<input type="'+typeOfLimitByField+'" id="limit-by-val1"/>');
+                $(self).parent().find('#limit-by-val1').replaceWith('<input type="'+typeOfLimitByField+'" id="limit-by-val1"/>');
             }
 
         });
+
 
         // handle button click to render visual based on retrieved statistics
         $(bindTo + ' #drill-down-button').click(function(){
@@ -320,11 +466,6 @@ class DataGrapher {
 
             var graphType = $(bindTo + ' #graph-type').val();
 
-            var filterColumn = $(bindTo + ' #limit-by-field').val();
-            var filterOp = $(bindTo + ' #limit-by-op').val();
-            var filterVal1of2 = $(bindTo + ' #limit-by-val1').val();
-            var filterVal2of2 = $(bindTo + ' #limit-by-val2').val();
-
             var aggregateOp = $(bindTo + ' #aggregate-op').val();
             var aggregateField = $(bindTo + ' #aggregate-field').val();
             if (aggregateOp == 'count' && !aggregateField) {
@@ -338,61 +479,74 @@ class DataGrapher {
                 return alert('must select from "Group Data By"');
             } else if (!graphType) {
                 return alert('must select from "Graph Type"');
-            } else if (filterColumn) {
-                filterColumn = {
-                    name: filterColumn,
-                    type: columns[filterColumn].type
-                };
-                if (!filterOp) {
-                    return alert('must select from "Limit By Operation"');
-                }
-                if (!filterVal1of2) {
-                    if (filterOp != 'notnull' && filterOp != 'isnull'){
-                        return alert('must select from "Limit By Value (1 of 2)"');
-                    }
-                }
-                if (filterOp == 'between') {
-                    if (!filterVal2of2) {
-                        return alert('must select from "Limit By Value (2 of 2"');
-                    }
-                }
             } else if (aggregateOp != 'count') {
                 if (!aggregateField) {
                     return alert('must select a field to aggregate by if aggregate operation is NOT count');
                 }
             }
 
-            // build filters
+            // get all filters and add them to filters variable
             var filters = [];
             if (preFilter) {
                 filters.push(preFilter);
             }
-            if (filterColumn) {
-                if (filterOp == 'eq') {
-                    filters.push({ "name": filterColumn.name, "op": "eq", "val": filterVal1of2 });
-                } else if (filterOp == 'neq') {
-                    filters.push({ "name": filterColumn.name, "op": "neq", "val": filterVal1of2 });
-                } else if (filterOp == 'contains') {
-                    filters.push({ "name": filterColumn.name, "op": "contains", "val": filterVal1of2 });
-                } else if (filterOp == 'isnull') {
-                    filters.push({ "name": filterColumn.name, "op": "isnull", "val": filterVal1of2 });
-                } else if (filterOp == 'notnull') {
-                    filters.push({ "name": filterColumn.name, "op": "notnull", "val": filterVal1of2 });
-                } else if (filterOp == 'gt') {
-                    filters.push({ "name": filterColumn.name, "op": "gt", "val": filterVal1of2 });
-                } else if (filterOp == 'gte') {
-                    filters.push({ "name": filterColumn.name, "op": "gte", "val": filterVal1of2 });
-                } else if (filterOp == 'lt') {
-                    filters.push({ "name": filterColumn.name, "op": "lt", "val": filterVal1of2 });
-                } else if (filterOp == 'lte') {
-                    filters.push({ "name": filterColumn.name, "op": "lte", "val": filterVal1of2 });
-                } else if (filterOp == 'between') {
-                    filters.push({ "name": filterColumn.name, "op": "gt", "val": filterVal1of2 });
-                    filters.push({ "name": filterColumn.name, "op": "lt", "val": filterVal2of2 });
-                } else if (filterOp == 'in') {
-                    filters.push({ "name": filterColumn.name, "op": "in", "val": "["+filterVal1of2+"]" });
+
+            $(bindTo + ' #limit-by-items').find('.limit-by-item').each(function(){
+
+                var filterColumn = $(this).find('#limit-by-field').val();
+                var filterOp = $(this).find('#limit-by-op').val();
+                var filterVal1of2 = $(this).find('#limit-by-val1').val();
+                var filterVal2of2 = $(this).find('#limit-by-val2').val();
+
+                if (filterColumn) {
+                    filterColumn = {
+                        name: filterColumn,
+                        type: columns[filterColumn].type
+                    };
+                    if (!filterOp) {
+                        return alert('must select from "Limit By Operation"');
+                    }
+                    if (!filterVal1of2) {
+                        if (filterOp != 'notnull' && filterOp != 'isnull'){
+                            return alert('must select from "Limit By Value (1 of 2)"');
+                        }
+                    }
+                    if (filterOp == 'between') {
+                        if (!filterVal2of2) {
+                            return alert('must select from "Limit By Value (2 of 2"');
+                        }
+                    }
                 }
-            }
+
+                // build filters
+                if (filterColumn) {
+                    if (filterOp == 'eq') {
+                        filters.push({ "name": filterColumn.name, "op": "eq", "val": filterVal1of2 });
+                    } else if (filterOp == 'neq') {
+                        filters.push({ "name": filterColumn.name, "op": "neq", "val": filterVal1of2 });
+                    } else if (filterOp == 'contains') {
+                        filters.push({ "name": filterColumn.name, "op": "contains", "val": filterVal1of2 });
+                    } else if (filterOp == 'isnull') {
+                        filters.push({ "name": filterColumn.name, "op": "isnull", "val": filterVal1of2 });
+                    } else if (filterOp == 'notnull') {
+                        filters.push({ "name": filterColumn.name, "op": "notnull", "val": filterVal1of2 });
+                    } else if (filterOp == 'gt') {
+                        filters.push({ "name": filterColumn.name, "op": "gt", "val": filterVal1of2 });
+                    } else if (filterOp == 'gte') {
+                        filters.push({ "name": filterColumn.name, "op": "gte", "val": filterVal1of2 });
+                    } else if (filterOp == 'lt') {
+                        filters.push({ "name": filterColumn.name, "op": "lt", "val": filterVal1of2 });
+                    } else if (filterOp == 'lte') {
+                        filters.push({ "name": filterColumn.name, "op": "lte", "val": filterVal1of2 });
+                    } else if (filterOp == 'between') {
+                        filters.push({ "name": filterColumn.name, "op": "gt", "val": filterVal1of2 });
+                        filters.push({ "name": filterColumn.name, "op": "lt", "val": filterVal2of2 });
+                    } else if (filterOp == 'in') {
+                        filters.push({ "name": filterColumn.name, "op": "in", "val": "["+filterVal1of2+"]" });
+                    }
+                }
+            });
+
 
             $.ajax({
               url: '/metrics-grouped-by/'+dataGrouping+'/'+dataSelect+'/'+aggregateOp+'/'+aggregateField,
