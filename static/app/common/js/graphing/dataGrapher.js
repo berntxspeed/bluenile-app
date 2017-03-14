@@ -10,6 +10,7 @@ class DataGrapher {
         var table;
         var columns = {};
         var typeOfLimitByField = 'text';
+        var reportName;
 
         var grouping = {
             grouping1: null,
@@ -449,9 +450,11 @@ class DataGrapher {
 
         });
 
-
         // handle button click to render visual based on retrieved statistics
-        $(bindTo + ' #drill-down-button').click(function(){
+        $(bindTo + ' .drill-down-button').click(function(){
+
+            var action = $(this).val();
+
             // interpret settings, and determine how to request data from server
             var dataSelect = $(bindTo + ' #data-selection').val();
 
@@ -547,17 +550,38 @@ class DataGrapher {
                 }
             });
 
+            var endpoint;
+            var successFunc;
+
+            if (action == 'update') {
+                endpoint = '/metrics-grouped-by';
+                successFunc = function(data) {
+                    self.renderGraph(self, bindTo + ' #drill-down-graph', graphType, data.results, dataGrouping, aggregateOp, aggregateField);
+                }
+            } else if (action == 'save') {
+                if (!reportName) {
+                    reportName = prompt('name of report: ');
+                }
+                endpoint = '/save-report/'+reportName;
+                successFunc = function(data) {
+                    alert('saved report')
+                }
+            } else if (action == 'save-as') {
+                reportName = prompt('enter new report name: ');
+                endpoint = '/save-report/'+reportName;
+                successFunc = function(data) {
+                    alert('saved report')
+                }
+            }
 
             $.ajax({
-              url: '/metrics-grouped-by/'+dataGrouping+'/'+dataSelect+'/'+aggregateOp+'/'+aggregateField,
-              data: {"q": JSON.stringify({'filters': filters})},
-              dataType: "json",
-              contentType: "application/json",
-              success: function(data) {
-                  window.data = data;
-                  self.renderGraph(self, bindTo + ' #drill-down-graph', graphType, data.results, dataGrouping, aggregateOp, aggregateField);
-              }
+                url: endpoint+'/'+dataGrouping+'/'+dataSelect+'/'+aggregateOp+'/'+aggregateField,
+                data: {"q": JSON.stringify({'filters': filters})},
+                dataType: "json",
+                contentType: "application/json",
+                success: successFunc
             });
+
         });
     }
 

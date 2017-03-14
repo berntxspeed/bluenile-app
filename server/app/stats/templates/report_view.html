@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Send Analyzer{% endblock %}
+{% block title %}Data Analyzer{% endblock %}
 
 {% block head %}
     {{ super() }}
-    {% assets 'send-view-css' %}
+    {% assets 'report-view-css' %}
         <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" >
     {% endassets %}
 {% endblock %}
@@ -15,7 +15,7 @@
             <div class="row">
                 <div class="col-md-6 center-block">
                     <h1>&nbsp;</h1>
-                    <h1>View Email Sends and their performance data.</h1>
+                    <h1>Analyze your data by grouping and graphing it.</h1>
                 </div>
             </div>
         </div>
@@ -87,7 +87,10 @@
                         </select>
 
                         <br/>
-                        <input type="button" value="Update" name="update" id="drill-down-button" class="updateView btn btn-default">
+                        <input type="button" value="update" name="update" class="drill-down-button update-button btn btn-default">
+                        <input type="button" value="save" name="save" class="drill-down-button save-button btn btn-default">
+                        <input type="button" value="save-as" name="save-as" class="drill-down-button sav-as-button btn btn-default">
+                        <input type="button" value="load" name="load" class="load-button btn btn-default">
                     </div>
 
                     <div class="well form-well">
@@ -200,7 +203,7 @@
         </div>
     </div>
 
-    {% assets "send-view-js" %}
+    {% assets "report-view-js" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 {% endblock %}

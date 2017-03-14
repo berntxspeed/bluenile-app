@@ -45,12 +45,12 @@ def journey_detail(jb_stats_service, id):
     result = jb_stats_service.journey_detail(id)
     return Response(dumps(result), mimetype='application/json')
 
-@stats.route('/send-view')
+@stats.route('/report-view')
 @inject(get_stats_service=GetStatsServ)
-@templated('send_view')
-def send_view(get_stats_service):
+@templated('report_view')
+def report_view(get_stats_service):
     # passes all send ids to view
-    return get_stats_service.send_view()
+    return get_stats_service.report_view()
 
 @stats.route('/send-info/<option>/<sendid>')
 @inject(get_stats_service=GetStatsServ)
@@ -154,3 +154,16 @@ def metrics_grouped_by(get_stats_service, grp_by, tbl, agg_op, agg_field):
 @templated('map_graph')
 def map_graph():
     return {}
+
+@stats.route('/save-report/<rpt_name>/<grp_by>/<tbl>/<agg_op>/<agg_field>')
+@inject(get_stats_service=GetStatsServ)
+def save_report(get_stats_service, rpt_name, grp_by, tbl, agg_op, agg_field):
+    filters = None
+    q = request.args.get('q')
+    if q:
+        q = loads(q)
+        filters = q.get('filters')
+        print(filters)
+    if agg_field == 'none':
+        agg_field = None
+    return get_stats_service.save_report(rpt_name, tbl, grp_by, agg_op, agg_field, filters)

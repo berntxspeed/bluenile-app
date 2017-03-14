@@ -624,4 +624,26 @@ def on_update(mapper, connection, target):
     target.last_modified = datetime.datetime.utcnow()
     return target
 
+class Report(db.Model):
+    __tablename__ = 'report'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    table = db.Column(db.String(255))
+    grp_by_first = db.Column(db.String(255))
+    grp_by_second = db.Column(db.String(255))
+    aggregate_op = db.Column(db.String(255))
+    aggregate_field = db.Column(db.String(255))
+    graph_type = db.Column(db.String(255))
+    filters_json = db.Column(JSON(astext_type=Text()))
+    created = db.Column(TIMESTAMP)
+    last_modified = db.Column(TIMESTAMP)
 
+@db.event.listens_for(Report, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target.created = datetime.datetime.utcnow()
+    return target
+
+@db.event.listens_for(Report, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target.last_modified = datetime.datetime.utcnow()
+    return target

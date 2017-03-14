@@ -2,7 +2,7 @@ from flask import jsonify
 from sqlalchemy import func
 
 from ...common.services import DbService
-from ...common.models import Artist, Customer, Purchase, EmlSend, EmlOpen, EmlClick, SendJob, Event, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
+from ...common.models import Artist, Customer, Purchase, EmlSend, EmlOpen, EmlClick, SendJob, Event, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm, Report
 from .classes.get_stats import StatsGetter
 
 class GetStatsService(DbService):
@@ -70,7 +70,7 @@ class GetStatsService(DbService):
 
         return jsonify(results=results)
 
-    def send_view(self):
+    def report_view(self):
         tables = self._acceptable_tables.keys()
 
         sends = SendJob.query.all()
@@ -152,5 +152,35 @@ class GetStatsService(DbService):
         except Exception as exc:
             return jsonify(error=str(exc)), 400
 
+    def save_report(self, rpt_name, tbl, grp_by, agg_op, agg_field, filters=None):
+
+        db_op = 'update'
+
+        rpt = Report.query.filter(Report.name == rpt_name).first()
+        if rpt is None:
+            db_op = 'add'
+            rpt = Report()
+
+        rpt.table = tbl
+        rpt.grp_by_first = grp_by.split('-')[0]
+
+        try:
+            rpt.grp_by_second = grp_by.split('-')[1]
+        except:
+            pass
+
+        rpt.aggregate_op = agg_op
+        rpt.aggregate_field = agg_field
+
+        rpt.filters_json = filters
+
+        if db_op == 'add':
+            self.db.session.add(rpt)
+        elif db_op == 'update':
+            self.db.session.merge(rpt)
+
+        self.db.session.commit()
+
+        return jsonify(status='complete')
 
 
