@@ -67,8 +67,12 @@ $(function(){
                 }
             });
 
-            var dataGrapher = new DataGrapher();
-            dataGrapher.init('#drill-down-areaEMAIL', bindings, filter);
+            var drillDownAreaEMAILHTML = $('#drill-down-areaEMAIL').html();
+            $('#drill-down-areaEMAIL').html(drillDownAreaEMAILHTML);
+
+            var emailDataGrapher = new DataGrapher();
+            emailDataGrapher.init('#drill-down-areaEMAIL', bindings, filter);
+
         });
     });
 });
