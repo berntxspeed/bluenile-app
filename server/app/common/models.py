@@ -374,8 +374,8 @@ class SendJob(db.Model):
 
     def _get_stats(self):
         self.num_sends = db.session.object_session(self).query(EmlSend).with_parent(self, "eml_sends").count()
-        self.num_opens = db.session.object_session(self).query(EmlOpen).with_parent(self, "eml_opens").count()
-        self.num_clicks = db.session.object_session(self).query(EmlClick).with_parent(self, "eml_clicks").count()
+        self.num_opens = db.session.object_session(self).query(EmlOpen).filter(EmlOpen.IsUnique == True).with_parent(self, "eml_opens").count()
+        self.num_clicks = db.session.object_session(self).query(EmlClick).filter(EmlClick.IsUnique == True).with_parent(self, "eml_clicks").count()
         db.session.add(self)
         db.session.commit()
 
