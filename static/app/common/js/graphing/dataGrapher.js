@@ -240,8 +240,7 @@ class DataGrapher {
         // also updates Graph type options based on group by selected
 
         var dataSelectHandler = function(event, el, callback){
-
-            var table;
+            
             if (!el) {
                 el = $(this);
 
@@ -256,6 +255,8 @@ class DataGrapher {
             $(elDataGrouping2).removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- optional --</option>');
+            grouping.grouping1 = null;
+            grouping.grouping2 = null;
 
             // clear data limiting options
             var limitByItemHtml = $(elLimitByItem + ':first-child').outerHTML();
