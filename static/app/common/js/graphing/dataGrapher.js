@@ -2,15 +2,143 @@
 // todo: pull a list of premade reports from server, and show a dropdown to pick them (select one preconfigs options)
 // todo: consider how to access data across relationships
 
+/*
+Copy this into your page javascript to bind page elements to the instance of this class you invoke:
+
+var bindings = {
+            dataSelect: '#data-selection',
+            dataGrouping1: '#data-grouping',
+            dataGrouping2: '#data-grouping2',
+            aggregateOp: '#aggregate-op',
+            aggregateField: '#aggregate-field',
+            graphType: '#graph-type',
+            drillDownButton: '.drill-down-button',
+            limitByAdd: '#limit-by-add',
+            limitByItems: '#limit-by-items',
+            limitByItem: '.limit-by-item',
+            limitByField: '#limit-by-field',
+            limitByOp: '#limit-by-op',
+            limitByVal1: '#limit-by-val1',
+            limitByVal2: '#limit-by.val2',
+            limitByDelete: '#limit-by-delete',
+            drillDownGraph: '#drill-down-graph'
+        };
+
+ */
+
 class DataGrapher {
     constructor(){}
 
-    init(bindTo, preFilter) {
+    init(bindTo, bindings, preFilter) {
         var self = this;
+
+        if (bindings.dataSelect) {
+            var elDataSelect = bindTo + ' ' + bindings.dataSelect;
+        } else {
+            return console.error('missing dataSelect in bindings');
+        }
+
+        if (bindings.dataGrouping1) {
+            var elDataGrouping1 = bindTo + ' ' + bindings.dataGrouping1;
+        } else {
+            return console.error('missing dataGrouping1 in bindings');
+        }
+
+        if (bindings.dataGrouping2) {
+            var elDataGrouping2 = bindTo + ' ' + bindings.dataGrouping2;
+        } else {
+            return console.error('missing dataGrouping2 in bindings');
+        }
+
+        if (bindings.aggregateOp) {
+            var elAggregateOp = bindTo + ' ' + bindings.aggregateOp;
+        } else {
+            return console.error('missing aggregateOp in bindings');
+        }
+
+        if (bindings.aggregateField) {
+            var elAggregateField = bindTo + ' ' + bindings.aggregateField;
+        } else {
+            return console.error('missing aggregateField in bindings');
+        }
+
+        if (bindings.graphType) {
+            var elGraphType = bindTo + ' ' + bindings.graphType;
+        } else {
+            return console.error('missing graphType in bindings');
+        }
+
+        if (bindings.drillDownButton) {
+            var elDrillDownButton = bindTo + ' ' + bindings.drillDownButton;
+        } else {
+            return console.error('missing drillDownButton in bindings');
+        }
+
+        if (bindings.limitByAdd) {
+            var elLimitByAdd = bindTo + ' ' + bindings.limitByAdd;
+        } else {
+            return console.error('missing limitByAdd in bindings');
+        }
+
+        if (bindings.limitByItems) {
+            var elLimitByItems = bindTo + ' ' + bindings.limitByItems;
+        } else {
+            return console.error('missing limitByItems in bindings');
+        }
+
+        if (bindings.limitByItem) {
+            var elLimitByItem = bindTo + ' ' + bindings.limitByItem;
+        } else {
+            return console.error('missing limitByItem in bindings');
+        }
+
+        if (bindings.limitByField) {
+            var elLimitByField = bindTo + ' ' + bindings.limitByField;
+        } else {
+            return console.error('missing limitByField in bindings');
+        }
+
+        if (bindings.limitByOp) {
+            var elLimitByOp = bindTo + ' ' + bindings.limitByOp;
+        } else {
+            return console.error('missing limitByOp in bindings');
+        }
+
+        if (bindings.limitByVal1) {
+            var elLimitByVal1 = bindTo + ' ' + bindings.limitByVal1;
+        } else {
+            return console.error('missing limitByVal1 in bindings');
+        }
+
+        if (bindings.limitByVal2) {
+            var elLimitByVal2 = bindTo + ' ' + bindings.limitByVal2;
+        } else {
+            return console.error('missing limitByVal2 in bindings');
+        }
+
+        if (bindings.limitByDelete) {
+            var elLimitByDelete = bindTo + ' ' + bindings.limitByDelete;
+        } else {
+            return console.error('missing limitByDelete in bindings');
+        }
+
+        if (bindings.drillDownGraph) {
+            var elDrillDownGraph = bindTo + ' ' + bindings.drillDownGraph;
+        } else {
+            return console.error('missing drillDownGraph in bindings');
+        }
+
+        if (bindings.loadReport) {
+            var elLoadReport = bindTo + ' ' + bindings.loadReport;
+        } else {
+            return console.error('missing loadReport in bindings');
+        }
+
         var table;
         var columns = {};
         var typeOfLimitByField = 'text';
         var reportName;
+        var reportId;
 
         var grouping = {
             grouping1: null,
@@ -110,31 +238,39 @@ class DataGrapher {
         // eventhandlers to control the option selection
         // limits Group by and Graph type depending on data table selected
         // also updates Graph type options based on group by selected
-        $(bindTo + ' #data-selection').change(function(){
 
-            table = $(this).val();
+        var dataSelectHandler = function(event, el, callback){
+
+            var table;
+            if (!el) {
+                el = $(this);
+
+            }
+
+            table = el.val();
 
             // clear data grouping options
-            $(bindTo + ' #data-grouping').removeAttr('disabled')
+            $(elDataGrouping1).removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- select one --</option>');
-            $(bindTo + ' #data-grouping2').removeAttr('disabled')
+            $(elDataGrouping2).removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- optional --</option>');
 
             // clear data limiting options
-            var limitByItemHtml = $(bindTo + ' .limit-by-item:first-child').html();
-            $(bindTo + ' #limit-by-items').find('.limit-by-item').remove().end()
-                .append('<div class="limit-by-item">'+limitByItemHtml+'</div>');
-            $(bindTo + ' #limit-by-field').removeAttr('disabled')
+            var limitByItemHtml = $(elLimitByItem + ':first-child').outerHTML();
+            $(elLimitByItems).find('div').remove().end()
+                .append(limitByItemHtml);
+            $(elLimitByField).removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- select one --</option>');
-            $(bindTo + ' #limit-by-op').attr('disabled', 'disabled');
-            $(bindTo + ' #limit-by-val1').attr('disabled', 'disabled');
-            $(bindTo + ' #limit-by-val2').attr('disabled', 'disabled')
+            $(elLimitByOp).attr('disabled', 'disabled');
+            $(elLimitByVal1).attr('disabled', 'disabled');
+            $(elLimitByVal2).attr('disabled', 'disabled')
                 .attr('hidden', 'hidden');
+            $(elLimitByDelete).css({ 'display': 'none' });
 
-            $(bindTo + ' #limit-by-field').change(function(){
+            $(elLimitByField).change(function(){
 
                 var self = this;
                 var typeOfLimitByField;
@@ -177,7 +313,7 @@ class DataGrapher {
 
             });
 
-            $(bindTo + ' #limit-by-op').change(function(){
+            $(elLimitByOp).change(function(){
 
                 var self = this;
                 var typeOfLimitByField = $(self).parent().find('#limit-by-val1').attr('type');
@@ -198,13 +334,15 @@ class DataGrapher {
             });
 
             // clear graph type options
-            $(bindTo + ' #graph-type').find('option').remove().end()
+            $(elGraphType).find('option').remove().end()
                 .attr('disabled', 'disabled');
 
             // clear aggregate field options
-            $(bindTo + ' #aggregate-field').removeAttr('disabled')
+            $(elAggregateField).removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- optional --</option>');
+
+            $(elAggregateOp).val('count');
 
             // get columns and add data grouping options (one for each column)
             $.ajax({
@@ -225,32 +363,33 @@ class DataGrapher {
                           columnType = 'boolean';
                       }
                       columns[column.name] = { type: columnType, special: false };
-                      $(bindTo + ' #data-grouping').append('<option value="'+column.name+'">'+column.name+'</option>');
-                      $(bindTo + ' #data-grouping2').append('<option value="'+column.name+'">'+column.name+'</option>');
-                      $(bindTo + ' #limit-by-field').append('<option value"'+column.name+'">'+column.name+'</option>');
+                      $(elDataGrouping1).append('<option value="'+column.name+'">'+column.name+'</option>');
+                      $(elDataGrouping2).append('<option value="'+column.name+'">'+column.name+'</option>');
+                      $(elLimitByField).append('<option value"'+column.name+'">'+column.name+'</option>');
 
                       // only add the numeric / datetime / boolean fields to the aggregate-field options
                       if (columnType == 'numeric' || columnType == 'datetime' || columnType == 'boolean') {
-                          $(bindTo + ' #aggregate-field').append('<option value"'+column.name+'">'+column.name+'</option>');
+                          $(elAggregateField).append('<option value"'+column.name+'">'+column.name+'</option>');
                       }
                   });
-                  var tempGroupings = specialGroupings[table];
-                  if(tempGroupings){
-                      tempGroupings.forEach(function(grouping){
-                          columns[grouping.value] = { type: grouping.type, special: true };
-                          $(bindTo + ' #data-grouping').append('<option value="'+grouping.value+'">'+grouping.name+'</option>');
-                      });
+
+                  if (callback) {
+                    callback();
                   }
               }
             });
 
-        });
+        };
 
-        $(bindTo + ' #data-grouping').change(function(){
+        var dataGroupingHandler = function(event, el, callback){
 
             var graphTypesToAdd = [];
 
-            grouping.grouping1 = $(this).val();
+            if (!el) {
+                el = $(this);
+            }
+
+            grouping.grouping1 = el.val();
             grouping.type = columns[grouping.grouping1].type;
 
             if (specialGroupings[table] && specialGroupings[table].find(function(sg){
@@ -262,7 +401,7 @@ class DataGrapher {
             }
 
             // clear existing graph-type options
-            $(bindTo + ' #graph-type').removeAttr('disabled')
+            $(elGraphType).removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- select one --</option>');
 
@@ -277,16 +416,20 @@ class DataGrapher {
             graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
 
             graphTypesToAdd.forEach(function(graphTypeToAdd){
-                $(bindTo + ' #graph-type').append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
+                $(elGraphType).append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
             });
 
-        });
+        };
 
-        $(bindTo + ' #data-grouping2').change(function(){
+        var dataGrouping2Handler = function(event, el, callback){
 
             var graphTypesToAdd = [];
 
-            grouping.grouping2 = $(this).val();
+            if (!el) {
+                el = $(this);
+            }
+
+            grouping.grouping2 = el.val();
 
             if (specialGroupings[table] && specialGroupings[table].find(function(sg){
                     return sg.grouping1 == grouping.grouping1 && sg.grouping2 == grouping.grouping2;
@@ -295,7 +438,7 @@ class DataGrapher {
             } else {
                 grouping.special = false;
                 //must reset graphTypes to get rid of special ones
-                $(bindTo + ' #graph-type').find('option').remove().end()
+                $(elGraphType).find('option').remove().end()
                     .append('<option value="">-- select one --</option>');
                 graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
             }
@@ -309,20 +452,21 @@ class DataGrapher {
             }
 
             graphTypesToAdd.forEach(function(graphTypeToAdd){
-                $(bindTo + ' #graph-type').append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
+                $(elGraphType).append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
             });
 
-        });
+        };
 
-        $(bindTo + ' #limit-by-add').click(function(){
+        var limitByAddHandler = function(event){
 
-            $(bindTo + ' #limit-by-items').append('<div class="limit-by-item">'+$(bindTo + ' .limit-by-item').html()+'<input type="button" value="delete" name="delete" id="limit-by-delete" class="updateView btn btn-default btn-xs"></div>');
+            $(elLimitByItems).append($(elLimitByItem + ':first-child').outerHTML());
+            $(elLimitByItem + ':last-child').find(bindings.limitByDelete).css({ 'display': 'inline'});
 
-            $(bindTo + ' #limit-by-delete').click(function(){
+            $(elLimitByDelete).click(function(){
                 $(this).parent().remove();
             });
 
-            $(bindTo + ' #limit-by-field').change(function(){
+            $(elLimitByField).change(function(){
 
                 var self = this;
                 var typeOfLimitByField;
@@ -365,7 +509,7 @@ class DataGrapher {
 
             });
 
-            $(bindTo + ' #limit-by-op').change(function(){
+            $(elLimitByOp).change(function(){
 
                 var self = this;
                 var typeOfLimitByField = $(self).parent().find('#limit-by-val1').attr('type');
@@ -385,27 +529,30 @@ class DataGrapher {
 
             });
 
-        });
+        };
 
-        $(bindTo + ' #limit-by-field').change(function(){
+        var limitByFieldHandler = function(event, el, callback){
 
-            var self = this;
+            if (!el) {
+                el = $(this);
+            }
+            var limitByField = el.val();
             var typeOfLimitByField;
 
-            if ($(this).val()) {
+            if (limitByField) {
 
                 var limitByField = {
-                    name: $(self).val(),
-                    type: columns[$(self).val()].type
+                    name: limitByField,
+                    type: columns[limitByField].type
                 };
 
                 // set 'op' options
-                $(self).parent().find('#limit-by-op').removeAttr('disabled')
+                el.parent().find(bindings.limitByOp).removeAttr('disabled')
                     .find('option').remove().end()
                     .append('<option value="">-- select one --</option>');
 
                 limitByOps[limitByField.type].forEach(function(op){
-                    $(self).parent().find('#limit-by-op').append('<option value="'+op.value+'">'+op.name+'</option>');
+                    el.parent().find(bindings.limitByOp).append('<option value="'+op.value+'">'+op.name+'</option>');
                 });
 
                 // configure 'value' input field(s)
@@ -419,58 +566,66 @@ class DataGrapher {
                     typeOfLimitByField = 'number';
                 }
 
-                $(self).parent().find('#limit-by-val1').removeAttr('disabled')
+                el.parent().find(bindings.limitByVal1).removeAttr('disabled')
                     .attr('type', typeOfLimitByField);
-                $(self).parent().find('#limit-by-val2').removeAttr('disabled')
+                el.parent().find(bindings.limitByVal2).removeAttr('disabled')
                     .attr('type', typeOfLimitByField);
             } else {
-                $(self).parent().find('#limit-by-op').val(null);
-                $(self).parent().find('#limit-by-val1').val(null);
+                el.parent().find(bindings.limitByOp).val(null);
+                el.parent().find(bindings.limitByVal1).val(null);
             }
 
-        });
+        };
 
-        $(bindTo + ' #limit-by-op').change(function(){
+        var limitByOpHandler = function(event, el, callback){
 
-            var self = this;
-            var typeOfLimitByField = $(self).parent().find('#limit-by-val1').attr('type');
-            var limitByOp = $(self).val();
+            if (!el) {
+                el = $(this);
+            }
+
+            var typeOfLimitByField = el.parent().find(bindings.limitByVal1).attr('type');
+            var limitByOp = el.val();
 
             if (limitByOp == 'between') {
-                $(self).parent().find('#limit-by-val2').removeAttr('hidden');
+                el.parent().find(bindings.limitByVal2).removeAttr('hidden');
             } else {
-                $(self).parent().find('#limit-by-val2').attr('hidden', 'hidden');
+                el.parent().find(bindings.limitByVal2).attr('hidden', 'hidden');
             }
 
             if (limitByOp == 'in') {
-                $(self).parent().find('#limit-by-val1').replaceWith('<textarea id="limit-by-val1" placeholder="separate values with comma"></textarea>');
+                el.parent().find(bindings.limitByVal1).replaceWith('<textarea id="09823409824" placeholder="separate values with comma"></textarea>');
             } else {
-                $(self).parent().find('#limit-by-val1').replaceWith('<input type="'+typeOfLimitByField+'" id="limit-by-val1"/>');
+                el.parent().find(bindings.limitByVal1).replaceWith('<input id="09823409824" type="'+typeOfLimitByField+'" />');
+            }
+            el.parent().find('#09823409824').attr('id', bindings.limitByVal1.substring(1))
+                .addClass(bindings.limitByVal1.substring(1));
+
+        };
+
+        var drillDownButtonHandler = function(event, el, callback){
+
+            if (!el) {
+                el = $(this);
             }
 
-        });
-
-        // handle button click to render visual based on retrieved statistics
-        $(bindTo + ' .drill-down-button').click(function(){
-
-            var action = $(this).val();
+            var action = el.val();
 
             // interpret settings, and determine how to request data from server
-            var dataSelect = $(bindTo + ' #data-selection').val();
+            var dataSelect = $(elDataSelect).val();
 
             var dataGrouping;
-            var dataGrouping1 = $(bindTo + ' #data-grouping').val();
-            var dataGrouping2 = $(bindTo + ' #data-grouping2').val();
+            var dataGrouping1 = $(elDataGrouping1).val();
+            var dataGrouping2 = $(elDataGrouping2).val();
             if (dataGrouping2) {
                 dataGrouping = dataGrouping1 + '-' + dataGrouping2;
             } else {
                 dataGrouping = dataGrouping1;
             }
 
-            var graphType = $(bindTo + ' #graph-type').val();
+            var graphType = $(elGraphType).val();
 
-            var aggregateOp = $(bindTo + ' #aggregate-op').val();
-            var aggregateField = $(bindTo + ' #aggregate-field').val();
+            var aggregateOp = $(elAggregateOp).val();
+            var aggregateField = $(elAggregateField).val();
             if (aggregateOp == 'count' && !aggregateField) {
                 aggregateField = 'none';
             }
@@ -494,7 +649,7 @@ class DataGrapher {
                 filters.push(preFilter);
             }
 
-            $(bindTo + ' #limit-by-items').find('.limit-by-item').each(function(){
+            $(elLimitByItems).find(bindings.limitByItem).each(function(){
 
                 var filterColumn = $(this).find('#limit-by-field').val();
                 var filterOp = $(this).find('#limit-by-op').val();
@@ -556,33 +711,97 @@ class DataGrapher {
             if (action == 'update') {
                 endpoint = '/metrics-grouped-by';
                 successFunc = function(data) {
-                    self.renderGraph(self, bindTo + ' #drill-down-graph', graphType, data.results, dataGrouping, aggregateOp, aggregateField);
+                    self.renderGraph(self, elDrillDownGraph, graphType, data.results, dataGrouping, aggregateOp, aggregateField);
                 }
             } else if (action == 'save') {
                 if (!reportName) {
                     reportName = prompt('name of report: ');
+                    reportId = 'null';
                 }
-                endpoint = '/save-report/'+reportName;
+                endpoint = '/save-report/'+reportId+'/'+reportName+'/'+graphType;
                 successFunc = function(data) {
+                    reportId = data.reportId;
                     alert('saved report')
                 }
             } else if (action == 'save-as') {
                 reportName = prompt('enter new report name: ');
-                endpoint = '/save-report/'+reportName;
+                endpoint = '/save-report/null/'+reportName+'/'+graphType;
                 successFunc = function(data) {
+                    reportId = data.reportId;
                     alert('saved report')
                 }
             }
 
             $.ajax({
-                url: endpoint+'/'+dataGrouping+'/'+dataSelect+'/'+aggregateOp+'/'+aggregateField,
+                url: endpoint+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField,
                 data: {"q": JSON.stringify({'filters': filters})},
                 dataType: "json",
                 contentType: "application/json",
                 success: successFunc
             });
 
-        });
+        };
+
+        var loadReportHandler = function(event, el, callback){
+
+            reportId = $(this).val();
+            reportName = $(this).find('option:selected').text();
+
+            $.ajax({
+                url: '/report/'+reportId,
+                success: function(data){
+
+                    // set ui params with report settings
+                    var report = data.report;
+
+                    $(elDataSelect).val(report.table);
+                    dataSelectHandler(null, $(elDataSelect), function(){
+
+                        $(elDataGrouping1).val(report.grp_by_first);
+                        dataGroupingHandler(null, $(elDataGrouping1));
+
+                        $(elDataGrouping2).val(report.grp_by_second);
+                        dataGrouping2Handler(null, $(elDataGrouping2));
+
+                        $(elAggregateOp).val(report.aggregate_op);
+                        $(elAggregateField).val(report.aggregate_field);
+                        $(elGraphType).val(report.graph_type);
+
+                        report.filters_json.forEach(function(filter){
+
+                            $(elLimitByItem + ':last-child ' + bindings.limitByField).val(filter.name);
+                            limitByFieldHandler(null, $(elLimitByItem + ':last-child ' + bindings.limitByField));
+                            $(elLimitByItem + ':last-child ' + bindings.limitByOp).val(filter.op);
+                            limitByOpHandler(null, $(elLimitByItem + ':last-child ' + bindings.limitByOp));
+                            $(elLimitByItem + ':last-child ' + bindings.limitByVal1).val(filter.val);
+                            limitByAddHandler();
+
+                        });
+
+                        drillDownButtonHandler(null, $(elDrillDownButton + '.update-button'));
+
+                    });
+                }
+            });
+
+        };
+
+        $(elDataSelect).change(dataSelectHandler);
+
+        $(elDataGrouping1).change(dataGroupingHandler);
+
+        $(elDataGrouping2).change(dataGrouping2Handler);
+
+        $(elLimitByAdd).click(limitByAddHandler);
+
+        $(elLimitByField).change(limitByFieldHandler);
+
+        $(elLimitByOp).change(limitByOpHandler);
+
+        // handle button click to render visual based on retrieved statistics
+        $(elDrillDownButton).click(drillDownButtonHandler);
+
+        $(elLoadReport).change(loadReportHandler);
     }
 
     formatDualGroupedData(data, secondGrouping) {
@@ -742,4 +961,8 @@ class DataGrapher {
             });
         }
     }
+};
+
+jQuery.fn.outerHTML = function() {
+  return jQuery('<div />').append(this.eq(0).clone()).html();
 };

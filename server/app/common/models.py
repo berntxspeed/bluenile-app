@@ -351,7 +351,7 @@ class SendJob(db.Model):
     SendDefinitionExternalKey = db.Column(db.String(255))
     SchedTime = db.Column(TIMESTAMP)
     SentTime = db.Column(TIMESTAMP)
-    EmailName= db.Column(db.String(64))
+    EmailName = db.Column(db.String(255))
     Subject = db.Column(db.String(1024))
     PreviewURL = db.Column(db.String(1024))
     _last_updated = db.Column(TIMESTAMP)

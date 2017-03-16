@@ -27,8 +27,19 @@
         <div class="col-md-12 center-block" id="c-side">
             <strong>Drill Down into any data (C SIDE)</strong>
             <div class="well" id="drill-down-well">
-                <div id="drill-down-areaC" style="background-color: ghostwhite">
+                <div id="drill-down-areaC" class="row" style="background-color: ghostwhite">
+
                     <div class="well form-well">
+                        <label>Load a saved report:</label>
+                        <select id="load-report">
+                            <option value="">-- select one --</option>
+                            {% for report in reports %}
+                                <option value="{{ report.id }}">{{ report.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="well form-well col-md-6">
                         <label>Data:</label>
                         <select id="data-selection">
                             <option value="">--select an table--</option>
@@ -48,26 +59,7 @@
                         </select>
                     </div>
 
-                    <div class="well form-well">
-                        <label>Limit data by:</label>
-                        <input type="button" value="add" name="add" id="limit-by-add" class="updateView btn btn-default btn-xs">
-
-                        <div id="limit-by-items">
-                            <div class="limit-by-item">
-                                <select id="limit-by-field" disabled>
-                                    <option value="">-- select one --</option>
-                                </select>
-                                <select id="limit-by-op" disabled>
-                                    <option value="">-- select one --</option>
-                                </select>
-                                <label>Value:</label>
-                                <input type="text" id="limit-by-val1" disabled/>
-                                <input type="text" id="limit-by-val2" disabled hidden/>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="well form-well">
+                    <div class="well form-well col-md-6">
                         <label>Calculate:</label>
                         <select id="aggregate-op">
                             <option value="count">Count</option>
@@ -89,8 +81,27 @@
                         <br/>
                         <input type="button" value="update" name="update" class="drill-down-button update-button btn btn-default">
                         <input type="button" value="save" name="save" class="drill-down-button save-button btn btn-default">
-                        <input type="button" value="save-as" name="save-as" class="drill-down-button sav-as-button btn btn-default">
-                        <input type="button" value="load" name="load" class="load-button btn btn-default">
+                        <input type="button" value="save-as" name="save-as" class="drill-down-button save-as-button btn btn-default">
+                    </div>
+
+                    <div class="well form-well">
+                        <label>Limit data by:</label>
+                        <input type="button" value="add" name="add" id="limit-by-add" class="updateView btn btn-default btn-xs">
+
+                        <div id="limit-by-items">
+                            <div class="limit-by-item">
+                                <select id="limit-by-field" disabled>
+                                    <option value="">-- select one --</option>
+                                </select>
+                                <select id="limit-by-op" disabled>
+                                    <option value="">-- select one --</option>
+                                </select>
+                                <label>Value:</label>
+                                <input type="text" id="limit-by-val1" disabled/>
+                                <input type="text" id="limit-by-val2" disabled hidden/>
+                                <input type="button" value="delete" name="delete" id="limit-by-delete" class="btn btn-default btn-xs" style="display:none;"/>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="well form-well">
@@ -105,9 +116,9 @@
         <div class="col-md-12 center-block" id="email-side">
             <strong>Drill Down into email data</strong>
             <div class="well" id="drill-down-well">
-                <div id="drill-down-areaEMAIL" style="background-color: ghostwhite">
+                <div id="drill-down-areaEMAIL" class="row" style="background-color: ghostwhite">
                     <div class="well form-well">
-                        By Specific Send Job:
+                        <label>By Specific Send Job:</label>
                         <select id="send-select">
                             <option value="">--select an send--</option>
                             <option value="">All Sends</option>
@@ -117,7 +128,8 @@
                                 {% endif %}
                             {% endfor %}
                         </select>
-                        By Email Name:
+                        <br/>
+                        <label>By Email Name:</label>
                         <select id="email-select">
                             <option value="">--select an emailname--</option>
                             {% for send in sends_by_emailname.items() %}
@@ -128,10 +140,9 @@
                         </select>
                     </div>
 
-                    <br/>
                     <div class="well form-well" id="send-info"></div>
 
-                    <div class="well form-well">
+                    <div class="well form-well col-md-6">
                         <label>Data:</label>
                         <select id="data-selection">
                             <option value="">--select an table--</option>
@@ -153,26 +164,7 @@
                         </select>
                     </div>
 
-                    <div class="well form-well">
-                        <label>Limit data by:</label>
-                        <input type="button" value="add" name="add" id="limit-by-add" class="updateView btn btn-default btn-xs">
-
-                        <div id="limit-by-items">
-                            <div class="limit-by-item">
-                                <select id="limit-by-field" disabled>
-                                    <option value="">-- select one --</option>
-                                </select>
-                                <select id="limit-by-op" disabled>
-                                    <option value="">-- select one --</option>
-                                </select>
-                                <label>Value:</label>
-                                <input type="text" id="limit-by-val1" disabled/>
-                                <input type="text" id="limit-by-val2" disabled hidden/>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="well form-well">
+                    <div class="well form-well col-md-6">
                         <label>Calculate:</label>
                         <select id="aggregate-op">
                             <option value="count">Count</option>
@@ -192,7 +184,28 @@
                         </select>
 
                         <br/>
-                        <input type="button" value="Update" name="update" id="drill-down-button" class="updateView btn btn-default">
+                        <input type="button" value="update" name="update" id="drill-down-button" class="update-button btn btn-default">
+                        <input type="button" value="save" name="save" class="drill-down-button save-button btn btn-default">
+                        <input type="button" value="save-as" name="save-as" class="drill-down-button save-as-button btn btn-default">
+                    </div>
+
+                    <div class="well form-well">
+                        <label>Limit data by:</label>
+                        <input type="button" value="add" name="add" id="limit-by-add" class="updateView btn btn-default btn-xs">
+
+                        <div id="limit-by-items">
+                            <div class="limit-by-item">
+                                <select id="limit-by-field" disabled>
+                                    <option value="">-- select one --</option>
+                                </select>
+                                <select id="limit-by-op" disabled>
+                                    <option value="">-- select one --</option>
+                                </select>
+                                <label>Value:</label>
+                                <input type="text" id="limit-by-val1" disabled/>
+                                <input type="text" id="limit-by-val2" disabled hidden/>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="well form-well">

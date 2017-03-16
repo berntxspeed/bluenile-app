@@ -114,9 +114,9 @@ def get_columns(get_stats_service, tbl):
     return get_stats_service.get_columns(tbl)
 
 
-@stats.route('/metrics-grouped-by/<grp_by>/<tbl>/<agg_op>/<agg_field>')
+@stats.route('/metrics-grouped-by/<tbl>/<grp_by>/<agg_op>/<agg_field>')
 @inject(get_stats_service=GetStatsServ)
-def metrics_grouped_by(get_stats_service, grp_by, tbl, agg_op, agg_field):
+def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
     """
     tbl = 'EmlOpen' # a table to query
     grp_by = 'Device' # a db field name to group by
@@ -155,9 +155,11 @@ def metrics_grouped_by(get_stats_service, grp_by, tbl, agg_op, agg_field):
 def map_graph():
     return {}
 
-@stats.route('/save-report/<rpt_name>/<grp_by>/<tbl>/<agg_op>/<agg_field>')
+@stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>')
 @inject(get_stats_service=GetStatsServ)
-def save_report(get_stats_service, rpt_name, grp_by, tbl, agg_op, agg_field):
+def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field):
+    if rpt_id == 'null':
+        rpt_id = None
     filters = None
     q = request.args.get('q')
     if q:
@@ -166,4 +168,9 @@ def save_report(get_stats_service, rpt_name, grp_by, tbl, agg_op, agg_field):
         print(filters)
     if agg_field == 'none':
         agg_field = None
-    return get_stats_service.save_report(rpt_name, tbl, grp_by, agg_op, agg_field, filters)
+    return get_stats_service.save_report(rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field, filters)
+
+@stats.route('/report/<rpt_id>')
+@inject(get_stats_service=GetStatsServ)
+def report(get_stats_service, rpt_id):
+    return get_stats_service.get_report(rpt_id)

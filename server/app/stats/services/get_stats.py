@@ -73,6 +73,8 @@ class GetStatsService(DbService):
     def report_view(self):
         tables = self._acceptable_tables.keys()
 
+        reports = Report.query.all()
+
         sends = SendJob.query.all()
 
         sends_by_emailname = {}
@@ -103,7 +105,8 @@ class GetStatsService(DbService):
         return {
             'sends_by_sendid': sends_by_sendid,
             'sends_by_emailname': sends_by_emailname,
-            'tables': tables
+            'tables': tables,
+            'reports': reports
         }
 
     def send_info(self, option, sendid):
@@ -152,15 +155,19 @@ class GetStatsService(DbService):
         except Exception as exc:
             return jsonify(error=str(exc)), 400
 
-    def save_report(self, rpt_name, tbl, grp_by, agg_op, agg_field, filters=None):
+    def save_report(self, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field, filters=None):
 
         db_op = 'update'
+        rpt = None
 
-        rpt = Report.query.filter(Report.name == rpt_name).first()
+        if rpt_id is not None:
+            rpt = Report.query.filter(Report.id == rpt_id).first()
+
         if rpt is None:
             db_op = 'add'
             rpt = Report()
 
+        rpt.name = rpt_name
         rpt.table = tbl
         rpt.grp_by_first = grp_by.split('-')[0]
 
@@ -174,6 +181,8 @@ class GetStatsService(DbService):
 
         rpt.filters_json = filters
 
+        rpt.graph_type = graph_type
+
         if db_op == 'add':
             self.db.session.add(rpt)
         elif db_op == 'update':
@@ -181,6 +190,26 @@ class GetStatsService(DbService):
 
         self.db.session.commit()
 
-        return jsonify(status='complete')
+        return jsonify(reportId=rpt.id)
+
+    def get_report(self, rpt_id):
+
+        rpt = Report.query.filter(Report.id == rpt_id).first()
+
+        if rpt is not None:
+            report = dict(table=rpt.table,
+                          id=rpt.id,
+                          name=rpt.name,
+                          grp_by_first=rpt.grp_by_first,
+                          grp_by_second=rpt.grp_by_second,
+                          aggregate_op=rpt.aggregate_op,
+                          aggregate_field=rpt.aggregate_field,
+                          graph_type=rpt.graph_type,
+                          filters_json=rpt.filters_json,
+                          created=rpt.created,
+                          last_modified=rpt.last_modified)
+            return jsonify(report=report)
+        else:
+            return jsonify(error='report not found'), 404
 
 

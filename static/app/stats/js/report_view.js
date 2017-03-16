@@ -4,8 +4,28 @@ $(function(){
     // main script
     $(document).ready(function () {
 
+        var bindings = {
+            dataSelect: '#data-selection',
+            dataGrouping1: '#data-grouping',
+            dataGrouping2: '#data-grouping2',
+            aggregateOp: '#aggregate-op',
+            aggregateField: '#aggregate-field',
+            graphType: '#graph-type',
+            drillDownButton: '.drill-down-button',
+            limitByAdd: '#limit-by-add',
+            limitByItems: '#limit-by-items',
+            limitByItem: '.limit-by-item',
+            limitByField: '#limit-by-field',
+            limitByOp: '#limit-by-op',
+            limitByVal1: '#limit-by-val1',
+            limitByVal2: '#limit-by-val2',
+            limitByDelete: '#limit-by-delete',
+            drillDownGraph: '#drill-down-graph',
+            loadReport: '#load-report'
+        };
+
         var dataGrapher = new DataGrapher();
-        dataGrapher.init('#drill-down-areaC', null);
+        dataGrapher.init('#drill-down-areaC', bindings, null);
 
         // render drill down view B for a specific email
         $("#email-side #send-select, #email-side #email-select").change(function () {
@@ -48,7 +68,7 @@ $(function(){
             });
 
             var dataGrapher = new DataGrapher();
-            dataGrapher.init('#drill-down-areaEMAIL', filter);
+            dataGrapher.init('#drill-down-areaEMAIL', bindings, filter);
         });
     });
 });
