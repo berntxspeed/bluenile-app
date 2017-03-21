@@ -181,10 +181,15 @@ class DataGrapher {
                 { name: 'Donut Chart', value: 'donut' }
             ],
             datetime: [
-                //todo add graph types for date time
+                { name: 'Bar Graph', value: 'datebar' },
+                { name: 'Line Graph', value: 'dateline' },
+                { name: 'Smoothed Line Graph', value: 'datespline' },
+                { name: 'Scatter Plot', value: 'datescatter' }
             ],
             boolean: [
-                //todo add graph types for boolean
+                { name: 'Bar Graph', value: 'bar' },
+                { name: 'Pie Chart', value: 'pie' },
+                { name: 'Donut Chart', value: 'donut' }
             ],
             special: {
                 'AreaCode': [
@@ -390,35 +395,42 @@ class DataGrapher {
                 el = $(this);
             }
 
-            grouping.grouping1 = el.val();
-            grouping.type = columns[grouping.grouping1].type;
+            if (el.val()) {
+                grouping.grouping1 = el.val();
+                grouping.type = columns[grouping.grouping1].type;
 
-            if (specialGroupings[table] && specialGroupings[table].find(function(sg){
-                    return sg.grouping1 == grouping.grouping1 && sg.grouping2 == grouping.grouping2;
-                })) {
-                grouping.special = true;
-            } else {
-                grouping.special = false;
-            }
-
-            // clear existing graph-type options
-            $(elGraphType).removeAttr('disabled')
-                .find('option').remove().end()
-                .append('<option value="">-- select one --</option>');
-
-            if (grouping.special) {
-                var tempkey = grouping.grouping1;
-                if (grouping.grouping2) {
-                    tempkey = tempkey + grouping.grouping2;
+                if (specialGroupings[table] && specialGroupings[table].find(function(sg){
+                        return sg.grouping1 == grouping.grouping1 && sg.grouping2 == grouping.grouping2;
+                    })) {
+                    grouping.special = true;
+                } else {
+                    grouping.special = false;
                 }
-                graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[tempkey]);
+
+                // clear existing graph-type options
+                $(elGraphType).removeAttr('disabled')
+                    .find('option').remove().end()
+                    .append('<option value="">-- select one --</option>');
+
+                if (grouping.special) {
+                    var tempkey = grouping.grouping1;
+                    if (grouping.grouping2) {
+                        tempkey = tempkey + grouping.grouping2;
+                    }
+                    graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[tempkey]);
+                }
+
+                graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
+
+                graphTypesToAdd.forEach(function(graphTypeToAdd){
+                    $(elGraphType).append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
+                });
+            } else {
+                if ($(elDataGrouping2).val()) {
+                    $(elDataGrouping1).val($(elDataGrouping2).val());
+                    $(elDataGrouping2).val(null);
+                }
             }
-
-            graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
-
-            graphTypesToAdd.forEach(function(graphTypeToAdd){
-                $(elGraphType).append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
-            });
 
         };
 
@@ -430,31 +442,41 @@ class DataGrapher {
                 el = $(this);
             }
 
-            grouping.grouping2 = el.val();
+            if (el.val()) {
 
-            if (specialGroupings[table] && specialGroupings[table].find(function(sg){
-                    return sg.grouping1 == grouping.grouping1 && sg.grouping2 == grouping.grouping2;
-                })) {
-                grouping.special = true;
-            } else {
-                grouping.special = false;
-                //must reset graphTypes to get rid of special ones
-                $(elGraphType).find('option').remove().end()
-                    .append('<option value="">-- select one --</option>');
-                graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
-            }
+                if (!$(elDataGrouping1).val()) {
+                    $(elDataGrouping1).val($(elDataGrouping2).val());
+                    $(elDataGrouping2).val(null);
+                } else {
+                    grouping.grouping2 = el.val();
+                    grouping.type = columns[grouping.grouping2].type;
 
-            if (grouping.special) {
-                var tempkey = grouping.grouping1;
-                if (grouping.grouping2) {
-                    tempkey = tempkey + grouping.grouping2;
+                    if (specialGroupings[table] && specialGroupings[table].find(function(sg){
+                            return sg.grouping1 == grouping.grouping1 && sg.grouping2 == grouping.grouping2;
+                        })) {
+                        grouping.special = true;
+                    } else {
+                        grouping.special = false;
+                        //must reset graphTypes to get rid of special ones
+                        $(elGraphType).find('option').remove().end()
+                            .append('<option value="">-- select one --</option>');
+                        graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
+                    }
+
+                    if (grouping.special) {
+                        var tempkey = grouping.grouping1;
+                        if (grouping.grouping2) {
+                            tempkey = tempkey + grouping.grouping2;
+                        }
+                        graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[tempkey]);
+                    }
+
+                    graphTypesToAdd.forEach(function(graphTypeToAdd){
+                        $(elGraphType).append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
+                    });
                 }
-                graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[tempkey]);
-            }
 
-            graphTypesToAdd.forEach(function(graphTypeToAdd){
-                $(elGraphType).append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
-            });
+            }
 
         };
 
@@ -891,13 +913,16 @@ class DataGrapher {
             var xAxisKey = 'x';
             var xAxisType = 'indexed';
             var xAxisShow = true;
+            var legendShow = true;
             if (dataGrouping.indexOf('-') > 0){
                 // double grouping
                 firstGrouping = dataGrouping.substring(0, dataGrouping.indexOf('-'));
                 secondGrouping = dataGrouping.substring(dataGrouping.indexOf('-')+1, dataGrouping.length);
                 data = self.formatDualGroupedData(data, secondGrouping);
+                window.data = data;
                 xAxisKey = secondGrouping;
-                xAxisType = 'category';
+                xAxisType = 'indexed';
+                if(data[0].length > 10){ legendShow = false; }
                 if(data.length > 30){ xAxisShow = false; }
                 //if(!isNaN(data[1][data[1].length-1])){ xAxisType = 'indexed'; }
             } else {
@@ -918,7 +943,10 @@ class DataGrapher {
                 point: {
                     r: '4'
                 },
-                legend: { position: 'bottom' },
+                legend: {
+                    show: legendShow,
+                    position: 'bottom'
+                },
                 axis: {
                     x: {
                         show: xAxisShow,
@@ -926,6 +954,69 @@ class DataGrapher {
                         label: {
                             text: secondGrouping,
                             position: 'outer-center'
+                        }
+                    },
+                    y: {
+                        label: {
+                            text: aggregateOp + ' ' + aggregateField,
+                            position: 'outer-middle'
+                        }
+                    }
+                },
+                grid: { x: { show: true }, y: { show: true } }
+            });
+
+            $(bindTo + ' .c3-circle').attr('r', '4');
+            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 18px;\n    }\n</style>');
+            return;
+        } else if(graphType == 'dateline' || graphType == 'datescatter' || graphType == 'datespline' || graphType == 'datebar'){
+            var secondGrouping = dataGrouping;
+            var firstGrouping = dataGrouping;
+            var xAxisKey = 'x';
+            var xAxisType = 'timeseries';
+            var xAxisShow = true;
+            var legendShow = true;
+            if (dataGrouping.indexOf('-') > 0){
+                // double grouping
+                firstGrouping = dataGrouping.substring(0, dataGrouping.indexOf('-'));
+                secondGrouping = dataGrouping.substring(dataGrouping.indexOf('-')+1, dataGrouping.length);
+                data = self.formatDualGroupedData(data, secondGrouping);
+                xAxisKey = secondGrouping;
+                if(data.length > 30){
+                    xAxisShow = false;
+                    legendShow = false;
+                }
+            } else {
+                // single grouping
+                xAxisKey = 'x';
+                data.unshift(['x', dataGrouping]);
+            }
+
+            c3.generate({
+                bindto: bindTo,
+                data: {
+                    x: xAxisKey,
+                    xFormat: '%a, %d %b %Y %H:%M:%S GMT',
+                    rows: data,
+                    type: graphType
+                },
+                point: {
+                    r: '4'
+                },
+                legend: {
+                    position: 'bottom',
+                    show: legendShow
+                },
+                axis: {
+                    x: {
+                        show: xAxisShow,
+                        type: xAxisType,
+                        label: {
+                            text: secondGrouping,
+                            position: 'outer-center'
+                        },
+                        tick: {
+                            format: '%Y-%m-%d %H:%M:%S' // how the date is displayed
                         }
                     },
                     y: {
