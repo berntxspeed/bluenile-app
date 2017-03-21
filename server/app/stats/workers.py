@@ -93,8 +93,32 @@ def long_task(self):
 from celery.task.schedules import crontab
 from celery.decorators import periodic_task
 
-@periodic_task(run_every=(crontab(minute='*/15')), name="load_customers", ignore_result=True)
+@periodic_task(run_every=(crontab(minute=0, hour='*/4')), name="load_customers", ignore_result=True)
 def load_customers_periodic():
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.load_customers()
+
+@periodic_task(run_every=(crontab(minute=0, hour='*/4')), name="load_purchases", ignore_result=True)
+def load_purchases_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_purchases()
+
+@periodic_task(run_every=(crontab(minute=0, hour='*/4')), name="load_web_tracking", ignore_result=True)
+def load_web_tracking_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_web_tracking()
+
+@periodic_task(run_every=(crontab(minute=0, hour='*/4')), name="load_mc_journeys", ignore_result=True)
+def load_mc_journeys_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_mc_journeys()
+
+@periodic_task(run_every=(crontab(hour=23, minute=50)), name="load_mc_email_data", ignore_result=True)
+def load_mc_email_data_periodic():
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_mc_email_data()

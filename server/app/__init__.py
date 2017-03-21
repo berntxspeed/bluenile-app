@@ -60,6 +60,9 @@ def create_injector(app=None):
 def init_db(app):
     from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer
     db.init_app(app)
+    from sqlalchemy.orm import sessionmaker, scoped_session
+    with app.app_context():
+        db.session = scoped_session(sessionmaker(bind=db.engine))
 
     # create the Flask-Restless API manager
     manager = Restless.APIManager(app, flask_sqlalchemy_db=db)
