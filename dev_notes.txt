@@ -1,0 +1,95 @@
+heroku commands:
+log into heroku postgres db: heroku pg:psql --app bluenile-app-dev
+view logs for a dyno: heroku logs --source app --dyno worker1 --tail --app bluenile-app-dev
+log into the heroku server: heroku run bash --app bluenile-app-dev
+
+
+celery tasks:
+return id of task to client
+add endpoint to request status of task 
+
+task.AsyncResult(task.request.id).state
+
+
+---lets make segment builder
+*build relationships between tables
+*add in shopify purchases table
+
+relationships: customers - eml stuff (email address)
+purchases - customer (customerid)
+
+work from bottom up:
+-relationships 
+-make temp table of query
+-push to MC
+
+12/9: querying across relationships,
+and using 'having' to enforce aggregate conditions
+query = db.session.query(Customer).join(EmlSend, Customer.eml_sends).filter(EmlSend.SendID == 110349).group_by(Customer.custome
+    ...: r_id).having(func.count(Customer.eml_sends) > 2)
+
+
+Looking at using this jquery lib for the front end of the segment builder:
+http://querybuilder.js.org/demo.html
+
+how to make the SHA256 hash of email address on Customer Table:
+http://stackoverflow.com/questions/1306550/calculating-a-sha-hash-with-a-string-secret-key-in-python
+base64.b64encode(hmac.new(HASH_SECRET,
+                msg=target.email_address.encode('utf-8'),
+                digestmod=hashlib.sha256).digest()).hex()
+HASH_SECRET = b'oiioj349858938r3hj3' (or whatever)
+
+
+
+---- when deploying to heroku apps on branch: dev / stage / prod, follow these steps to ensure smooth deploy:
+-for db changes, (delete table rows in tables that may get fields deleted/added/changed
+heroku pg:psql --app <app>
+DELETE TABLE <table>;
+reset alembic versioning db:
+DROP TABLE alembic_version;
+log into app and execute db migration:
+heroku run bash --app <app>
+$python manage.py db init
+$python manage.py db migrate
+$python manage.py db upgrade
+--make sure any env variables are updated/added/deleted
+
+  "scripts": {
+    "postdeploy": "python manage.py db init && python manage.py db migrate && python manage.py db upgrade && python manage.py init_db"
+  },
+--having problems deploying a heroku review app?
+giving you errors while attempting to migrate db schema, due to some missing Text() in a migration script?
+https://bitbucket.org/zzzeek/alembic/issues/85/using-postgresqlarray-unicode-breaks
+http://disq.us/p/1df9tlt
+http://stackoverflow.com/questions/39997252/flask-python-manage-py-db-upgrade-raise-error
+
+having issues deploying a JSON field to postgres db?
+try adding this line to top of the migration script generated from $python manage.py db migrate
+(this line:) from sqlalchemy import Text
+(using this bash trick: ) echo 'from sqlalchemy import Text' | cat - <yourmigratefile>.py > temp && mv temp <yourmigratefile>.py
+-then run: $python manage.py db upgrade
+
+
+
+--building event listener module - to inspect changes to a model instance
+used this s/o post as a guide (aka ripped it off completely)
+http://stackoverflow.com/questions/29921260/tracking-model-changes-in-sqlalchemy
+
+
+
+
+--using custom version of FuelSDK hosted on personal git repo
+pip install -e git+https://github.com/berntxspeed/FuelSDK-Python.git@v1.0.0#egg=FuelSDK
+pip freeze > requirements.txt
+
+--using a custom commit of Flask_SQLAlchemy:
+(WHY?) because for sqlalchemy events to work, we needed session builder to work correctly (bug in 2.1)
+v2.2 solves this problem, not GA'd yet though - thus this janky workaround
+pip install -e git+git://github.com/mitsuhiko/flask-sqlalchemy.git@3fec7535922e687e0518bdbfcd24b6389ab5c3af#egg=flask-sqlalchemy
+pip freeze > requirements.txt
+//the -e on pip install ensures that it's written properly to requirements.txt so when someone later does >pip install -r requirements.txt
+it can install the package properly.  :)
+BTW, i used this install of flask-sqlalchemy https://github.com/mitsuhiko/flask-sqlalchemy/pull/364/commits/3fec7535922e687e0518bdbfcd24b6389ab5c3af
+
+---CHANGES to GA and Site to use GA tracking linkage to EmailAddress:
+add this tracking code
