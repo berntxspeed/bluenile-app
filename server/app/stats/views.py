@@ -104,7 +104,7 @@ def load(action):
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')
-    result = task.delay()
+    result = task.delay(task_type=action)
     return dict(task_id=result.id)
 
 
