@@ -27,14 +27,28 @@
                         type: column_obj.type,
                         placeholder: ('Enter' + column_obj.label.split(':')[1]).toLowerCase()
                     }
-                    if (column_obj.type == 'boolean'){
+                    if (column_obj.type === 'boolean'){
                         filter.operators = ['equal']
                         filter.input = 'radio'
                         filter.values = {1 :'true', 0: 'false'}
                         filter.colors = {1 :'success', 0: 'danger'}
                         filter.default_value = 1
                         filter.description = 'Optional Filter Description'
-                        filter.vertical = 'Optional Filter Description'
+                    }
+                    else if (column_obj.type === 'datetime') {
+                        filter.operators = ['equal', 'not_equal', 'less', 'greater', 'between', 'not_between']
+                        filter.validation = {
+                          format: 'YYYY/MM/DD'
+                        }
+                        filter.plugin = 'datepicker'
+                        filter.plugin_config = {
+                          format: 'yyyy/mm/dd',
+                          todayBtn: 'linked',
+                          todayHighlight: true,
+                          autoclose: true,
+                          orientation: 'bottom'
+                        }
+                        filter.placeholder = 'yyyy/mm/dd'
                     }
                     filters_result.push(filter)
                 }

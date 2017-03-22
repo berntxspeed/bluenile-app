@@ -55,11 +55,13 @@ query-builder-js:
         - app/common/js/dataBuilderUtils.js
         - app/common/js/dataBuilder.js
         - bower_components/bootstrap-table/dist/bootstrap-table.js
+        - bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js
 
 query-builder-css:
     contents:
         - bower_components/jQuery-QueryBuilder/dist/css/query-builder.default.min.css
         - bower_components/bootstrap-table/dist/bootstrap-table.css
+        - bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css
         - app/common/css/query_builder.css
 
 task-admin-css:
