@@ -199,13 +199,35 @@ $(document).ready(function() {
         }
         else {
             columns =  [{
-                            field: 'info',
+                            field: 'Value',
                             title: 'Values Information'
+                        },
+                        {
+                            field: 'Count',
+                            title: 'Times it appears in the data'
                         }]
-            data = [{'info': 'Brevity is the sister of talent'}]
-            showExploreValuesTable(columns, data)
-            changeModalHeader(row.key)
-            g_explore.state = 'info'
+            console.log(e, row, $element)
+            $.ajax({
+                        url: "/builder/request-explore-values",
+                        method: "POST",
+                        contentType: 'application/json;charset=UTF-8',
+                        data: JSON.stringify(row),
+                        beforeSend: function(request) {
+                            request.setRequestHeader("X-CSRFToken", g_csrf_token)
+                        },
+                        success: function(data) {
+                            //data = [{'info': 'Brevity is the sister of talent'}]
+                            console.log(data)
+                            showExploreValuesTable(columns, data)
+                            changeModalHeader(row.key)
+                            g_explore.state = 'info'
+                        },
+                        error: function(err) {
+                        //                    TODO: handle the error or retry
+                            console.log(err)
+                        }
+                    })
+
         }
   	})
 

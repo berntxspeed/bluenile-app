@@ -7,6 +7,10 @@ from flask import Response
 from flask import make_response
 from flask import request
 from injector import inject
+from sqlalchemy import func
+from sqlalchemy import select
+from sqlalchemy import table
+from sqlalchemy import text
 
 from server.app.common.models import *
 from server.app.common.views.decorators import templated
@@ -36,9 +40,9 @@ def data_builder(mongo, query_id=None):
 def get_queries(mongo):
     status, result = DataBuilderQuery(mongo.db).get_all_queries()
     columns = [{
-            'field': 'name',
-            'title': 'Query Name'
-        },
+        'field': 'name',
+        'title': 'Query Name'
+    },
         {
             'field': 'created',
             'title': 'Created'
@@ -54,7 +58,7 @@ def get_default_queries(mongo):
     columns = [{
         'field': 'name',
         'title': 'Query Name'
-        }]
+    }]
     return Response(json.dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),
                     mimetype='application/json')
 
@@ -91,11 +95,9 @@ def save_query(mongo, query_id):
 @databuilder.route('/custom-query-preview/<query_sttmt>', methods=['POST'])
 @inject(alchemy=SQLAlchemy)
 def custom_query_preview(alchemy, query_sttmt):
-    from sqlalchemy import func
-
     try:
-        results = eval('alchemy.session.' + query_sttmt +'.limit(100).all()')
-        rows_count = eval('alchemy.session.' + query_sttmt +'.count()')
+        results = eval('alchemy.session.' + query_sttmt + '.limit(100).all()')
+        rows_count = eval('alchemy.session.' + query_sttmt + '.count()')
         columns, data = SqlQueryService.extract_data(results, {})
         return Response(json.dumps({'columns': columns,
                                     'data': data,
@@ -112,10 +114,9 @@ def custom_query_preview(alchemy, query_sttmt):
 @databuilder.route('/export/<query_name>', methods=['GET'])
 @inject(alchemy=SQLAlchemy, mongo=MongoDB, sql_query_service=SqlQueryServ)
 def export_query_result(alchemy, mongo, sql_query_service, query_name):
-
     status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
     if status is not True:
-        #TODO: handle error
+        # TODO: handle error
         pass
     if 'custom_sql' in result.keys():
         from sqlalchemy import func
@@ -154,4 +155,20 @@ def query_preview(sql_query_service):
                                 'data': data,
                                 'no_of_rows': final_query.count()
                                 }, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
+
+
+@databuilder.route('/request-explore-values', methods=['POST'])
+@inject(sql_query_service=SqlQueryServ, db = SQLAlchemy)
+def request_explore_values(sql_query_service, db):
+    rules_query = request.json
+    expression = rules_query.get('expression')
+    tbl, field = expression.split('.')[:2]
+
+    query= select([text(expression), func.count(text(expression))])\
+                .select_from(text(tbl))\
+                .group_by(text(expression))
+    results = db.session.execute(query).fetchall()
+
+    return Response(json.dumps([dict(Value=result[0], Count=result[1]) for result in results]),
                     mimetype='application/json')
