@@ -96,8 +96,8 @@ def save_query(mongo, query_id):
 @inject(alchemy=SQLAlchemy)
 def custom_query_preview(alchemy, query_sttmt):
     try:
-        results = eval('alchemy.session.' + query_sttmt + '.limit(100).all()')
-        rows_count = eval('alchemy.session.' + query_sttmt + '.count()')
+        results = eval('alchemy.session.' + query_sttmt + '.distinct(Customer.id).limit(100).all()')
+        rows_count = eval('alchemy.session.' + query_sttmt + '.distinct(Customer.id).count()')
         columns, data = SqlQueryService.extract_data(results, {})
         return Response(json.dumps({'columns': columns,
                                     'data': data,
@@ -149,26 +149,23 @@ def query_preview(sql_query_service):
     rules_query = request.json
     final_query = sql_query_service.get_customer_query_based_on_rules(rules_query)
 
-    results = final_query.limit(100).all()
+    results = final_query.distinct(Customer.id).limit(100).all()
     columns, data = sql_query_service.extract_data(results, rules_query)
     return Response(json.dumps({'columns': columns,
                                 'data': data,
-                                'no_of_rows': final_query.count()
+                                'no_of_rows': final_query.distinct(Customer.id).count()
                                 }, default=SqlQueryService.alchemy_encoder),
                     mimetype='application/json')
 
 
 @databuilder.route('/request-explore-values', methods=['POST'])
-@inject(sql_query_service=SqlQueryServ, db = SQLAlchemy)
-def request_explore_values(sql_query_service, db):
+@inject(db=SQLAlchemy)
+def request_explore_values(db):
     rules_query = request.json
     expression = rules_query.get('expression')
-    tbl, field = expression.split('.')[:2]
+    get_results_query = 'db.session.query({0}, func.count({0})).group_by({0}).all()'.format(expression)
+    results = eval(get_results_query)
+    db.session.close()
 
-    query= select([text(expression), func.count(text(expression))])\
-                .select_from(text(tbl))\
-                .group_by(text(expression))
-    results = db.session.execute(query).fetchall()
-
-    return Response(json.dumps([dict(Value=result[0], Count=result[1]) for result in results]),
+    return Response(json.dumps([dict(value=result[0], count=result[1]) for result in results]),
                     mimetype='application/json')

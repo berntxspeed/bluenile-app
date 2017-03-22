@@ -185,8 +185,9 @@ $(document).ready(function() {
     }
 
   	explore_values_table.on('click-row.bs.table', function (e, row, $element) {
+  	    if (g_explore.state === 'info') {return}
   	    if ('name' in row) {
-            $("#modal2").modal("toggle")
+            $("#explore-values-modal").modal("toggle")
             showBuilderQuery(row)
             hideElement($("#btn-save-query-element"), $("#save-query-separator"))
             setupExportData(row.name)
@@ -199,12 +200,8 @@ $(document).ready(function() {
         }
         else {
             columns =  [{
-                            field: 'Value',
+                            field: 'value',
                             title: 'Values Information'
-                        },
-                        {
-                            field: 'Count',
-                            title: 'Times it appears in the data'
                         }]
             console.log(e, row, $element)
             $.ajax({
@@ -217,13 +214,23 @@ $(document).ready(function() {
                         },
                         success: function(data) {
                             //data = [{'info': 'Brevity is the sister of talent'}]
-                            console.log(data)
+                            if (data.length === 0) { data.push({ value: 'No data for' + row.key + ' in Database'}) }
+                            else {
+                                columns.push({
+                                    field: 'count',
+                                    title: 'Times it appears in the data'
+                                })
+                            }
                             showExploreValuesTable(columns, data)
                             changeModalHeader(row.key)
                             g_explore.state = 'info'
                         },
                         error: function(err) {
                         //                    TODO: handle the error or retry
+                            changeModalHeader(row.key)
+                            data = [{ value: 'Values preview not available'}]
+                            showExploreValuesTable(columns, data)
+                            g_explore.state = 'info'
                             console.log(err)
                         }
                     })
@@ -274,8 +281,13 @@ $(document).ready(function() {
                 console.log(err)
             }
         })
-        $("#modal2").modal({backdrop: false})
+        $("#explore-values-modal").modal({backdrop: false})
 
+    })
+
+    $("#explore-values-modal").on('hide.bs.modal', function(){
+        g_explore.state = null
+        g_explore.table = null
     })
 
     $("#btn-explore-values").on('click', function() {
@@ -288,12 +300,12 @@ $(document).ready(function() {
             data.push({'table_id': a_table})
         }
 
-        $("#modal2").on('show.bs.modal', function () {
+        $("#explore-values-modal").on('show.bs.modal', function () {
             showExploreValuesTable(columns, data)
             changeModalHeader('Click To Choose A Table')
             hideElement($("#back-explore-tables"))
         })
-        $("#modal2").modal("show")
+        $("#explore-values-modal").modal("show")
 
     })
 
