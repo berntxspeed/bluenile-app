@@ -62,6 +62,16 @@ query-builder-css:
         - bower_components/bootstrap-table/dist/bootstrap-table.css
         - app/common/css/query_builder.css
 
+task-admin-css:
+    contents:
+        - bower_components/bootstrap-table/dist/bootstrap-table.css
+
+task-admin-js:
+    contents:
+        - bower_components/moment/moment.js
+        - app/common/js/taskBuilder.js
+        - bower_components/bootstrap-table/dist/bootstrap-table.js
+
 base-css:
     contents:
         - bootstrap-css

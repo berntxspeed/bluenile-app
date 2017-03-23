@@ -1,4 +1,4 @@
-from server.app.stats.services.classes.db_data_loader import MongoDataLoader
+from ...stats.services.classes.db_data_loader import MongoDataLoader
 
 
 class DataBuilderQuery(object):
