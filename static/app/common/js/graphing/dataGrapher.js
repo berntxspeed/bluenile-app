@@ -173,10 +173,10 @@ class DataGrapher {
                 { name: 'Donut Chart', value: 'donut' }
             ],
             numeric: [
-                { name: 'Bar Graph', value: 'bar' },
-                { name: 'Line Graph', value: 'line' },
-                { name: 'Smoothed Line Graph', value: 'spline' },
-                { name: 'Scatter Plot', value: 'scatter' },
+                { name: 'Bar Graph', value: 'numericbar' },
+                { name: 'Line Graph', value: 'numericline' },
+                { name: 'Smoothed Line Graph', value: 'numericspline' },
+                { name: 'Scatter Plot', value: 'numericscatter' },
                 { name: 'Pie Chart', value: 'pie' },
                 { name: 'Donut Chart', value: 'donut' }
             ],
@@ -909,11 +909,15 @@ class DataGrapher {
             var dayHourPlot = new DayHourPlot();
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
-        } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar'){
+        } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar' || graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar'){
             var secondGrouping = dataGrouping;
             var firstGrouping = '';
             var xAxisKey = 'x';
-            var xAxisType = 'indexed';
+            var xAxisType = 'category';
+            if (graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar') {
+                xAxisType = 'indexed';
+                graphType = graphType.substring(7);
+            }
             var xAxisShow = true;
             var legendShow = true;
             if (dataGrouping.indexOf('-') > 0){
@@ -923,14 +927,12 @@ class DataGrapher {
                 data = self.formatDualGroupedData(data, secondGrouping);
                 window.data = data;
                 xAxisKey = secondGrouping;
-                xAxisType = 'indexed';
                 if(data[0].length > 10){ legendShow = false; }
                 if(data.length > 30){ xAxisShow = false; }
                 //if(!isNaN(data[1][data[1].length-1])){ xAxisType = 'indexed'; }
             } else {
                 // single grouping
                 xAxisKey = 'x';
-                xAxisType = 'category';
                 //if(!isNaN(data[0][0])){ xAxisType = 'indexed'; }
                 data.unshift(['x', dataGrouping]);
             }
