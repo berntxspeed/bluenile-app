@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Data Manager{% endblock %}
+
+{% block head %}
+{{ super() }}
+
+{% assets "task-admin-css" %}
+<link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+{% endassets %}
+
+{% assets "task-admin-js" %}
+<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
+
+<script type="text/javascript">
+        var g_csrf_token = '{{ csrf_token() }}';
+        var g_tasks = {{ tasks|tojson|safe }};
+        g_data = []
+        for (a_task in g_tasks) {
+            g_data.push({
+                        'task_type': g_tasks[a_task].task_type,
+                        'task_id': g_tasks[a_task].task_id,
+                        'status': g_tasks[a_task].status,
+                        'timestamp': g_tasks[a_task].timestamp,
+//                        'einfo': g_tasks[a_task].einfo,
+                        'retval': g_tasks[a_task].retval
+                     })
+        }
+        console.log(g_tasks)
+</script>
+
+{% endblock %}
+
+{% block banner %}
+    <div class="container banner banner-jumbotron banner-gray">
+        <div class="row">
+            <div class="center-block">
+                <h1>&nbsp;</h1>
+                <h3>Monitor & Manage Data Load Tasks</h3>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body_content %}
+    <div class="row panel panel-info">
+        <div class="panel-heading" style="padding-bottom :0px;">
+            <!--<h4 id="data-preview-header" class="panel-title">Choose A Task</h4>-->
+            <ul class="nav nav-tabs">
+                <li class="active"><a id="btn-all-tasks" data-toggle="tab" href="#home"><font color="black"><b>All Tasks</b></font></a></li>
+                <li><a id="btn-load-customers" data-toggle="tab" href="#"><font color="black">Load Customers</font></a></li>
+                <li><a id="btn-load-purchases" data-toggle="tab" href="#"><font color="black">Load Purchases</font></a></li>
+                <li><a id="btn-mc-email-data" data-toggle="tab" href="#"><font color="black">Load MC Email Data</font></a></li>
+                <li><a id="btn-load-journeys" data-toggle="tab" href="#"><font color="black">Load Journeys</font></a></li>
+                <li><a id="btn-load-web-tracking" data-toggle="tab" href="#"><font color="black">Load Web Tracking</font></a></li>
+                <li><a id="btn-load-failed" data-toggle="tab" href="#"><font color="black">Failed Tasks</font></a></a></li>
+                <li><a id="btn-celery-flower" style="text-align: right" href="http://localhost:5555/tasks" ><font color="green"><b>Flower</b></font></a></a></li>
+
+            </ul>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <table id="tasks-table"></table>
+            </div>
+            <!--<div class="row" align="right">-->
+                <!--<div id="gotopage" class="form-inline">-->
+                    <!--<input id="page" class="form-control" style="width: 60px" type="number" value="1">-->
+                    <!--<button id="page-button" class="btn btn-primary">Go to Page</button>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+    </div>
+
+<!--Modal for User Alerts-->
+    <div id="alertModal" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:15px 50px;">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                    <h4>User Alert</h4>
+                </div>
+                <font size="4">
+                    <div class="modal-body" style="text-align: center" id="modal-content">
+                        Modal Content
+                    </div>
+                </font>
+            </div>
+        </div>
+    </div>
+{% endblock %}
