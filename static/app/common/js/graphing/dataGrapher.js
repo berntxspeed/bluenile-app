@@ -476,6 +476,8 @@ class DataGrapher {
                     });
                 }
 
+            } else {
+                dataGroupingHandler(null, $(elDataGrouping1));
             }
 
         };
