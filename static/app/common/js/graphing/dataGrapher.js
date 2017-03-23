@@ -476,6 +476,8 @@ class DataGrapher {
                     });
                 }
 
+            } else {
+                dataGroupingHandler(null, $(elDataGrouping1));
             }
 
         };
@@ -992,13 +994,13 @@ class DataGrapher {
                 data.unshift(['x', dataGrouping]);
             }
 
-            c3.generate({
+            window.graph = c3.generate({
                 bindto: bindTo,
                 data: {
                     x: xAxisKey,
                     xFormat: '%a, %d %b %Y %H:%M:%S GMT',
                     rows: data,
-                    type: graphType
+                    type: graphType.substring(4) // to get the date part off
                 },
                 point: {
                     r: '4'
@@ -1016,7 +1018,7 @@ class DataGrapher {
                             position: 'outer-center'
                         },
                         tick: {
-                            format: '%Y-%m-%d %H:%M:%S' // how the date is displayed
+                            format: '%Y-%m-%d' // how the date is displayed
                         }
                     },
                     y: {
