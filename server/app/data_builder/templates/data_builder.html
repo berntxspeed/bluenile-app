@@ -16,6 +16,7 @@
 <script type="text/javascript">
         var g_csrf_token = '{{ csrf_token() }}';
         var g_rules = {{ data|tojson|safe }};
+        var g_name = g_rules.name
         var get_filters = function(model){
             filters_result = []
             for(table in model){
@@ -36,7 +37,7 @@
                         filter.description = 'Optional Filter Description'
                     }
                     else if (column_obj.type === 'datetime') {
-                        filter.operators = ['equal', 'not_equal', 'less', 'greater', 'between', 'not_between']
+                        filter.operators = ['equal', 'not_equal', 'less', 'greater', 'between', 'not_between', 'is_empty', 'is_not_empty']
                         filter.validation = {
                           format: 'YYYY/MM/DD'
                         }
@@ -128,6 +129,7 @@
                     </ul>
                     <ul class="nav">
                         <li class="navbar-right"><button id="btn-preview" class="btn btn-default navbar-btn">Preview Results</button></li>
+                        <button id="sync-to-mc" href="{{ url_for('data_builder.sync_current_query_to_mc', query_id=g_query) }}" class="btn btn-default navbar-btn" >Sync Results</button>
                         <button id="btn-export-data" type="submit" class= "btn btn-default navbar-btn pull-right">Export All Data</button>
                     </ul>
                 </div><!-- /.navbar-collapse -->
@@ -275,26 +277,6 @@
                 <div class="modal-footer">
                     <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
                     <button type="submit" id='back-explore-tables' class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
-    <div id="modalValuesExplorer" class="modal fade" tabindex="-2" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="padding:25px 50px;">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span></button>
-                    <h4><span class="glyphicon glyphicon-menu-hamburger"></span> Values Explorer</h4>
-                </div>
-                <div class="modal-body">
-                    <select id="selected-value-explore" class="form-control"></select>
-                    <table id="values-explorer-table"/>
-                </div>
-                <div class="modal-footer">
-                    <button type="cancel" class="btn btn-success btn-default pull-right" data-dismiss="modal">
-                         Close
-                    </button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->

@@ -8,9 +8,6 @@ from flask import make_response
 from flask import request
 from injector import inject
 from sqlalchemy import func
-from sqlalchemy import select
-from sqlalchemy import table
-from sqlalchemy import text
 
 from server.app.common.models import *
 from server.app.common.views.decorators import templated
@@ -33,6 +30,26 @@ def data_builder(mongo, query_id=None):
     status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
 
     return {'model': result, 'data': data, 'status': status}
+
+
+@databuilder.route('/sync-query/<query_id>')
+@inject(mongo=MongoDB)
+@templated('data_builder')
+def sync_current_query_to_mc(mongo, query_id):
+    models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
+              WebTrackingEcomm, WebTrackingPageView]
+
+    model = SqlQueryService.map_models_to_columns(models)
+    status, query_rules = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+
+    from ..data.workers import sync_query_to_mc
+    result = sync_query_to_mc.delay(query_rules)
+
+    return {'model': model,
+            'data': query_rules,
+            'status': status,
+            'task_id': result.id
+            }
 
 
 @databuilder.route('/get-queries')
@@ -163,8 +180,11 @@ def query_preview(sql_query_service):
 def request_explore_values(db):
     rules_query = request.json
     expression = rules_query.get('expression')
-    get_results_query = 'db.session.query({0}, func.count({0})).group_by({0}).all()'.format(expression)
+    get_results_query = 'db.session.query({0}, func.count({0}).label("total")).' \
+                        'group_by({0}).order_by("total DESC").all()'.format(expression)
     results = eval(get_results_query)
+    if (None, 0) in results:
+        results.remove((None, 0))
     db.session.close()
 
     return Response(json.dumps([dict(value=result[0], count=result[1]) for result in results]),

@@ -25,14 +25,6 @@ def data_pusher(mongo):
     return dict(query_names=[ a_query['name'] for a_query in result ])
 
 
-@data.route('/sync-data-to-mc/<table>')
-@templated('data_pusher')
-def sync_data_to_mc(table):
-    from .workers import sync_data_to_mc
-    result = sync_data_to_mc.delay(table)
-    return dict(task_id=result.id)
-
-
 @data.route('/clear-sync-flags/<table>')
 @templated('data_pusher')
 def clr_ext_sync_flags(table):
