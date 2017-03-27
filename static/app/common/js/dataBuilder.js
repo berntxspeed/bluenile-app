@@ -129,7 +129,6 @@ $(document).ready(function() {
             current_href_comps[current_href_comps.length - 1] = query_name
             sync_to_mc_button.attr('onclick', 'location.href ="' + current_href_comps.join('/') + '"')
         }
-        console.log(sync_to_mc_button.attr('href'))
         showElement(sync_to_mc_button)
     }
 
@@ -233,7 +232,6 @@ $(document).ready(function() {
     init()
 
     $("#btn-reset").on('click', function() {
-//        console.log(g_model)
         destroyTable(preview_table)
         setDefaults()
         resetQueryName('Default')

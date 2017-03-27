@@ -4,8 +4,7 @@ import traceback
 from io import StringIO
 
 from flask import Response
-from flask import make_response
-from flask import request
+from flask import make_response, redirect, request, url_for
 from injector import inject
 from sqlalchemy import func
 
@@ -28,28 +27,27 @@ def data_builder(mongo, query_id=None):
 
     result = SqlQueryService.map_models_to_columns(models)
     status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+    response_dict = {'model': result, 'data': data, 'status': status}
 
-    return {'model': result, 'data': data, 'status': status}
+    if request.args.get('sync') == 'True':
+        from ..data.workers import sync_query_to_mc
+        result = sync_query_to_mc.delay(data)
+        response_dict.update({'task_id': result.id})
+
+    return response_dict
 
 
 @databuilder.route('/sync-query/<query_id>')
 @inject(mongo=MongoDB)
 @templated('data_builder')
 def sync_current_query_to_mc(mongo, query_id):
-    models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
-              WebTrackingEcomm, WebTrackingPageView]
+    return redirect(url_for('data_builder.data_builder', query_id=query_id, sync=True))
 
-    model = SqlQueryService.map_models_to_columns(models)
-    status, query_rules = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
-
-    from ..data.workers import sync_query_to_mc
-    result = sync_query_to_mc.delay(query_rules)
-
-    return {'model': model,
-            'data': query_rules,
-            'status': status,
-            'task_id': result.id
-            }
+    # return {'model': model,
+    #         'data': query_rules,
+    #         'status': status,
+    #         'task_id': result.id
+    #         }
 
 
 @databuilder.route('/get-queries')
