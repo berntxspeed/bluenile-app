@@ -4,9 +4,9 @@ import traceback
 from io import StringIO
 
 from flask import Response
-from flask import make_response
-from flask import request
+from flask import make_response, redirect, request, url_for
 from injector import inject
+from sqlalchemy import func
 
 from server.app.common.models import *
 from server.app.common.views.decorators import templated
@@ -27,8 +27,27 @@ def data_builder(mongo, query_id=None):
 
     result = SqlQueryService.map_models_to_columns(models)
     status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+    response_dict = {'model': result, 'data': data, 'status': status}
 
-    return {'model': result, 'data': data, 'status': status}
+    if request.args.get('sync') == 'True':
+        from ..data.workers import sync_query_to_mc
+        result = sync_query_to_mc.delay(data)
+        response_dict.update({'task_id': result.id})
+
+    return response_dict
+
+
+@databuilder.route('/sync-query/<query_id>')
+@inject(mongo=MongoDB)
+@templated('data_builder')
+def sync_current_query_to_mc(mongo, query_id):
+    return redirect(url_for('data_builder.data_builder', query_id=query_id, sync=True))
+
+    # return {'model': model,
+    #         'data': query_rules,
+    #         'status': status,
+    #         'task_id': result.id
+    #         }
 
 
 @databuilder.route('/get-queries')
@@ -36,9 +55,9 @@ def data_builder(mongo, query_id=None):
 def get_queries(mongo):
     status, result = DataBuilderQuery(mongo.db).get_all_queries()
     columns = [{
-            'field': 'name',
-            'title': 'Query Name'
-        },
+        'field': 'name',
+        'title': 'Query Name'
+    },
         {
             'field': 'created',
             'title': 'Created'
@@ -54,7 +73,7 @@ def get_default_queries(mongo):
     columns = [{
         'field': 'name',
         'title': 'Query Name'
-        }]
+    }]
     return Response(json.dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),
                     mimetype='application/json')
 
@@ -91,11 +110,9 @@ def save_query(mongo, query_id):
 @databuilder.route('/custom-query-preview/<query_sttmt>', methods=['POST'])
 @inject(alchemy=SQLAlchemy)
 def custom_query_preview(alchemy, query_sttmt):
-    from sqlalchemy import func
-
     try:
-        results = eval('alchemy.session.' + query_sttmt +'.limit(100).all()')
-        rows_count = eval('alchemy.session.' + query_sttmt +'.count()')
+        results = eval('alchemy.session.' + query_sttmt + '.distinct(Customer.id).limit(100).all()')
+        rows_count = eval('alchemy.session.' + query_sttmt + '.distinct(Customer.id).count()')
         columns, data = SqlQueryService.extract_data(results, {})
         return Response(json.dumps({'columns': columns,
                                     'data': data,
@@ -112,10 +129,9 @@ def custom_query_preview(alchemy, query_sttmt):
 @databuilder.route('/export/<query_name>', methods=['GET'])
 @inject(alchemy=SQLAlchemy, mongo=MongoDB, sql_query_service=SqlQueryServ)
 def export_query_result(alchemy, mongo, sql_query_service, query_name):
-
     status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
     if status is not True:
-        #TODO: handle error
+        # TODO: handle error
         pass
     if 'custom_sql' in result.keys():
         from sqlalchemy import func
@@ -148,10 +164,26 @@ def query_preview(sql_query_service):
     rules_query = request.json
     final_query = sql_query_service.get_customer_query_based_on_rules(rules_query)
 
-    results = final_query.limit(100).all()
+    results = final_query.distinct(Customer.id).limit(100).all()
     columns, data = sql_query_service.extract_data(results, rules_query)
     return Response(json.dumps({'columns': columns,
                                 'data': data,
-                                'no_of_rows': final_query.count()
+                                'no_of_rows': final_query.distinct(Customer.id).count()
                                 }, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
+
+
+@databuilder.route('/request-explore-values', methods=['POST'])
+@inject(db=SQLAlchemy)
+def request_explore_values(db):
+    rules_query = request.json
+    expression = rules_query.get('expression')
+    get_results_query = 'db.session.query({0}, func.count({0}).label("total")).' \
+                        'group_by({0}).order_by("total DESC").all()'.format(expression)
+    results = eval(get_results_query)
+    if (None, 0) in results:
+        results.remove((None, 0))
+    db.session.close()
+
+    return Response(json.dumps([dict(value=result[0], count=result[1]) for result in results]),
                     mimetype='application/json')

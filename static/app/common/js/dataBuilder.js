@@ -9,11 +9,16 @@ $(document).ready(function() {
                          ]
                         }
 
-    var g_current_query = {
-                            name: null,
-                            rules: l_empty_rules,
-                            sqlalchemy: null
-                          }
+    if (!g_name) {
+        var g_current_query = {
+                                name: null,
+                                rules: l_empty_rules,
+                                sqlalchemy: null
+                              }
+    }
+    else{
+        var g_current_query = g_rules
+    }
 
     var g_explore = {
                     state: null,
@@ -22,27 +27,15 @@ $(document).ready(function() {
 
     var g_timeout = 1700
 
-    var default_queries = {
-                            'All Customers': "query(Customer)",
-//                            'Customers With Average Purchase Price Exceeding 100': "query(Customer)"+
-//                                                                                   ".join(Purchase,Customer.purchases)"+
-//                                                                                   ".group_by(Customer.customer_id)"+
-//                                                                                   ".having(func.avg(Purchase.price)>100)",
-                            'Customers With 2 or More Purchases': "query(Customer)"+
-                                                                  ".join(Purchase,Customer.purchases)"+
-                                                                  ".group_by(Customer.customer_id)"+
-                                                                  ".having(func.count(Customer.purchases)>=2)",
-                            'Customers Who Clicked Marketing Email': "query(Customer)"+
-                                                                     ".join(EmlClick,Customer.eml_clicks)"+
-                                                                     ".group_by(Customer.customer_id)"+
-                                                                     ".having(func.count(Customer.eml_clicks)>=1)"
-    }
-
     //Tables
-//    var $("#preview-table") = $("#preview-table")
-    var saved_queries_table = $("#saved-queries-table")
-    var explore_values_table = $("#explore-values-table")
-    var export_data_button = $("#btn-export-data")
+    var preview_table           = $("#preview-table")
+    var saved_queries_table     = $("#saved-queries-table")
+    var explore_values_table    = $("#explore-values-table")
+
+    var progress_bar            = $("#container")
+    //Buttons
+    var export_data_button      = $("#btn-export-data")
+    var sync_to_mc_button       = $("#sync-to-mc")
 
     var buildUI = function(data){
         reduced_model = {}
@@ -75,19 +68,6 @@ $(document).ready(function() {
         // Turn off the 'save as' in the beginning
         $("#btn-save-query-as").prop('disabled', true)
 
-        // Set the model on the value explorer widget
-        var explore_select = $("#selected-value-explore")[0]
-
-        for(var tn in g_model){
-            var t = g_model[tn]
-//            console.log(t)
-            for(var k in t){
-                var v = t[k]
-                var o = new Option(v["label"], v["expression"])
-//                console.log(o)
-                explore_select.append(o)
-            }
-        }
     }
 
     var getCurrentQuery = function(){
@@ -116,36 +96,149 @@ $(document).ready(function() {
         $("#builder").queryBuilder('setRules', l_empty_rules)
     }
 
-    showElement = function() {
+    var showElement = function() {
         var args = Array.prototype.slice.call(arguments)
         for (element in args){
             args[element].css('display', 'inline')
         }
     }
 
-    hideElement = function() {
+    var hideElement = function() {
         var args = Array.prototype.slice.call(arguments)
         for (element in args){
             args[element].hide()
         }
     }
 
+    function resetQueryName(name) {
+        document.getElementById('data-preview-header').innerHTML = name
+    }
+
+    var setupExportData = function(query_name) {
+        export_data_button.attr('onclick', 'location.href = "/builder/export/' + query_name + '"')
+        showElement(export_data_button)
+    }
+
+    var setupSyncMC = function(query_name) {
+        var current_href =  sync_to_mc_button.attr('href')
+        current_href_comps = current_href.split('/')
+        if (current_href_comps[current_href_comps.length - 1] === '/') {
+            sync_to_mc_button.attr('onclick', 'location.href = "' + current_href + query_name + '"')
+        }
+        else {
+            current_href_comps[current_href_comps.length - 1] = query_name
+            sync_to_mc_button.attr('onclick', 'location.href ="' + current_href_comps.join('/') + '"')
+        }
+        showElement(sync_to_mc_button)
+    }
+
+    var showPreview = function(preview_query) {
+        $.ajax({
+                 url: "/builder/query-preview",
+                 method: "POST",
+                 data: JSON.stringify(preview_query),
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
+                 },
+                 success: function(data) {
+                     visible_header = (data.data.length > 0)
+                     destroyTable(preview_table)
+                     data.showHeader = visible_header
+                     data.formatShowingRows = function(pageFrom, pageTo, totalRows){
+                             return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                         }
+                     preview_table.bootstrapTable(data);
+                     (preview_table.bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
+                 },
+                 error: function(err) {
+//                   TODO: handle the error or retry
+                 }
+             });
+        $("#btn-save-query-as").prop('disabled', false);
+    };
+
+    function showBuilderQuery(row) {
+        g_current_query.rules = row.rules
+        g_current_query.sqlalchemy = null
+        showElement($("#builder1"), $("#builder2"))
+        buildUI(row)
+        showPreview(row)
+        resetQueryName("'" + row.name + "'")
+        $("#btn-preview").prop('disabled', false)
+    }
+
+    function showCustomSqlPreview(sqlalchemy_query, label) {
+        $.ajax({
+                 url: "/builder/custom-query-preview/" + sqlalchemy_query,
+                 method: "POST",
+                 data: JSON.stringify(sqlalchemy_query),
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
+                 },
+                 success: function(data) {
+                     if (data.error_msg) {
+                         error_msg_arr = data.error_msg.split("\n")
+                         alertUser(error_msg_arr[error_msg_arr.length - 2] + '\n: See console for Full Traceback',4000)
+                         console.log(data.error_msg)
+                     }
+                     else {
+                         resetQueryName(label)
+                         hideElement($("#builder1"), $("#builder2") )
+                         g_current_query.sqlalchemy = sqlalchemy_query
+                         setDefaults()
+                         destroyTable(preview_table)
+                         visible_header = (data.data.length > 0)
+                         data.showHeader = visible_header
+                         data.formatShowingRows = function(pageFrom, pageTo, totalRows){
+                                 return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                             }
+                         preview_table.bootstrapTable(data);
+                         (preview_table.bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
+                     }
+                 },
+                 error: function(err) {
+                     alert('Error in SqlQuery Statement')
+//                   TODO: handle the error or retry
+                 }
+             })
+        $("#btn-preview").prop('disabled', true)
+        showElement(export_data_button, sync_to_mc_button)
+    }
+
+    var setupLoadedQuery = function (query) {
+        showElement($("#btn-save-query-element"), $("#save-query-separator"))
+        setupExportData(query.name)
+        setupSyncMC(query.name)
+        if (query.custom_sql) {
+            showCustomSqlPreview(query.custom_sql, query.name + ': ' + query.custom_sql)
+        }
+        else {
+            showBuilderQuery(query)
+        }
+    }
+
     var init = function(){
-        buildUI(g_rules)
-        hideElement($("#gotopage"), export_data_button)
+        if (!g_name) {
+            buildUI(g_rules)
+            hideElement($("#gotopage"), export_data_button, sync_to_mc_button)
+        }
+        else{
+            setupLoadedQuery(g_rules)
+        }
     }
 
     init()
 
     $("#btn-reset").on('click', function() {
-//        console.log(g_model)
-        destroyTable($("#preview-table"))
+        destroyTable(preview_table)
         setDefaults()
         resetQueryName('Default')
         g_current_query.name = null
         g_current_query.sqlalchemy = null
         showElement($("#builder1"), $("#builder2"), $("#btn-save-query-element"), $("#save-query-separator"))
-        hideElement(export_data_button)
+        hideElement(export_data_button, sync_to_mc_button, progress_bar)
         $("#btn-preview").prop('disabled', false)
     })
 
@@ -159,7 +252,7 @@ $(document).ready(function() {
         document.getElementById('modal-table-header').innerHTML = '<span class="glyphicon glyphicon-hand-down"></span> ' + title
     }
 
-    function showExploreColumns (table_id){
+    var showExploreColumns = function(table_id){
         g_explore.state = 'column'
         changeModalHeader(table_id + ': Choose A Field')
         columns =  [{
@@ -184,32 +277,6 @@ $(document).ready(function() {
         showElement($("#back-explore-tables"))
     }
 
-  	explore_values_table.on('click-row.bs.table', function (e, row, $element) {
-  	    if ('name' in row) {
-            $("#modal2").modal("toggle")
-            showBuilderQuery(row)
-            hideElement($("#btn-save-query-element"), $("#save-query-separator"))
-            setupExportData(row.name)
-            showElement(export_data_button)
-
-  	    }
-  	    else if ('table_id' in row) {
-  	        g_explore.table = row.table_id
-  	        showExploreColumns(row.table_id)
-        }
-        else {
-            columns =  [{
-                            field: 'info',
-                            title: 'Values Information'
-                        }]
-            data = [{'info': 'Brevity is the sister of talent'}]
-            showExploreValuesTable(columns, data)
-            changeModalHeader(row.key)
-            g_explore.state = 'info'
-        }
-  	})
-
-
     var showExploreValuesTable = function(columns, data) {
         destroyTable(explore_values_table)
         explore_values_table.bootstrapTable( {
@@ -224,6 +291,65 @@ $(document).ready(function() {
                 data: data
         })
     }
+
+  	function getSelectedRow() {
+        var index = saved_queries_table.find('tr.success').data('index')
+        return saved_queries_table.bootstrapTable('getData')[index]
+    }
+
+  	explore_values_table.on('click-row.bs.table', function (e, row, $element) {
+  	    if (g_explore.state === 'info') {return}
+  	    if ('name' in row) {
+            $("#explore-values-modal").modal("toggle")
+            showBuilderQuery(row)
+            hideElement($("#btn-save-query-element"), $("#save-query-separator"), progress_bar)
+            setupExportData(row.name)
+            setupSyncMC(row.name)
+
+  	    }
+  	    else if ('table_id' in row) {
+  	        g_explore.table = row.table_id
+  	        showExploreColumns(row.table_id)
+        }
+        else {
+            columns =  [{
+                            field: 'value',
+                            title: 'Values Information'
+                        }]
+            $.ajax({
+                        url: "/builder/request-explore-values",
+                        method: "POST",
+                        contentType: 'application/json;charset=UTF-8',
+                        data: JSON.stringify(row),
+                        beforeSend: function(request) {
+                            request.setRequestHeader("X-CSRFToken", g_csrf_token)
+                        },
+                        success: function(data) {
+                            //data = [{'info': 'Brevity is the sister of talent'}]
+                            if (data.length === 0) { data.push({ value: 'No data for' + row.key + ' in Database'}) }
+                            else {
+                                columns.push({
+                                    field: 'count',
+                                    title: 'Times it appears in the data'
+                                })
+                            }
+                            showExploreValuesTable(columns, data)
+                            changeModalHeader(row.key)
+                            g_explore.state = 'info'
+                        },
+                        error: function(err) {
+                        //                    TODO: handle the error or retry
+                            changeModalHeader(row.key)
+                            data = [{ value: 'Values preview not available'}]
+                            showExploreValuesTable(columns, data)
+                            g_explore.state = 'info'
+                            console.log(err)
+                        }
+                    })
+
+        }
+  	})
+
 
     $("#back-explore-tables").on('click', function() {
         if (g_explore.state === 'info') {
@@ -252,8 +378,13 @@ $(document).ready(function() {
                 console.log(err)
             }
         })
-        $("#modal2").modal({backdrop: false})
+        $("#explore-values-modal").modal({backdrop: false})
 
+    })
+
+    $("#explore-values-modal").on('hide.bs.modal', function(){
+        g_explore.state = null
+        g_explore.table = null
     })
 
     $("#btn-explore-values").on('click', function() {
@@ -266,12 +397,12 @@ $(document).ready(function() {
             data.push({'table_id': a_table})
         }
 
-        $("#modal2").on('show.bs.modal', function () {
+        $("#explore-values-modal").on('show.bs.modal', function () {
             showExploreValuesTable(columns, data)
             changeModalHeader('Click To Choose A Table')
             hideElement($("#back-explore-tables"))
         })
-        $("#modal2").modal("show")
+        $("#explore-values-modal").modal("show")
 
     })
 
@@ -303,49 +434,39 @@ $(document).ready(function() {
     		$($element).addClass('success')
   	})
 
-  	function getSelectedRow() {
-        var index = saved_queries_table.find('tr.success').data('index')
-        return saved_queries_table.bootstrapTable('getData')[index]
+    function checkSavedOrEmpty(a_button) {
+        current_query = getCurrentQuery()
+        changed = (!deepCompare(current_query.rules, g_current_query.rules) && !g_current_query.sqlalchemy)
+        if (!preview_table.bootstrapTable('getOptions').totalRows) {
+            alertUser('Query Yields No Results', 3000)
+            a_button.removeAttr('onclick')
+        }
+        else if (changed)
+        {
+            alertUser('Save Query Before This Action', 3000)
+            a_button.removeAttr('onclick')
+        }
     }
 
     export_data_button.click( function() {
         window.onbeforeunload = null
-        current_query = getCurrentQuery()
-        changed = (!deepCompare(current_query.rules, g_current_query.rules) && !g_current_query.sqlalchemy)
-        if (!$("#preview-table").bootstrapTable('getOptions').totalRows) {
-            alertUser('Export Error: Query Yields No Results', 3000)
-            export_data_button.removeAttr('onclick')
-        }
-        else if (changed)
-        {
-            alertUser('Export Error: Save Query before Export', 3000)
-            export_data_button.removeAttr('onclick')
-        }
+        checkSavedOrEmpty($(this))
+        window.onbeforeunload = confirmExit
+    })
+
+    sync_to_mc_button.click( function() {
+        window.onbeforeunload = null
+        checkSavedOrEmpty($(this))
         window.onbeforeunload = confirmExit
     })
 
     $("#btn-load-saved-query").click(function () {
         var row = getSelectedRow()
         g_current_query.name = row.name
-        showElement($("#btn-save-query-element"), $("#save-query-separator"), export_data_button)
-        setupExportData(row.name)
-        if (row.custom_sql) {
-            showCustomSqlPreview(row.custom_sql, row.name + ': ' + row.custom_sql)
-        }
-        else {
-            showBuilderQuery(row)
-        }
+        setupLoadedQuery(row)
+        hideElement(progress_bar)
     })
 
-    function showBuilderQuery(row) {
-        g_current_query.rules = row.rules
-        g_current_query.sqlalchemy = null
-        showElement($("#builder1"), $("#builder2"))
-        buildUI(row)
-        showPreview(row)
-        resetQueryName("'" + row.name + "'")
-        $("#btn-preview").prop('disabled', false)
-    }
 
     $("#btn-delete-saved-query").click(function () {
         var row = getSelectedRow()
@@ -376,25 +497,12 @@ $(document).ready(function() {
 
     });
 
-    function resetQueryName(name) {
-        document.getElementById('data-preview-header').innerHTML = name
-    }
-
-    function setupExportData(query_name) {
-        export_data_button.attr('onclick', 'location.href = "/builder/export/' + query_name + '"')
-    }
 
     saved_queries_table.on('dbl-click-row.bs.table', function (e, row, $element) {
         $("#modalTable").modal("toggle")//{backdrop: "static"});
+        hideElement(progress_bar)
         g_current_query.name = row.name
-        setupExportData(row.name)
-        showElement($("#btn-save-query-element"), $("#save-query-separator"), export_data_button)
-        if (row.custom_sql) {
-            showCustomSqlPreview(row.custom_sql, row.name + ': ' + row.custom_sql)
-        }
-        else {
-            showBuilderQuery(row)
-        }
+        setupLoadedQuery(row)
     })
 
 
@@ -423,8 +531,8 @@ $(document).ready(function() {
                     resetQueryName(label)
                     g_current_query.name = query_name
                     g_current_query.rules = save_query.rules
-                    showElement(export_data_button)
                     setupExportData(query_name)
+                    setupSyncMC(query_name)
                     alertUser("Saved!")
                  },
                  error: function(err) {
@@ -434,44 +542,6 @@ $(document).ready(function() {
              })
     }
 
-    function showCustomSqlPreview(sqlalchemy_query, label) {
-        $.ajax({
-                 url: "/builder/custom-query-preview/" + sqlalchemy_query,
-                 method: "POST",
-                 data: JSON.stringify(sqlalchemy_query),
-                 contentType: 'application/json;charset=UTF-8',
-                 beforeSend: function(request) {
-                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
-                 },
-                 success: function(data) {
-                     if (data.error_msg) {
-                         error_msg_arr = data.error_msg.split("\n")
-                         alertUser(error_msg_arr[error_msg_arr.length - 2] + '\n: See console for Full Traceback',4000)
-                         console.log(data.error_msg)
-                     }
-                     else {
-                         resetQueryName(label)
-                         hideElement($("#builder1"), $("#builder2") )
-                         g_current_query.sqlalchemy = sqlalchemy_query
-                         setDefaults()
-                         destroyTable($("#preview-table"))
-                         visible_header = (data.data.length > 0)
-                         data.showHeader = visible_header
-                         data.formatShowingRows = function(pageFrom, pageTo, totalRows){
-                                 return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
-                             }
-                         $("#preview-table").bootstrapTable(data);
-                         ($("#preview-table").bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
-                     }
-                 },
-                 error: function(err) {
-                     alert('Error in SqlQuery Statement')
-//                   TODO: handle the error or retry
-                 }
-             })
-        $("#btn-preview").prop('disabled', true)
-        showElement(export_data_button)
-    }
 
     $("#btn-submit-custom-query").click(function(e) {
         e.preventDefault()
@@ -479,7 +549,7 @@ $(document).ready(function() {
         //TODO: only exec sttmts below if success
         sqlalchemy_query = $("#custom_query").val().trim()
         showCustomSqlPreview(sqlalchemy_query, 'Custom Query: session.' + sqlalchemy_query)
-        hideElement(export_data_button)
+        hideElement(export_data_button, sync_to_mc_button, progress_bar)
     })
 
     $("#submit-save-query").click(function(e) {
@@ -524,34 +594,6 @@ $(document).ready(function() {
         $("#modalDefineQuery").modal('toggle')
     })
 
-//    $("#btn-sync").on('click', function() {
-//        console.log(document.getElementById('saveDialog'))
-//        var query_name = prompt("Please enter query name")
-//        var sync_query = getCurrentQuery()
-//        sync_query.name = query_name
-//        console.log(sync_query)
-//        //TODO: Automatically save the query in Mongo?
-//        //TODO: Track loaded query/saved query: only prompt for name then
-//        $.ajax({
-//                 url: "/builder/sync-query",
-//                 method: "POST",
-//                 data: JSON.stringify(sync_query),
-//                 contentType: 'application/json;charset=UTF-8',
-//                 beforeSend: function(request) {
-//                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
-//                 },
-//                 success: function(data) {
-//                     console.log('received data!')
-//                     console.log(data)
-////                     return data
-//                     alert("Synced to MC!")
-//                 },
-//                 error: function(err) {
-////                         //TODO: handle the error here
-//                     //handle the error or retry
-//                 }
-//        })
-//    })
 
     $("#tables input").each(function(i){
         // this should yield the input field
@@ -576,21 +618,10 @@ $(document).ready(function() {
         e.preventDefault()
     })
 
-    window.onbeforeunload = confirmExit
-    function confirmExit(e) {
-        current_query = getCurrentQuery()
-        changed = (!(deepCompare(current_query.rules, g_current_query.rules)) && (current_query.rules))
-//        changed = ((JSON.stringify(current_query.rules) != JSON.stringify(g_current_query.rules)) && (current_query.rules))
-        if (changed) {
-            return "Current query has not been saved"
-        }
-    }
-
 //  Set global defaults on bootstrap table columns
     $.extend($.fn.bootstrapTable.columnDefaults, {
       	sortable: true,
     })
-
 //  Set global defaults on bootstrap table
     $.extend($.fn.bootstrapTable.defaults, {
       	pagination: true,
@@ -609,34 +640,9 @@ $(document).ready(function() {
         })
 //      	showPaginationSwitch: true,
 
-    var showPreview = function(preview_query) {
-        $.ajax({
-                 url: "/builder/query-preview",
-                 method: "POST",
-                 data: JSON.stringify(preview_query),
-                 contentType: 'application/json;charset=UTF-8',
-                 beforeSend: function(request) {
-                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
-                 },
-                 success: function(data) {
-                     visible_header = (data.data.length > 0)
-                     destroyTable($("#preview-table"))
-                     data.showHeader = visible_header
-                     data.formatShowingRows = function(pageFrom, pageTo, totalRows){
-                             return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
-                         }
-                     $("#preview-table").bootstrapTable(data);
-                     ($("#preview-table").bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
-                 },
-                 error: function(err) {
-//                   TODO: handle the error or retry
-                 }
-             });
-        $("#btn-save-query-as").prop('disabled', false);
-    };
 
     $("#page-button").click(function () {
-        $("#preview-table").bootstrapTable('selectPage', +$("#page").val());
+        preview_table.bootstrapTable('selectPage', +$("#page").val());
     });
 
     $("#alertModal").on('show.bs.modal', function(){
@@ -657,7 +663,12 @@ $(document).ready(function() {
         showPreview(preview_query)
     })
 
-    $("#btn-explore-data").click(function(){
-        $("#modalValuesExplorer").modal("show")
-    })
+    window.onbeforeunload = confirmExit
+    function confirmExit(e) {
+        current_query = getCurrentQuery()
+        changed = (!(deepCompare(current_query.rules, g_current_query.rules)) && (current_query.rules))
+        if (changed) {
+            return "Current query has not been saved"
+        }
+    }
 });
