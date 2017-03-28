@@ -222,7 +222,6 @@ $(document).ready(function() {
     var init = function(){
         if (!g_name) {
             buildUI(g_rules)
-            hideElement($("#gotopage"), export_data_button, sync_to_mc_button)
         }
         else{
             setupLoadedQuery(g_rules)
