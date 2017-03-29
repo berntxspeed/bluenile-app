@@ -69,9 +69,7 @@ class EventMgr(object):
                     elif event_def.dml_op == 'update':
                         change = changes.get(event_def.column, None)
                         oldVal = safe_list_get(safe_list_get(change, 0, None), 0, None)
-                        print('old val: ' + str(oldVal))
                         newVal = safe_list_get(safe_list_get(change, 1, None), 0, None)
-                        print('new val: ' + str(newVal))
                         if event_def.old_val is None \
                                         or (event_def.old_val == str(oldVal)) \
                                         or (event_def.old_val == 'notnull' and oldVal != None) \
