@@ -276,10 +276,10 @@ $(document).ready(function() {
         showElement($("#back-explore-tables"))
     }
 
-    var showExploreValuesTable = function(columns, data) {
+    var showExploreValuesTable = function(columns, data, pagination=false) {
         destroyTable(explore_values_table)
         explore_values_table.bootstrapTable( {
-              	pagination: false,
+              	pagination: pagination,
               	showRefresh: false,
               	showToggle: false,
               	showColumns: false,
@@ -287,10 +287,20 @@ $(document).ready(function() {
               	striped: true,
               	clickToSelect: true,
               	columns: columns,
-                data: data
+                data: data,
+                rowStyle: rowStyleFunc
         })
     }
 
+    var rowStyleFunc = function (row, index){
+        return {
+            css: {
+                  "word-wrap": "break-word",
+                  "in-width": "250px",
+                  "max-width": "250px"
+                  }
+        }
+    }
   	function getSelectedRow() {
         var index = saved_queries_table.find('tr.success').data('index')
         return saved_queries_table.bootstrapTable('getData')[index]
@@ -324,15 +334,14 @@ $(document).ready(function() {
                             request.setRequestHeader("X-CSRFToken", g_csrf_token)
                         },
                         success: function(data) {
-                            //data = [{'info': 'Brevity is the sister of talent'}]
                             if (data.length === 0) { data.push({ value: 'No data for' + row.key + ' in Database'}) }
                             else {
                                 columns.push({
                                     field: 'count',
-                                    title: 'Times it appears in the data'
+                                    title: 'Appearances in the data'
                                 })
                             }
-                            showExploreValuesTable(columns, data)
+                            showExploreValuesTable(columns, data, true)
                             changeModalHeader(row.key)
                             g_explore.state = 'info'
                         },
@@ -637,7 +646,6 @@ $(document).ready(function() {
       	paginationPreText: 'Previous',
       	paginationNextText: 'Next'
         })
-//      	showPaginationSwitch: true,
 
 
     $("#page-button").click(function () {

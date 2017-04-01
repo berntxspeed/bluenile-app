@@ -43,12 +43,6 @@ def data_builder(mongo, query_id=None):
 def sync_current_query_to_mc(mongo, query_id):
     return redirect(url_for('data_builder.data_builder', query_id=query_id, sync=True))
 
-    # return {'model': model,
-    #         'data': query_rules,
-    #         'status': status,
-    #         'task_id': result.id
-    #         }
-
 
 @databuilder.route('/get-queries')
 @inject(mongo=MongoDB)

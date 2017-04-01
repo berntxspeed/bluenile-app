@@ -53,12 +53,12 @@ $(document).ready(function() {
 //            classes: 'success'
 //        };
 //    }
-    if (row.status == 'FAILURE') {
-        return {
-            classes: 'danger'
-        };
-    }
-    return {};
+        if (row.status == 'FAILURE') {
+            return {
+                classes: 'danger'
+            };
+        }
+        return {};
     }
 
 //  Set global defaults on bootstrap table columns
