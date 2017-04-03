@@ -1,3 +1,4 @@
+import datetime
 from sqlalchemy import func
 
 from .classes.data_pusher import DataPusher
@@ -66,7 +67,9 @@ class DataPushService(DbService):
         #            'query3': {'name': 'customers who clicked a marketing email', 'q': query3}}
 
         dp = DataPusher(self.db, self._models['customer'])
-        resp = dp.sync_query(name=query_rules['name'],
+        query_name = query_rules['name'] + '_' + datetime.datetime.today().strftime('%Y-%m-%d_%H:%M')
+
+        resp = dp.sync_query(name=query_name,
                              query=SqlQueryConstructor(self.db, query_rules, customer_only=True).construct_sql_query())
 
         if resp and hasattr(resp, 'code'):

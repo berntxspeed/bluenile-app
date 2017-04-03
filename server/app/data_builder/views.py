@@ -49,9 +49,9 @@ def sync_current_query_to_mc(mongo, query_id):
 def get_queries(mongo):
     status, result = DataBuilderQuery(mongo.db).get_all_queries()
     columns = [{
-        'field': 'name',
-        'title': 'Query Name'
-    },
+            'field': 'name',
+            'title': 'Query Name'
+        },
         {
             'field': 'created',
             'title': 'Created'

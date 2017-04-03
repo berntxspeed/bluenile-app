@@ -133,7 +133,7 @@ class DataPusher(object):
         if resp.code != 200:
             raise ConnectionError('failed to receive response from Marketing Cloud when attempting to create data extension' + str(resp.results))
         if resp.message != 'OK':
-            raise ValueError('error occurred while created data extension' + resp.message + resp.status + resp.code)
+            raise ValueError('error occurred while created data extension: {0}: {1}: {2}'.format(resp.message, str(resp.status), str(resp.code)))
         return resp
 
     def _find_recs_for_insert(self):

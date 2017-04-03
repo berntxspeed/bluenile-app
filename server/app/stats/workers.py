@@ -19,7 +19,7 @@ class BaseTask(celery.Task):
         task = {'status': status,
                 'task_id': task_id,
                 'retval': str(retval),
-                'task_type': kwargs['task_type'],
+                'task_type': kwargs.get('task_type'),
                 'einfo': str(einfo)
                 }
 
