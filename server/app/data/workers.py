@@ -1,5 +1,7 @@
 from manage import celery, injector, app
+from server.app.stats.workers import BaseTask
 from .injector_keys import DataPushServ
+
 
 @celery.task
 def sync_data_to_mc(table):
@@ -15,8 +17,8 @@ def clean_sync_flags(table):
         service.clean_sync_flags(table)
 
 
-@celery.task
-def sync_query_to_mc(query_rules):
+@celery.task(base=BaseTask)
+def sync_query_to_mc(query_rules, **kwargs):
     with app.app_context():
         service = injector.get(DataPushServ)
         service.sync_query_to_mc(query_rules)

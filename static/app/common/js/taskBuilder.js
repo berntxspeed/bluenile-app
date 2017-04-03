@@ -93,6 +93,7 @@ $(document).ready(function() {
     var filterWebTracking = function(task) { return task.task_type == 'web-tracking' }
     var filterJourneys = function(task) { return task.task_type == 'mc-journeys' }
     var filterMCEmailData = function(task) { return task.task_type == 'mc-email-data' }
+    var filterDataPush = function(task) { return task.task_type == 'data-push' }
     var filterFailed = function(task) { return task.status == 'FAILURE' }
 
     $("#btn-load-purchases").on('click', function() {
@@ -121,6 +122,12 @@ $(document).ready(function() {
 
     $("#btn-load-web-tracking").on('click', function() {
         var tasks = g_data.filter(filterWebTracking)
+        destroyTable(tasks_table)
+        tasks_table.bootstrapTable({data: tasks, columns: g_columns});
+    });
+
+    $("#btn-data-push").on('click', function() {
+        var tasks = g_data.filter(filterDataPush)
         destroyTable(tasks_table)
         tasks_table.bootstrapTable({data: tasks, columns: g_columns});
     });

@@ -31,7 +31,7 @@ def data_builder(mongo, query_id=None):
 
     if request.args.get('sync') == 'True':
         from ..data.workers import sync_query_to_mc
-        result = sync_query_to_mc.delay(data)
+        result = sync_query_to_mc.delay(data, task_type='data-push')
         response_dict.update({'task_id': result.id})
 
     return response_dict

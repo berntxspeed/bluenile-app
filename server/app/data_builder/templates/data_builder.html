@@ -249,15 +249,35 @@
                 <div class="modal-header" style="padding:25px 50px;">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span></button>
-                    <h4><span class="glyphicon glyphicon-menu-hamburger"></span> Saved Queries</h4>
+                    <h4 id="saved-queries-modal"> <span class="glyphicon glyphicon-menu-hamburger"></span> Saved Queries</h4>
                 </div>
                 <div class="modal-body">
                     <table id="saved-queries-table"></table>
+                    <div class="row" id="frequency-selector" style="display: none">
+                        <th>Repeats:</th>
+                        <select id="frequency" title="Repeats Weekly">
+                            <option value="7" title="Never">Never</option>
+                            <option value="0" title="Daily">Daily</option>
+                            <option value="1" title="Every weekday (Monday to Friday)">Every weekday (Monday to Friday)</option>
+                            <option value="2" title="Every Monday, Wednesday and Friday">Every Monday, Wednesday and Friday</option>
+                            <option value="3" title="Every Tuesday and Thursday">Every Tuesday and Thursday</option>
+                            <option value="4" title="Weekly">Weekly</option>
+                            <option value="5" title="Monthly">Monthly</option>
+                            <option value="6" title="Yearly">Yearly</option>
+                        </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
-                    <button type="submit" id='btn-load-saved-query' class="btn btn-success btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Load</button>
-                    <button type="submit" id='btn-delete-saved-query' class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-thumbs-down"></span> Delete</button>
+                    <div class="row" id="saved-queries-buttons">
+                        <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                        <button type="submit" id="btn-load-saved-query" class="btn btn-success btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Load</button>
+                        <button type="submit" id="btn-delete-saved-query" class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-thumbs-down"></span> Delete</button>
+                        <button type="submit" id="btn-periodic-sync" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-ok"></span> Repeat Sync</button>
+                    </div>
+                    <div class="row" id="frequency-buttons" style="display: none">
+                        <button type="submit" id="btn-save-periodic-sync" class="btn btn-success btn-default pull-right"><span class="glyphicon glyphicon-ok"></span> Save</button>
+                        <button type="submit" id="btn-return-to-saved-queries" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
+                        <h4 id="periodic-footer" style="text-align: center"></h4>
+                    </div>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
