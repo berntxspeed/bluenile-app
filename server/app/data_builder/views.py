@@ -31,7 +31,7 @@ def data_builder(mongo, query_id=None):
 
     if request.args.get('sync') == 'True':
         from ..data.workers import sync_query_to_mc
-        result = sync_query_to_mc.delay(data, task_type='data-push')
+        result = sync_query_to_mc.delay(data, task_type='data-push', query_name=query_id)
         response_dict.update({'task_id': result.id})
 
     return response_dict
@@ -55,7 +55,11 @@ def get_queries(mongo):
         {
             'field': 'created',
             'title': 'Created'
-        }]
+        },
+        {
+            'field': 'last_sync',
+            'title': 'Last Sync'
+    }]
     return Response(json.dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),
                     mimetype='application/json')
 
