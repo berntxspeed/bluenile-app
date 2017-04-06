@@ -73,7 +73,7 @@ class DataLoadService(DbService):
                       },
                       ftp_path=filepath,
                       ftp_cfg=cfg,
-                      delimiter='   ')
+                      delimiter='\t')
 
         # load lead perfection data to db
         csv.load_data()
