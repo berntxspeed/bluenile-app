@@ -113,6 +113,13 @@ def add_fips_location_emlclick(**kwargs):
         service.add_fips_location_data('EmlClick')
 
 
+@celery.task(base=BaseTask)
+def load_lead_perfection(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_lead_perfection()
+
+
 NUM_OBJ_TO_CREATE = 30;
 
 

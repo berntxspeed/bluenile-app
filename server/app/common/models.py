@@ -515,6 +515,14 @@ class Customer(db.Model):
     total_spent_so_far = db.Column(db.Float)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
+    city = db.Column(db.String(255))
+    state = db.Column(db.String(255))
+    interest_area = db.Column(db.String(255))
+    status = db.Column(db.String(255))
+    source = db.Column(db.String(255))
+    last_communication = db.Column(TIMESTAMP)
+    sales_rep = db.Column(db.String(255))
+
     purchases = relationship(Purchase, backref='customer',
                              primaryjoin='Customer.customer_id==Purchase.customer_id',
                              foreign_keys=[Purchase.customer_id],
