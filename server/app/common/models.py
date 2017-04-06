@@ -59,8 +59,7 @@ class User(UserMixin, db.Model):
     @staticmethod
     def insert_users():
         users = [
-            User(username='bernt', password='pass', id=1),
-            User(username='val', password='pass', id=2)
+            User(username='bernt', password='Temp@12345', id=1)
         ]
         for user in users:
             usr = User.query.filter_by(id=user.id).first()
