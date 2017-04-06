@@ -223,8 +223,8 @@ class DataLoadService(DbService):
         #TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
         # get auth token
         url = 'https://auth.exacttargetapis.com/v1/requestToken'
-        body = dict(clientId='pmbrqffimjnc2p9hfdnvg1sn',
-                    clientSecret='R1HWMpHIpzqx0l2vp9glolND')
+        body = dict(clientId='3t1ch44ej7pb4p117oyr7m4g',
+                    clientSecret='2Cegvz6Oe9qTmc8HMUn2RWKh')
         r = requests.post(url, data=body)
         if r.status_code != 200:
             raise PermissionError('ET auth code retrieval: failed to get auth token')
