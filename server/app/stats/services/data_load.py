@@ -60,13 +60,13 @@ class DataLoadService(DbService):
                       db_model=Customer,
                       primary_keys=['customer_id'],
                       db_field_map={
-                          'customer_id': 'SubscriberKey',
-                          'email_address': 'EmailAddress',
+                          'customer_id': 'LeadNumber',
+                          'email_address': 'Email',
                           'created_at': 'EntryDate',
                           'city': 'City',
                           'state': 'State',
                           'interest_area': 'Productid',
-                          'status': 'ds_id',
+                          'status': 'disp_id',
                           'source': 'src_id',
                           'last_communication': 'LastCall',
                           'sales_rep': 'SalesRepName'

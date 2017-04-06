@@ -49,7 +49,7 @@ class FtpFile(object):
 
 class CsvFile(SqlDataLoader, FtpFile):
 
-    def __init__(self, file, db_session, db_model, primary_keys, db_field_map, ftp_path=None, ftp_cfg=None):
+    def __init__(self, file, db_session, db_model, primary_keys, db_field_map, ftp_path=None, ftp_cfg=None, delimiter=None):
 
         """Instantiates the Csvfile class
 
@@ -77,13 +77,18 @@ class CsvFile(SqlDataLoader, FtpFile):
             FtpFile.__init__(self, file, ftp_path, ftp_cfg)
             self._no_dl = False
 
+        if delimiter:
+            self._delimiter = delimiter
+        else:
+            self._delimiter = ','
+
         self._db_field_map = db_field_map
 
     def load_data(self):
         if not self._no_dl:
             FtpFile.download(self)
 
-        SqlDataLoader.load_to_db(self, self._get_data)
+        SqlDataLoader.load_to_db(self, self._get_data, delimiter=self._delimiter)
 
     def _get_data(self, chunk_size=500, delimiter=','):
         num_recs = 0
