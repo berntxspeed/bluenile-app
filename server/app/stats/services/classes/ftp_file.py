@@ -66,8 +66,6 @@ class CsvFile(SqlDataLoader, FtpFile):
             instance of the Csvfile class
         """
 
-        if file.split('.')[-1] != 'csv':
-            raise ValueError('filetype must be csv')
 
         SqlDataLoader.__init__(self, db_session, db_model, primary_keys)
         self._no_dl = True

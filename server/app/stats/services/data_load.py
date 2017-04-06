@@ -72,7 +72,8 @@ class DataLoadService(DbService):
                           'sales_rep': 'SalesRepName'
                       },
                       ftp_path=filepath,
-                      ftp_cfg=cfg)
+                      ftp_cfg=cfg,
+                      delimiter='   ')
 
         # load lead perfection data to db
         csv.load_data()
