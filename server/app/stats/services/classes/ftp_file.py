@@ -116,6 +116,12 @@ class CsvFile(SqlDataLoader, FtpFile):
         try:
             os.chdir(tmp_directory)
             try:
+                fi = open(filename, 'rb')
+                data = fi.read()
+                fi.close()
+                fo = open(filename, 'wb')
+                fo.write(data.replace('\x00', ''))
+                fo.close()
                 with open(filename, 'r') as csvfile:
                     csvfile_reader = csv.DictReader(csvfile, delimiter=delimiter)
                     # create a dict of all the new records by their primary key
