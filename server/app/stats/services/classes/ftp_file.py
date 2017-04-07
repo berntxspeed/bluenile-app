@@ -49,7 +49,7 @@ class FtpFile(object):
 
 class CsvFile(SqlDataLoader, FtpFile):
 
-    def __init__(self, file, db_session, db_model, primary_keys, db_field_map, ftp_path=None, ftp_cfg=None, delimiter=None):
+    def __init__(self, file, db_session, db_model, primary_keys, db_field_map, ftp_path=None, ftp_cfg=None, file_encoding='utf8', delimiter=None):
 
         """Instantiates the Csvfile class
 
@@ -81,6 +81,8 @@ class CsvFile(SqlDataLoader, FtpFile):
             self._delimiter = ','
 
         self._db_field_map = db_field_map
+
+        self._file_encoding = file_encoding
 
     def load_data(self):
         if not self._no_dl:
@@ -116,42 +118,33 @@ class CsvFile(SqlDataLoader, FtpFile):
         try:
             os.chdir(tmp_directory)
             try:
-                if '\0' in open(filename).read():
-                    import codecs
-                    csvfile = codecs.open(filename, 'rb', 'utf-16')
-                else:
-                    csvfile = open(filename, 'r')
+                with open(filename, 'r', encoding=self._file_encoding) as csvfile:
+                    csvfile_reader = csv.DictReader(csvfile, delimiter=delimiter)
+                    # create a dict of all the new records by their primary key
+                    import_items = {}
+                    for row in csvfile_reader:
+                        item = SqlDataLoader.db_model(self)
+                        for csv_field, db_field in self._db_field_map.items():
+                            item.__setattr__(db_field,
+                                             set_db_instance_attr(item,
+                                                                  db_field,
+                                                                  row[csv_field]))
+                        # use a composite key to reference the records on the dict
+                        composite_key = ''
+                        for pk in self._primary_keys:
+                            composite_key += str(getattr(item, pk))
+                        # place item on dict, w key reference to composite key, and value of dbModel instance
+                        import_items[composite_key] = item
 
-                csvfile_reader = csv.DictReader(csvfile, delimiter=delimiter)
-                # create a dict of all the new records by their primary key
-                import_items = {}
-                for row in csvfile_reader:
-                    item = SqlDataLoader.db_model(self)
-                    for csv_field, db_field in self._db_field_map.items():
-                        item.__setattr__(db_field,
-                                         set_db_instance_attr(item,
-                                                              db_field,
-                                                              row[csv_field]))
-                    # use a composite key to reference the records on the dict
-                    composite_key = ''
-                    for pk in self._primary_keys:
-                        composite_key += str(getattr(item, pk))
-                    # place item on dict, w key reference to composite key, and value of dbModel instance
-                    import_items[composite_key] = item
-
-                    num_recs += 1
-                    if num_recs >= chunk_size:
-                        num_recs = 0
-                        yield (False, import_items)
-                        import_items = {}
-
-                csvfile.close()
+                        num_recs += 1
+                        if num_recs >= chunk_size:
+                            num_recs = 0
+                            yield (False, import_items)
+                            import_items = {}
 
             except FileNotFoundError as exc:
-                csvfile.close()
                 raise FileNotFoundError('could not locate file: {}, error: {}'.format(filename, str(exc)))
             except KeyError as exc:
-                csvfile.close()
                 raise KeyError(str(exc))
 
 
