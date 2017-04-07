@@ -124,7 +124,7 @@ class CsvFile(SqlDataLoader, FtpFile):
                     import_items = {}
                     for row in csvfile_reader:
                         item = SqlDataLoader.db_model(self)
-                        for csv_field, db_field in self._db_field_map.items():
+                        for db_field, csv_field in self._db_field_map.items():
                             item.__setattr__(db_field,
                                              set_db_instance_attr(item,
                                                                   db_field,
