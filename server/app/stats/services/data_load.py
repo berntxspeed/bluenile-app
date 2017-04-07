@@ -59,18 +59,18 @@ class DataLoadService(DbService):
                       db_session=self.db.session,
                       db_model=Customer,
                       primary_keys=['customer_id'],
-                      db_field_map={
-                          'customer_id': 'SubscriberKey',
-                          'email_address': 'EmailAddress',
-                          'created_at': 'EntryDate',
-                          'city': 'City',
-                          'state': 'State',
-                          'interest_area': 'Productid',
-                          'status': 'ds_id',
-                          'source': 'src_id',
-                          'sales_rep': 'SalesRepName',
-                          'last_communication': 'LastCall'
-                      },
+                      db_field_map=dict(
+                          customer_id='SubscriberKey',
+                          email_address='EmailAddress',
+                          created_at='EntryDate',
+                          city='City',
+                          state='State',
+                          interest_area='Productid',
+                          status='ds_id',
+                          source='src_id',
+                          sales_rep='SalesRepName',
+                          last_communication='LastCall'
+                      ),
                       ftp_path=filepath,
                       ftp_cfg=cfg,
                       file_encoding='utf16')
