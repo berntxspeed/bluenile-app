@@ -62,6 +62,8 @@ class DataLoadService(DbService):
                       db_field_map=dict(
                           SubscriberKey='customer_id',
                           EmailAddress='email_address',
+                          firstname='fname',
+                          lastname='lname',
                           EntryDate='created_at',
                           City='city',
                           State='state',
