@@ -81,8 +81,8 @@ class EventMgr(object):
                                 if oldVal != newVal:
                                     event = self._Event(def_id=event_def.id,
                                                   rec_id=target.id,
-                                                  old_val=safe_list_get(oldVal, 0, None),
-                                                  new_val=safe_list_get(newVal, 0, None))
+                                                  old_val=oldVal,
+                                                  new_val=newVal)
                                     self._db.session.add(event)
 
     def _get_event_defs(self):
