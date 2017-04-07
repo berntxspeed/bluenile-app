@@ -60,16 +60,16 @@ class DataLoadService(DbService):
                       db_model=Customer,
                       primary_keys=['customer_id'],
                       db_field_map={
-                          'customer_id': 'LeadNumber',
-                          'email_address': 'Email',
+                          'customer_id': 'SubscriberKey',
+                          'email_address': 'EmailAddress',
                           'created_at': 'EntryDate',
                           'city': 'City',
                           'state': 'State',
                           'interest_area': 'Productid',
-                          'status': 'disp_id',
+                          'status': 'ds_id',
                           'source': 'src_id',
-                          'last_communication': 'LastCall',
-                          'sales_rep': 'SalesRepName'
+                          'sales_rep': 'SalesRepName',
+                          'last_communication': 'LastCall'
                       },
                       ftp_path=filepath,
                       ftp_cfg=cfg,
