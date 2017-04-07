@@ -45,18 +45,18 @@ def journey_detail(jb_stats_service, id):
     result = jb_stats_service.journey_detail(id)
     return Response(dumps(result), mimetype='application/json')
 
-@stats.route('/send-view')
+@stats.route('/report-view')
 @inject(get_stats_service=GetStatsServ)
-@templated('send_view')
-def send_view(get_stats_service):
+@templated('report_view')
+def report_view(get_stats_service):
     # passes all send ids to view
-    return get_stats_service.send_view()
+    return get_stats_service.report_view()
 
-@stats.route('/send-info/<sendid>')
+@stats.route('/send-info/<option>/<sendid>')
 @inject(get_stats_service=GetStatsServ)
-def send_info(get_stats_service, sendid):
+def send_info(get_stats_service, option, sendid):
     # sends info about a single email send
-    return get_stats_service.send_info(sendid)
+    return get_stats_service.send_info(option, sendid)
 
 
 @stats.route('/celery-task-test')
@@ -90,7 +90,7 @@ def devpage_joint():
 @templated('data_manager')
 def load(action):
     from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, \
-        load_web_tracking
+        load_web_tracking, load_lead_perfection
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
 
     load_map = {'customers': load_customers,
@@ -100,11 +100,12 @@ def load(action):
                 'mc-journeys': load_mc_journeys,
                 'web-tracking': load_web_tracking,
                 'add-fips-location-emlopen': add_fips_location_emlopen,
-                'add-fips-location-emlclick': add_fips_location_emlclick}
+                'add-fips-location-emlclick': add_fips_location_emlclick,
+                'lead-perfection': load_lead_perfection}
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')
-    result = task.delay()
+    result = task.delay(task_type=action)
     return dict(task_id=result.id)
 
 
@@ -114,9 +115,9 @@ def get_columns(get_stats_service, tbl):
     return get_stats_service.get_columns(tbl)
 
 
-@stats.route('/metrics-grouped-by/<grp_by>/<tbl>')
+@stats.route('/metrics-grouped-by/<tbl>/<grp_by>/<agg_op>/<agg_field>')
 @inject(get_stats_service=GetStatsServ)
-def metrics_grouped_by(get_stats_service, grp_by, tbl):
+def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
     """
     tbl = 'EmlOpen' # a table to query
     grp_by = 'Device' # a db field name to group by
@@ -145,10 +146,32 @@ def metrics_grouped_by(get_stats_service, grp_by, tbl):
         q = loads(q)
         filters = q.get('filters')
         print(filters)
-    return get_stats_service.get_grouping_counts(tbl, grp_by, filters)
+    if agg_field == 'none':
+        agg_field = None
+    return get_stats_service.get_grouping_counts(tbl, grp_by, agg_op, agg_field, filters)
 
 
 @stats.route('/map-graph')
 @templated('map_graph')
 def map_graph():
     return {}
+
+@stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>')
+@inject(get_stats_service=GetStatsServ)
+def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field):
+    if rpt_id == 'null':
+        rpt_id = None
+    filters = None
+    q = request.args.get('q')
+    if q:
+        q = loads(q)
+        filters = q.get('filters')
+        print(filters)
+    if agg_field == 'none':
+        agg_field = None
+    return get_stats_service.save_report(rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field, filters)
+
+@stats.route('/report/<rpt_id>')
+@inject(get_stats_service=GetStatsServ)
+def report(get_stats_service, rpt_id):
+    return get_stats_service.get_report(rpt_id)

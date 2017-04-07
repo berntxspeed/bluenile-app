@@ -6,7 +6,7 @@ import csv
 import shutil
 
 from .db_data_loader import SqlDataLoader
-
+from ....common.utils.db_datatype_handler import set_db_instance_attr
 
 tmp_directory = 'tmp'
 if not os.path.isdir(tmp_directory):
@@ -49,7 +49,7 @@ class FtpFile(object):
 
 class CsvFile(SqlDataLoader, FtpFile):
 
-    def __init__(self, file, db_session, db_model, primary_keys, db_field_map, ftp_path=None, ftp_cfg=None):
+    def __init__(self, file, db_session, db_model, primary_keys, db_field_map, ftp_path=None, ftp_cfg=None, file_encoding='utf8', delimiter=None):
 
         """Instantiates the Csvfile class
 
@@ -66,8 +66,6 @@ class CsvFile(SqlDataLoader, FtpFile):
             instance of the Csvfile class
         """
 
-        if file.split('.')[-1] != 'csv':
-            raise ValueError('filetype must be csv')
 
         SqlDataLoader.__init__(self, db_session, db_model, primary_keys)
         self._no_dl = True
@@ -77,17 +75,24 @@ class CsvFile(SqlDataLoader, FtpFile):
             FtpFile.__init__(self, file, ftp_path, ftp_cfg)
             self._no_dl = False
 
+        if delimiter:
+            self._delimiter = delimiter
+        else:
+            self._delimiter = ','
+
         self._db_field_map = db_field_map
+
+        self._file_encoding = file_encoding
 
     def load_data(self):
         if not self._no_dl:
             FtpFile.download(self)
 
-        data = self._get_data(self._filename)
-        SqlDataLoader.load_to_db(self, data)
+        SqlDataLoader.load_to_db(self, self._get_data, delimiter=self._delimiter)
 
-    def _get_data(self, filename, delimiter=','):
-
+    def _get_data(self, chunk_size=500, delimiter=','):
+        num_recs = 0
+        filename = self._filename
         """Load csv file into the database
 
         Args:
@@ -113,28 +118,41 @@ class CsvFile(SqlDataLoader, FtpFile):
         try:
             os.chdir(tmp_directory)
             try:
-                with open(filename, 'r') as csvfile:
+                with open(filename, 'r', encoding=self._file_encoding) as csvfile:
                     csvfile_reader = csv.DictReader(csvfile, delimiter=delimiter)
                     # create a dict of all the new records by their primary key
                     import_items = {}
                     for row in csvfile_reader:
                         item = SqlDataLoader.db_model(self)
                         for csv_field, db_field in self._db_field_map.items():
-                            item.__setattr__(db_field, row[csv_field])
+                            item.__setattr__(db_field,
+                                             set_db_instance_attr(item,
+                                                                  db_field,
+                                                                  row[csv_field]))
                         # use a composite key to reference the records on the dict
                         composite_key = ''
                         for pk in self._primary_keys:
                             composite_key += str(getattr(item, pk))
                         # place item on dict, w key reference to composite key, and value of dbModel instance
                         import_items[composite_key] = item
+
+                        num_recs += 1
+                        if num_recs >= chunk_size:
+                            num_recs = 0
+                            yield (False, import_items)
+                            import_items = {}
+
             except FileNotFoundError as exc:
                 raise FileNotFoundError('could not locate file: {}, error: {}'.format(filename, str(exc)))
             except KeyError as exc:
                 raise KeyError(str(exc))
 
-            return import_items
-        finally:
+
             os.chdir('..')
+            yield (True, import_items)
+        except Exception as exc:
+            os.chdir('..')
+            raise exc
 
 
 class ZipFile(FtpFile):

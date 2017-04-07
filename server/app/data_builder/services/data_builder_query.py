@@ -1,4 +1,4 @@
-from server.app.stats.services.classes.db_data_loader import MongoDataLoader
+from ...stats.services.classes.db_data_loader import MongoDataLoader
 
 
 class DataBuilderQuery(object):
@@ -15,10 +15,17 @@ class DataBuilderQuery(object):
             if a_query.get('created'):
                 a_query['created'] = str(a_query['created']).replace('T', ' at ')[:-5]
 
-    def get_all_queries(self):
+    def get_all_queries(self, type=None):
         all_queries = []
+        if type == 'default':
+            filter_func = lambda q: 'preset' in q
+        elif type == 'all':
+            filter_func = None
+        else:
+            filter_func = lambda q: 'preset' not in q
+
         try:
-            for a_query in self._collection.find({}, {'_id': 0}).sort('created', -1):
+            for a_query in filter(filter_func, self._collection.find({}, {'_id': 0}).sort('created', -1)):
                 all_queries.append(a_query)
 
             self.convert_timedate(all_queries)

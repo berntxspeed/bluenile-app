@@ -65,7 +65,7 @@ class PieChartEmlStats {
               click: 'eml_click'
           };
 
-          var filters = [{"name": "SendID", "op": "eq", "val": obj.sendId}];
+          var filters = [{"name": "TriggeredSendExternalKey", "op": "eq", "val": obj.sendId}];
           if(table == 'open' || table == 'click') {
               filters.push({"name": "IsUnique", "op": "eq", "val": "True"});
           }

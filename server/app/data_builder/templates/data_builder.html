@@ -16,16 +16,42 @@
 <script type="text/javascript">
         var g_csrf_token = '{{ csrf_token() }}';
         var g_rules = {{ data|tojson|safe }};
+        var g_name = g_rules.name
         var get_filters = function(model){
             filters_result = []
             for(table in model){
                 for(column in model[table]){
                     column_obj = model[table][column]
-                    filters_result.push({
+                    filter = {
                         id: column_obj.expression,
                         label: column_obj.label,
-                        type: column_obj.type
-                      })
+                        type: column_obj.type,
+                        placeholder: ('Enter' + column_obj.label.split(':')[1]).toLowerCase()
+                    }
+                    if (column_obj.type === 'boolean'){
+                        filter.operators = ['equal']
+                        filter.input = 'radio'
+                        filter.values = {1 :'true', 0: 'false'}
+                        filter.colors = {1 :'success', 0: 'danger'}
+                        filter.default_value = 1
+                        filter.description = 'Optional Filter Description'
+                    }
+                    else if (column_obj.type === 'datetime') {
+                        filter.operators = ['equal', 'not_equal', 'less', 'greater', 'between', 'not_between', 'is_empty', 'is_not_empty']
+                        filter.validation = {
+                          format: 'YYYY/MM/DD'
+                        }
+                        filter.plugin = 'datepicker'
+                        filter.plugin_config = {
+                          format: 'yyyy/mm/dd',
+                          todayBtn: 'linked',
+                          todayHighlight: true,
+                          autoclose: true,
+                          orientation: 'bottom'
+                        }
+                        filter.placeholder = 'yyyy/mm/dd'
+                    }
+                    filters_result.push(filter)
                 }
             }
             return filters_result;
@@ -33,58 +59,127 @@
 
         var g_model = {{ model|tojson|safe }};
         var g_filters = get_filters(g_model);
-    </script>
+</script>
 
 {% endblock %}
 
 {% block banner %}
-    <div class="banner banner-jumbotron banner-gray">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 center-block">
-                    <h1>&nbsp;</h1>
-                    <h3>Transform and Enrich Your Data</h3>
-                </div>
+    <div class="container banner banner-jumbotron banner-gray">
+        <div class="row">
+            <div class="center-block">
+                <h1>&nbsp;</h1>
+                <h3>Transform and Enrich Your Data</h3>
             </div>
         </div>
     </div>
 {% endblock %}
 
 {% block body_content %}
-    <div class="row">
-        <div id="queries">
-            <!--<button id="btn-get-sql" class="btn btn-primary parse-sql">SQL statement</button>-->
-            <button id="btn-get-query" class="btn btn-primary">Manage Saved Queries</button>
-            <button id="btn-reset" class="btn btn-primary">Reset Defaults</button>
-            <button id="btn-preview" class="btn btn-primary">Preview Results</button>
-            <button id="btn-save-query" class="btn btn-primary">Save Query</button>
-            <button id="btn-save-query-as" class="btn btn-primary">Save Query AS</button>
-        <!--</div>-->
-        <div id="tables" class="collapse">
-            {% for table in model %}
-                    <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
-            {% endfor %}
-        </div>
+    <div class="row" id="navbardiv">
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand">Segment Builder</a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                            <btn class="dropdown-toggle btn btn-default navbar-btn" data-toggle="dropdown" role="button"
+                               aria-haspopup="true" aria-expanded="false">Query <span class="caret"></span>
+                            </btn>
+                            <ul class="dropdown-menu">
+                                <li id="btn-save-query-element">
+                                    <!--<button id="btn-save-query" class="btn btn-primary">Save Query</button>-->
+                                    <a href="#" id="btn-save-query" class="">Save Query</a>
+                                </li>
+                                <li id="save-query-separator" role="separator" class="divider"></li>
+                                <li>
+                                    <!--<button id="btn-save-query-as" class="btn btn-primary">Save Query AS</button>-->
+                                    <a id="btn-save-query-as" class="">Save Query AS</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <!--<button id="btn-reset" class="btn btn-primary">Reset Defaults</button>-->
+                                    <a id="btn-reset" class="">Reset Defaults</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <btn class="dropdown-toggle btn btn-default navbar-btn" data-toggle="dropdown" role="button"
+                                 aria-haspopup="true" aria-expanded="false">Manage <span class="caret"></span>
+                            </btn>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="#" id="btn-manage-queries" class="">Manage Saved Queries</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a href="#" id="btn-custom-query" class="">SQLAlchemy Query</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a href="#" id="btn-preset-queries" class="">Default Queries</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><button id="btn-explore-values" class="btn btn-default navbar-btn">Explore Values</button></li>
+                    </ul>
+                    <ul class="nav">
+                        <li class="navbar-right"><button id="btn-preview" class="btn btn-default navbar-btn">Preview Results</button></li>
+                        <button id="sync-to-mc" href="{{ url_for('data_builder.sync_current_query_to_mc', query_id=g_query) }}" class="btn btn-default navbar-btn" >Sync Results</button>
+                        <button id="btn-export-data" type="submit" class= "btn btn-default navbar-btn pull-right">Export All Data</button>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
     </div>
-    <div class="row">
-        <h4>Filter your data</h4>
-        <div class="col-md-12 col-lg-10 col-lg-offset-1">
-            <div id="builder" class="query-builder form-inline"></div>
-            <script type="text/javascript">
-                $('#builder').queryBuilder({
-                  plugins: ['bt-tooltip-errors'],
-                  filters: g_filters,
-                });
-            </script>
+    <div class="row panel panel-info">
+        <div class="panel-heading">
+            <h4 id="data-preview-header" class="panel-title">Default</h4>
         </div>
-    </div>
-    <div class="row">
-        <h4 id="data-preview-header"></h4>
-        <table id="preview-table"></table>
+        <div class="panel-body">
+            <div id= "builder1" class="row">
+                <div id="queries">
+                    <div id="tables" class="collapse">
+                        {% for table in model %}
+                        <label class="checkbox-inline col-sm-3"><input type="checkbox" id="{{table}}">{{table}}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div id="builder2" class="row">
+                <!--<h4>Filter your data</h4>-->
+                <div>
+                    <div id="builder" class="query-builder form-inline"></div>
+                        <script type="text/javascript">
+                            $('#builder').queryBuilder({
+                              plugins: ['bt-tooltip-errors',
+                                        'filter-description',
+                                        'unique-filter',
+                                        'bt-checkbox'
+                                       ],
+                              filters: g_filters,
+                                });
+                        </script>
+                    </div>
+                </div>
+            <div class="row">
+                <table id="preview-table"></table>
+            </div>
+            <div class="row" align="right">
+                <div id="gotopage" class="form-inline">
+                    <input id="page" class="form-control" style="width: 60px" type="number" value="1">
+                    <button id="page-button" class="btn btn-primary">Go to Page</button>
+                </div>
+            </div>
+        </div>
     </div>
 
 <!-- Modal Dialog For Save Query -->
-    <div class="modal fade" id="modalDialog" role="dialog">
+    <div class="modal fade" id="saveDialog" role="dialog">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header" style="padding:25px 50px;">
@@ -98,6 +193,30 @@
                             <input type="text" class="form-control" id="query_name" placeholder="enter query name">
                         </div>
                         <button type="submit" id="submit-save-query" class="btn btn-success btn-block"><span class="glyphicon glyphicon-thumbs-up"></span> Save</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="cancel" class="btn btn-danger btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+<!-- Modal Dialog For Custom Query -->
+    <div class="modal fade" id="modalDefineQuery" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:25px 50px;">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4><span class="glyphicon glyphicon-list  "></span> Define Query</h4>
+                </div>
+                <div class="modal-body" style="padding:25px 50px;">
+                    <form role="form" id="custom-query-form">
+                        <div class="form-group">
+                            <label for="custom_query"><span class="glyphicon glyphicon-star"></span> SqlAlchemy Query </label>
+                            <input type="text" class="form-control" id="custom_query" placeholder="Enter SqlAlchemy Query Starting With 'query', e.g. 'query(Customer)'">
+                        </div>
+                        <button type="submit" id="btn-submit-custom-query" class="btn btn-success btn-block"><span class="glyphicon glyphicon-thumbs-up"></span> Try Preview</button>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -124,7 +243,7 @@
         </div>
     </div>
 <!-- Modal Table For Load Query -->
-    <div class="modal fade" id="modalTable" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div id="modalTable" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header" style="padding:25px 50px;">
@@ -137,16 +256,29 @@
                 </div>
                 <div class="modal-footer">
                     <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
-                    <button type="submit" id='load-saved-query' class="btn btn-success btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Load</button>
-                    <button type="submit" id='delete-saved-query' class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-thumbs-down"></span> Delete</button>
+                    <button type="submit" id='btn-load-saved-query' class="btn btn-success btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Load</button>
+                    <button type="submit" id='btn-delete-saved-query' class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-thumbs-down"></span> Delete</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
-    <div class="row" align="right">
-        <div id="gotopage" class="form-inline">
-            <input id="page" class="form-control" style="width: 60px" type="number" value="1">
-            <button id="page-button" class="btn btn-primary">Go to Page</button>
-        </div>
-    </div>
+    <!-- Modal Table For Explore Values -->
+    <div id="explore-values-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:25px 50px;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 id='modal-table-header'><span class="glyphicon glyphicon-menu-hamburger"></span></h4>
+                </div>
+                <div class="modal-body">
+                    <table id="explore-values-table"></table>
+                </div>
+                <div class="modal-footer">
+                    <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                    <button type="submit" id='back-explore-tables' class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 {% endblock %}
