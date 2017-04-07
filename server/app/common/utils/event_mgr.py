@@ -78,11 +78,12 @@ class EventMgr(object):
                                             or (event_def.new_val == str(newVal)) \
                                             or (event_def.new_val == 'notnull' and newVal != None) \
                                             or (event_def.new_val == 'null' and newVal == None):
-                                event = self._Event(def_id=event_def.id,
-                                              rec_id=target.id,
-                                              old_val=safe_list_get(oldVal, 0, None),
-                                              new_val=safe_list_get(newVal, 0, None))
-                                self._db.session.add(event)
+                                if oldVal != newVal:
+                                    event = self._Event(def_id=event_def.id,
+                                                  rec_id=target.id,
+                                                  old_val=safe_list_get(oldVal, 0, None),
+                                                  new_val=safe_list_get(newVal, 0, None))
+                                    self._db.session.add(event)
 
     def _get_event_defs(self):
         edefs = {}
