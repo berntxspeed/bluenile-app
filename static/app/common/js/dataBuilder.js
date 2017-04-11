@@ -520,11 +520,30 @@ $(document).ready(function() {
         showElement($("#frequency-buttons"))
         showElement($("#frequency-selector"))
         g_current_query.current_row = row
+
+//        $("#frequency-date").datepicker({
+//            maxViewMode: 0,
+//            todayBtn: "linked",
+//            clearBtn: true,
+//            autoclose: true,
+//            todayHighlight: true,
+//            toggleActive: true
+//        });
         if (row.periodic_sync != null) {
             $("#frequency").val(row.periodic_sync)
+            //TODO: fill in every_x_hours value
+            if (row.periodic_sync === '1')  {
+                showElement($("#every-x-hours-block"))
+                $("#every-x-hours").val(row.hourly_frequency)
+            }
+            else {
+                hideElement($("#every-x-hours-block"))
+                $("#every-x-hours").val("")
+            }
         }
         else {
-            $("#frequency").val("7")
+            $("#frequency").val("0")
+            hideElement($("#every-x-hours-block"))
         }
     })
 
@@ -532,14 +551,39 @@ $(document).ready(function() {
         $("#btn-manage-queries").click()
     })
 
-    $("#btn-save-periodic-sync").click(function () {
+    $("#frequency").on('change', function() {
+        if (this.value === '1'){
+            showElement($("#every-x-hours-block"))
+            $("#every-x-hours").val("")
+        }
+        else {hideElement($("#every-x-hours-block"))}
+    })
+
+    $("#btn-save-periodic-sync").click(function (e) {
+        changed = false
         save_query = g_current_query.current_row
         current_frequency = g_current_query.current_row.periodic_sync
-        save_query.periodic_sync = $("#frequency").val()
-        if ( (save_query.periodic_sync === current_frequency) || ((save_query.periodic_sync === "7") && (current_frequency == null)) ){
+        new_periodic_sync= $("#frequency").val()
+        if (new_periodic_sync == '1') {
+            //check for valid entry values
+            if ( ($("#every-x-hours").val() === "") || (!(0 < parseInt($("#every-x-hours").val()) < 24)) ){
+                document.getElementById('periodic-footer').innerHTML = "Enter Value between 1 and 23"
+            }
+            //check if frequency changed
+            else if ( (current_frequency === new_periodic_sync) && (g_current_query.current_row.hourly_frequency === $("#every-x-hours").val()) ) {
+                document.getElementById('periodic-footer').innerHTML = "Change Hourly Frequency Before Save"
+            }
+            else {
+                save_query.hourly_frequency = $("#every-x-hours").val()
+                changed = true
+            }
+        }
+        else if ( (new_periodic_sync === current_frequency) || ((new_periodic_sync === "0") && (current_frequency == null)) ){
             $("#btn-return-to-saved-queries").click()
         }
-        else {
+        else {changed = true}
+        if (changed) {
+            save_query.periodic_sync = new_periodic_sync
             $.ajax({
                  url: "/builder/save-query/" + save_query.name,
                  method: "POST",
@@ -549,7 +593,7 @@ $(document).ready(function() {
                      request.setRequestHeader("X-CSRFToken", g_csrf_token)
                  },
                  success: function(data) {
-                    document.getElementById('periodic-footer').innerHTML = "SAVED!"
+                    document.getElementById('periodic-footer').innerHTML = "Saved!"
                  },
                  error: function(err) {
                          //TODO: handle the error here

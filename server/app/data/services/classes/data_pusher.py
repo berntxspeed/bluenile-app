@@ -48,11 +48,15 @@ class DataPusher(object):
     def sync_query(self, name, query):
         # ***check that query returned model = self._model
 
+        if self._check_table_exists(name):
+            del_resp = self._delete_table(name)
+            if del_resp.code is not None and del_resp.code != 200:
+                return del_resp
+
         # table creation
-        if not self._check_table_exists(name):
-            resp = self._create_table(name)
-            if resp.code is not None and resp.code != 200:
-                return resp
+        resp = self._create_table(name)
+        if resp.code is not None and resp.code != 200:
+            return resp
 
         # table inserts
         recs = query.all()
@@ -90,6 +94,21 @@ class DataPusher(object):
         # if no return conditions were meant something went off the rails,
         # - so raise an exception
         raise ValueError('none of the conditions were met in attempting to determine if table exists in marketing cloud')
+
+    def _delete_table(self, name=None):
+        # returns: delResponse object with code and status attributes
+
+        name = name or self._tablename
+
+        de = ET_DataExtension()
+        de.props = ['CustomerKey', 'Name']
+        de.auth_stub = self._stub_obj
+        de.props = {"Name" : name,"CustomerKey" : name}
+        delResponse = de.delete()
+
+        if delResponse.code != 200:
+            raise ConnectionError('failed to receive response from Marketing Cloud when deleting data extension')
+        return delResponse
 
     def _create_table(self, name=None):
 

@@ -62,9 +62,9 @@ celery.conf.beat_schedule = {
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'mc-email-data'}
     },
-    'every-day_periodic_sync_to_mc': {
+    'every-hour_periodic_sync_to_mc': {
         'task': 'server.app.stats.workers.periodic_sync_to_mc',
-        'schedule': crontab(minute=0, hour=0),
+        'schedule': crontab(minute=0, hour='*'),
         'kwargs': {'task_type': 'periodic-sync'}
     }
 }
