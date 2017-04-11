@@ -1,5 +1,16 @@
 from ...stats.services.classes.db_data_loader import MongoDataLoader
 
+SYNC_MAP = {
+    "0": "Never",
+    "1": "Every X Hour(s)",
+    "2": "Daily",
+    "3": "Every Weekday",
+    "4": "Every M, W, Fri",
+    "5": "Every Tue, Thu",
+    "6": "Weekly",
+    "7": "Monthly",
+    "8": "Annually"
+}
 
 class DataBuilderQuery(object):
     def __init__(self, client_instance):
@@ -10,10 +21,18 @@ class DataBuilderQuery(object):
         self._collection = self._db[self._collection_name]
 
     @staticmethod
-    def iso_to_date(all_queries):
+    def convert_date_and_frequency_to_human_readable(all_queries):
         for a_query in all_queries:
+            #iso_to_date
             if a_query.get('created'):
                 a_query['created'] = str(a_query['created']).replace('T', ' at ')[:-5]
+            if a_query.get('periodic_sync'):
+                if a_query['periodic_sync'] == '1':
+                    a_query['frequency'] = str(SYNC_MAP[a_query['periodic_sync']]
+                                               .replace('X', a_query.get('hourly_frequency', 'X')))
+                else:
+                    a_query['frequency'] = str(SYNC_MAP[a_query['periodic_sync']])
+
 
     @staticmethod
     def date_to_iso(current_date):
@@ -33,7 +52,7 @@ class DataBuilderQuery(object):
             for a_query in filter(filter_func, self._collection.find({}, {'_id': 0}).sort('created', -1)):
                 all_queries.append(a_query)
 
-            self.iso_to_date(all_queries)
+            self.convert_date_and_frequency_to_human_readable(all_queries)
             return True, all_queries
         except Exception as e:
             return False, 'Get All Queries Failed: {0}'.format(str(e))

@@ -53,8 +53,8 @@ def get_queries(mongo):
             'title': 'Query Name'
         },
         {
-            'field': 'created',
-            'title': 'Created'
+            'field': 'frequency',
+            'title': 'Sync Frequency'
         },
         {
             'field': 'last_sync',
@@ -133,11 +133,11 @@ def export_query_result(alchemy, mongo, sql_query_service, query_name):
         pass
     if 'custom_sql' in result.keys():
         from sqlalchemy import func
-        results = eval('alchemy.session.' + result['custom_sql'] + '.all()')
+        results = eval('alchemy.session.' + result['custom_sql'] + '.distinct(Customer.id).all()')
         columns, data = SqlQueryService.extract_data(results, {})
     else:
         final_query = sql_query_service.get_customer_query_based_on_rules(result)
-        results = final_query.all()
+        results = final_query.distinct(Customer.id).all()
         columns, data = sql_query_service.extract_data(results, result)
 
     ordered_column_titles = [column['title'] for column in columns]
