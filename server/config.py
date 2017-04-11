@@ -73,6 +73,13 @@ class Config(object):
             'app_sig': os.getenv('FUELSDK_APP_SIGNATURE'),
             'wsdl': os.getenv('FUELSDK_DEFAULT_WSDL'),
             'auth_url': os.getenv('FUELSDK_AUTH_URL')
+        },
+        'lead-perfection': {
+            'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
+            'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
+            'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
+            'filename': os.getenv('LEAD_PERFECTION_FILENAME'),
+            'filepath': os.getenv('LEAD_PERFECTION_FILEPATH')
         }
     }
 

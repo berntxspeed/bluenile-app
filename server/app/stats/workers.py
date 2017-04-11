@@ -37,21 +37,16 @@ class BaseTask(celery.Task):
 
 
 celery.conf.beat_schedule = {
-    'every-4-hours_purchases': {
-        'task': 'server.app.stats.workers.load_purchases',
-        'schedule': crontab(minute=0, hour='*/4'),
-        'kwargs': {'task_type': 'purchases'}
+    'every-1-hours_lead_perfection': {
+        'task': 'server.app.stats.workers.load_lead_perfection',
+        'schedule': crontab(minute=0, hour='*/1'),
+        'kwargs': {'task_type': 'lead_perfection'}
     },
-    'every-4-hours_customers': {
-        'task': 'server.app.stats.workers.load_customers',
-        'schedule': crontab(minute=0, hour='*/4'),
-        'kwargs': {'task_type': 'customers'}
-    },
-    'every-4-hours_web_tracking': {
+    """ 'every-4-hours_web_tracking': {
         'task': 'server.app.stats.workers.load_web_tracking',
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'web-tracking'}
-    },
+    },"""
     'every-4-hours_mc_journeys': {
         'task': 'server.app.stats.workers.load_mc_journeys',
         'schedule': crontab(minute=0, hour='*/4'),
@@ -139,6 +134,13 @@ def periodic_sync_to_mc(**kwargs):
             from ..data.workers import sync_query_to_mc
             for a_query in relevant_queries:
                 sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
+
+
+def load_lead_perfection(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.load_lead_perfection()
+
 
 NUM_OBJ_TO_CREATE = 30;
 

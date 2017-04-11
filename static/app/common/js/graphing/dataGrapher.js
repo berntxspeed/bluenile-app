@@ -173,10 +173,10 @@ class DataGrapher {
                 { name: 'Donut Chart', value: 'donut' }
             ],
             numeric: [
-                { name: 'Bar Graph', value: 'bar' },
-                { name: 'Line Graph', value: 'line' },
-                { name: 'Smoothed Line Graph', value: 'spline' },
-                { name: 'Scatter Plot', value: 'scatter' },
+                { name: 'Bar Graph', value: 'numericbar' },
+                { name: 'Line Graph', value: 'numericline' },
+                { name: 'Smoothed Line Graph', value: 'numericspline' },
+                { name: 'Scatter Plot', value: 'numericscatter' },
                 { name: 'Pie Chart', value: 'pie' },
                 { name: 'Donut Chart', value: 'donut' }
             ],
@@ -476,6 +476,8 @@ class DataGrapher {
                     });
                 }
 
+            } else {
+                dataGroupingHandler(null, $(elDataGrouping1));
             }
 
         };
@@ -907,11 +909,15 @@ class DataGrapher {
             var dayHourPlot = new DayHourPlot();
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
-        } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar'){
+        } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar' || graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar'){
             var secondGrouping = dataGrouping;
             var firstGrouping = '';
             var xAxisKey = 'x';
-            var xAxisType = 'indexed';
+            var xAxisType = 'category';
+            if (graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar') {
+                xAxisType = 'indexed';
+                graphType = graphType.substring(7);
+            }
             var xAxisShow = true;
             var legendShow = true;
             if (dataGrouping.indexOf('-') > 0){
@@ -921,14 +927,12 @@ class DataGrapher {
                 data = self.formatDualGroupedData(data, secondGrouping);
                 window.data = data;
                 xAxisKey = secondGrouping;
-                xAxisType = 'indexed';
                 if(data[0].length > 10){ legendShow = false; }
                 if(data.length > 30){ xAxisShow = false; }
                 //if(!isNaN(data[1][data[1].length-1])){ xAxisType = 'indexed'; }
             } else {
                 // single grouping
                 xAxisKey = 'x';
-                xAxisType = 'category';
                 //if(!isNaN(data[0][0])){ xAxisType = 'indexed'; }
                 data.unshift(['x', dataGrouping]);
             }
@@ -992,13 +996,13 @@ class DataGrapher {
                 data.unshift(['x', dataGrouping]);
             }
 
-            c3.generate({
+            window.graph = c3.generate({
                 bindto: bindTo,
                 data: {
                     x: xAxisKey,
                     xFormat: '%a, %d %b %Y %H:%M:%S GMT',
                     rows: data,
-                    type: graphType
+                    type: graphType.substring(4) // to get the date part off
                 },
                 point: {
                     r: '4'
@@ -1016,7 +1020,7 @@ class DataGrapher {
                             position: 'outer-center'
                         },
                         tick: {
-                            format: '%Y-%m-%d %H:%M:%S' // how the date is displayed
+                            format: '%Y-%m-%d %H:%M' // how the date is displayed
                         }
                     },
                     y: {

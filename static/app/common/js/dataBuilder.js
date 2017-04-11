@@ -302,6 +302,7 @@ $(document).ready(function() {
                   }
         }
     }
+
   	function getSelectedRow() {
         var index = saved_queries_table.find('tr.success').data('index')
         return saved_queries_table.bootstrapTable('getData')[index]
