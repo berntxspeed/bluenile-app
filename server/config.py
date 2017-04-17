@@ -72,7 +72,8 @@ class Config(object):
             'secret': os.getenv('FUELSDK_CLIENT_SECRET'),
             'app_sig': os.getenv('FUELSDK_APP_SIGNATURE'),
             'wsdl': os.getenv('FUELSDK_DEFAULT_WSDL'),
-            'auth_url': os.getenv('FUELSDK_AUTH_URL')
+            'auth_url': os.getenv('FUELSDK_AUTH_URL'),
+            # for later 'endpoint': os.getenv('FUELSDK_RAW_ENDPOINT')
         },
         'lead-perfection': {
             'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
