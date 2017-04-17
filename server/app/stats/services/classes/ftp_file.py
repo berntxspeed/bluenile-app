@@ -148,7 +148,6 @@ class CsvFile(SqlDataLoader, FtpFile):
                 raise KeyError(str(exc))
 
 
-            self.clean_up()
             yield (True, import_items)
         except Exception as exc:
             os.chdir('..')
