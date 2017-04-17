@@ -224,10 +224,12 @@ class DataLoadService(DbService):
 
     def __get_mc_auth(self):
         #TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
+        config = self.config
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('EMAIL_DATA_DEST'))
         # get auth token
-        url = 'https://auth.exacttargetapis.com/v1/requestToken'
-        body = dict(clientId='3t1ch44ej7pb4p117oyr7m4g',
-                    clientSecret='2Cegvz6Oe9qTmc8HMUn2RWKh')
+        url = mc_data_creds.get('auth_url') # was 'https://auth.exacttargetapis.com/v1/requestToken'
+        body = dict(clientId=mc_data_creds.get('id'), # was '3t1ch44ej7pb4p117oyr7m4g',
+                    clientSecret=mc_data_creds.get('secret')) # was '2Cegvz6Oe9qTmc8HMUn2RWKh')
         r = requests.post(url, data=body)
         if r.status_code != 200:
             raise PermissionError('ET auth code retrieval: failed to get auth token')
