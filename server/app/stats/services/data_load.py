@@ -253,15 +253,18 @@ class DataLoadService(DbService):
         collection = self.mongo.db.journeys
 
         for journey in journeys['items']:
-            adm = ApiDataToMongo(
-                endpoint='https://www.exacttargetapis.com/interaction/v1/interactions/' + journey['id'],
-                auth=None,
-                headers={'Content-Type': 'application/json',
-                         'Authorization': 'Bearer ' + token},
-                params=None,
-                collection=collection,
-                primary_keys=['id'])
-            adm.load_data()
+            try:
+                adm = ApiDataToMongo(
+                    endpoint='https://www.exacttargetapis.com/interaction/v1/interactions/' + journey['id'],
+                    auth=None,
+                    headers={'Content-Type': 'application/json',
+                             'Authorization': 'Bearer ' + token},
+                    params=None,
+                    collection=collection,
+                    primary_keys=['id'])
+                adm.load_data()
+            except KeyError as exc:
+                print('problem with journey id ['+journey['id']+']')
 
     def load_web_tracking(self, startDate=None, endDate=None):
 
