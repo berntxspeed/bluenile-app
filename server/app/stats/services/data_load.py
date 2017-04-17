@@ -125,90 +125,163 @@ class DataLoadService(DbService):
                      ftp_path=filepath,
                      ftp_cfg=cfg)
 
-        # load Sendjobs data to db
-        zf.load_data(file='SendJobs.csv',
-                     db_session=self.db.session,
-                     db_model=SendJob,
-                     primary_keys=['SendID'],
-                     db_field_map={
-                         'SendID': 'SendID',
-                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey',
-                         'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
-                         'EmailName': 'EmailName',
-                         'SchedTime': 'SchedTime',
-                         'SentTime': 'SentTime',
-                         'Subject': 'Subject',
-                         'PreviewURL': 'PreviewURL'
-                     })
+        try:
+            # load Sendjobs data to db
+            zf.load_data(file='SendJobs.csv',
+                         db_session=self.db.session,
+                         db_model=SendJob,
+                         primary_keys=['SendID'],
+                         db_field_map={
+                             'SendID': 'SendID',
+                             'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
+                             'EmailName': 'EmailName',
+                             'SchedTime': 'SchedTime',
+                             'SentTime': 'SentTime',
+                             'Subject': 'Subject',
+                             'PreviewURL': 'PreviewURL'
+                         })
+        except Exception as exc:
+            print('ALERT: problem importing SendJobs.csv')
+        try:
+            zf.load_data(file='Sent.csv',
+                         db_session=self.db.session,
+                         db_model=EmlSend,
+                         primary_keys=['SubscriberKey', 'EventDate'],
+                         db_field_map={
+                             'SendID': 'SendID',
+                             'SubscriberKey': 'SubscriberKey',
+                             'EmailAddress': 'EmailAddress',
+                             'EventDate': 'EventDate',
+                         })
+        except Exception as exc:
+            print('ALERT: problem importing Sent.csv')
+        try:
+            # load Opens data to db
+            zf.load_data(file='Opens.csv',
+                         db_session=self.db.session,
+                         db_model=EmlOpen,
+                         primary_keys=['SubscriberKey', 'EventDate'],
+                         db_field_map={
+                             'SendID': 'SendID',
+                             'SubscriberKey': 'SubscriberKey',
+                             'EmailAddress': 'EmailAddress',
+                             'EventDate': 'EventDate',
+                             'IsUnique': 'IsUnique',
+                             'IpAddress': 'IpAddress',
+                             'Country': 'Country',
+                             'Region': 'Region',
+                             'City': 'City',
+                             'Latitude': 'Latitude',
+                             'Longitude': 'Longitude',
+                             'MetroCode': 'MetroCode',
+                             'AreaCode': 'AreaCode',
+                             'Browser': 'Browser',
+                             'EmailClient': 'EmailClient',
+                             'OperatingSystem': 'OperatingSystem',
+                             'Device': 'Device'
+                         })
+        except Exception as exc:
+            print('ALERT: problem importing Opens.csv')
+        try:
+            # load Clicks data to db
+            zf.load_data(file='Clicks.csv',
+                         db_session=self.db.session,
+                         db_model=EmlClick,
+                         primary_keys=['SubscriberKey', 'EventDate'],
+                         db_field_map={
+                             'SendID': 'SendID',
+                             'SubscriberKey': 'SubscriberKey',
+                             'EmailAddress': 'EmailAddress',
+                             'EventDate': 'EventDate',
+                             'SendURLID': 'SendURLID',
+                             'URLID': 'URLID',
+                             'URL': 'URL',
+                             'Alias': 'Alias',
+                             'IsUnique': 'IsUnique',
+                             'IpAddress': 'IpAddress',
+                             'Country': 'Country',
+                             'Region': 'Region',
+                             'City': 'City',
+                             'Latitude': 'Latitude',
+                             'Longitude': 'Longitude',
+                             'MetroCode': 'MetroCode',
+                             'AreaCode': 'AreaCode',
+                             'Browser': 'Browser',
+                             'EmailClient': 'EmailClient',
+                             'OperatingSystem': 'OperatingSystem',
+                             'Device': 'Device'
+                         })
+        except Exception as exc:
+            print('ALERT: problem importing Clicks.csv')
 
-        zf.load_data(file='Sent.csv',
-                     db_session=self.db.session,
-                     db_model=EmlSend,
-                     primary_keys=['SubscriberKey', 'EventDate'],
-                     db_field_map={
-                         'SendID': 'SendID',
-                         'SubscriberKey': 'SubscriberKey',
-                         'EmailAddress': 'EmailAddress',
-                         'EventDate': 'EventDate',
-                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey'
-                     })
-
-        # load Opens data to db
-        zf.load_data(file='Opens.csv',
-                     db_session=self.db.session,
-                     db_model=EmlOpen,
-                     primary_keys=['SubscriberKey', 'EventDate'],
-                     db_field_map={
-                         'SendID': 'SendID',
-                         'SubscriberKey': 'SubscriberKey',
-                         'EmailAddress': 'EmailAddress',
-                         'EventDate': 'EventDate',
-                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey',
-                         'IsUnique': 'IsUnique',
-                         'IpAddress': 'IpAddress',
-                         'Country': 'Country',
-                         'Region': 'Region',
-                         'City': 'City',
-                         'Latitude': 'Latitude',
-                         'Longitude': 'Longitude',
-                         'MetroCode': 'MetroCode',
-                         'AreaCode': 'AreaCode',
-                         'Browser': 'Browser',
-                         'EmailClient': 'EmailClient',
-                         'OperatingSystem': 'OperatingSystem',
-                         'Device': 'Device'
-                     })
-
-        # load Clicks data to db
-        zf.load_data(file='Clicks.csv',
-                     db_session=self.db.session,
-                     db_model=EmlClick,
-                     primary_keys=['SubscriberKey', 'EventDate'],
-                     db_field_map={
-                         'SendID': 'SendID',
-                         'SubscriberKey': 'SubscriberKey',
-                         'EmailAddress': 'EmailAddress',
-                         'EventDate': 'EventDate',
-                         'SendURLID': 'SendURLID',
-                         'URLID': 'URLID',
-                         'URL': 'URL',
-                         'Alias': 'Alias',
-                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey',
-                         'IsUnique': 'IsUnique',
-                         'IpAddress': 'IpAddress',
-                         'Country': 'Country',
-                         'Region': 'Region',
-                         'City': 'City',
-                         'Latitude': 'Latitude',
-                         'Longitude': 'Longitude',
-                         'MetroCode': 'MetroCode',
-                         'AreaCode': 'AreaCode',
-                         'Browser': 'Browser',
-                         'EmailClient': 'EmailClient',
-                         'OperatingSystem': 'OperatingSystem',
-                         'Device': 'Device'
-                     })
         zf.clean_up() # delete downloaded files
+
+        try:
+            # execute separate load of exported Journey-based sends information
+            filename = 'journey_sends.csv'
+            filepath = '/Export/'
+            csv = CsvFile(file=filename,
+                          db_session=self.db.session,
+                          db_model=EmlSend,
+                          primary_keys=['SubscriberKey', 'EventDate'],
+                          db_field_map={
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate',
+                          },
+                          ftp_path=filepath,
+                          ftp_cfg=cfg,
+                          file_encoding='utf16')
+
+            # load journey send data to db
+            csv.load_data()
+        except Exception as exc:
+            print('ALERT: problem loading journey_sends.csv')
+        try:
+            # execute separate load of exported Journey-based opens information
+            filename = 'journey_opens.csv'
+            filepath = '/Export/'
+            csv = CsvFile(file=filename,
+                          db_session=self.db.session,
+                          db_model=EmlOpen,
+                          primary_keys=['SubscriberKey', 'EventDate'],
+                          db_field_map={
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate',
+                          },
+                          ftp_path=filepath,
+                          ftp_cfg=cfg,
+                          file_encoding='utf16')
+
+            # load journey opens data to db
+            csv.load_data()
+        except Exception as exc:
+            print('ALERT: problem loading journey_opens.csv')
+        try:
+            # execute separate load of exported Journey-based clicks information
+            filename = 'journey_clicks.csv'
+            filepath = '/Export'
+            csv = CsvFile(file=filename,
+                          db_session=self.db.session,
+                          db_model=EmlClick,
+                          primary_keys=['SubscriberKey', 'EventDate'],
+                          db_field_map={
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate',
+                          },
+                          ftp_path=filepath,
+                          ftp_cfg=cfg,
+                          file_encoding='utf16')
+
+            # load journey click data to db
+            csv.load_data()
+        except Exception as exc:
+            print('ALERT: problem loading journey_clicks.csv')
 
         # TODO: append county FIPS codes to open and click data
 
