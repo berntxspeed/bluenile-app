@@ -28,7 +28,8 @@ def create_app():
                 template_folder=config_obj.TEMPLATE_FOLDER,
                 static_url_path=config_obj.STATIC_URL_PATH)
 
-    app.debug = True
+    # app.debug = True
+    app.debug = False
     app.config.from_object(config_obj)
     config_obj.init_app(app)
 
@@ -60,9 +61,6 @@ def create_injector(app=None):
 def init_db(app):
     from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer
     db.init_app(app)
-    from sqlalchemy.orm import sessionmaker, scoped_session
-    with app.app_context():
-        db.session = scoped_session(sessionmaker(bind=db.engine))
 
     # create the Flask-Restless API manager
     manager = Restless.APIManager(app, flask_sqlalchemy_db=db)
@@ -104,16 +102,17 @@ def init_assets(app):
 def create_event_mgr(app):
     from .common.utils.event_mgr import EventMgr
     from .common.models import db, Event, EventDefinition
+    from flask_sqlalchemy import SignallingSession
 
     event_mgr = EventMgr(db, Event, EventDefinition)
 
     # process record updates
-    @db.event.listens_for(db.session, 'before_flush')
+    @db.event.listens_for(SignallingSession, 'before_flush')
     def on_flush(session, flush_context, instances):
         event_mgr.log_update_events(session)
 
     # process record inserts
-    @db.event.listens_for(db.session, 'after_flush')
+    @db.event.listens_for(SignallingSession, 'after_flush')
     def after_flush(session, flush_context):
         event_mgr.log_insert_events(session)
 

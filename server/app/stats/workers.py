@@ -75,7 +75,12 @@ def load_customers(**kwargs):
 def load_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.load_purchases()
+        try:
+            service.load_purchases()
+        except:
+            service.db.session.rollback()
+        finally:
+            service.db.session.remove()
 
 
 @celery.task(base=BaseTask)

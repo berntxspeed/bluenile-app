@@ -104,7 +104,7 @@ class DataLoadService(DbService):
                            auth=auth,
                            headers=headers,
                            params=params,
-                           db_session=self.db.session,
+                           db_session=self.db.session(),
                            db_model=Purchase,
                            primary_keys=primary_keys,
                            db_field_map=db_field_map,
