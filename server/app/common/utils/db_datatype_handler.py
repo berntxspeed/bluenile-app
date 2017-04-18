@@ -58,7 +58,7 @@ def _to_timestamp(str_val):
     conversions_available = [
         lambda x: datetime.datetime.strptime(x, '%m/%d/%Y %I:%M:%S %p'),
         lambda x: datetime.datetime.strptime(x[:19], '%Y-%m-%dT%H:%M:%S'),
-        lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'),
+        lambda x: datetime.datetime.strptime(x[:19], '%Y-%m-%d %H:%M:%S'),
         lambda x: datetime.datetime.fromtimestamp(float(x[:-3])),
         lambda x: datetime.datetime.strptime(x, '%Y-%m-%d')
     ]
