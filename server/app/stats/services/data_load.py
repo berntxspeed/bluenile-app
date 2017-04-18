@@ -141,7 +141,7 @@ class DataLoadService(DbService):
                              'PreviewURL': 'PreviewURL'
                          })
         except Exception as exc:
-            print('ALERT: problem importing SendJobs.csv')
+            print('ALERT: problem importing SendJobs.csv'+str(exc))
         try:
             zf.load_data(file='Sent.csv',
                          db_session=self.db.session,
@@ -154,7 +154,7 @@ class DataLoadService(DbService):
                              'EventDate': 'EventDate',
                          })
         except Exception as exc:
-            print('ALERT: problem importing Sent.csv')
+            print('ALERT: problem importing Sent.csv'+str(exc))
         try:
             # load Opens data to db
             zf.load_data(file='Opens.csv',
@@ -181,7 +181,7 @@ class DataLoadService(DbService):
                              'Device': 'Device'
                          })
         except Exception as exc:
-            print('ALERT: problem importing Opens.csv')
+            print('ALERT: problem importing Opens.csv'+str(exc))
         try:
             # load Clicks data to db
             zf.load_data(file='Clicks.csv',
@@ -212,9 +212,12 @@ class DataLoadService(DbService):
                              'Device': 'Device'
                          })
         except Exception as exc:
-            print('ALERT: problem importing Clicks.csv')
-
-        zf.clean_up() # delete downloaded files
+            print('ALERT: problem importing Clicks.csv' +str(exc))
+        finally:
+            try:
+                zf.clean_up() # delete downloaded files
+            except Exception as exc:
+                print('ALERT: problem cleaning up downloaded files: '+str(exc))
 
         try:
             # execute separate load of exported Journey-based sends information
@@ -237,7 +240,7 @@ class DataLoadService(DbService):
             # load journey send data to db
             csv.load_data()
         except Exception as exc:
-            print('ALERT: problem loading journey_sends.csv')
+            print('ALERT: problem loading journey_sends.csv'+str(exc))
         csv.clean_up()
         try:
             # execute separate load of exported Journey-based opens information
@@ -260,7 +263,7 @@ class DataLoadService(DbService):
             # load journey opens data to db
             csv.load_data()
         except Exception as exc:
-            print('ALERT: problem loading journey_opens.csv')
+            print('ALERT: problem loading journey_opens.csv'+str(exc))
         csv.clean_up()
         try:
             # execute separate load of exported Journey-based clicks information
@@ -283,7 +286,7 @@ class DataLoadService(DbService):
             # load journey click data to db
             csv.load_data()
         except Exception as exc:
-            print('ALERT: problem loading journey_clicks.csv')
+            print('ALERT: problem loading journey_clicks.csv'+str(exc))
         csv.clean_up()
 
         # TODO: append county FIPS codes to open and click data
