@@ -153,7 +153,7 @@ class DataLoadService(DbService):
                              'SendID': 'SendID',
                              'SubscriberKey': 'SubscriberKey',
                              'EmailAddress': 'EmailAddress',
-                             'EventDate': 'EventDate',
+                             'EventDate': 'EventDate'
                          })
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
