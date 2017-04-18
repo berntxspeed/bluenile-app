@@ -50,13 +50,7 @@ class PieChartEmlStats {
           });
   }
   getSendCount(obj, callback){
-          this.statsApiRequest('send', obj, callback);
-  }
-  getOpenCount(obj, callback){
-          this.statsApiRequest('open', obj, callback);
-  }
-  getClickCount(obj, callback){
-          this.statsApiRequest('click', obj, callback);
+          this.statsApiRequest(obj, callback);
   }
   statsApiRequest(obj, callback){
           /*$.ajax({
