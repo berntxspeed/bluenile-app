@@ -58,17 +58,7 @@ class PieChartEmlStats {
   getClickCount(obj, callback){
           this.statsApiRequest('click', obj, callback);
   }
-  statsApiRequest(table, obj, callback){
-          var tables = {
-              send: 'eml_send',
-              open: 'eml_open',
-              click: 'eml_click'
-          };
-
-          var filters = [{"name": "TriggeredSendExternalKey", "op": "eq", "val": obj.sendId}];
-          if(table == 'open' || table == 'click') {
-              filters.push({"name": "IsUnique", "op": "eq", "val": "True"});
-          }
+  statsApiRequest(obj, callback){
           /*$.ajax({
               url: '/api/' + tables[table],
               data: {"q": JSON.stringify({"filters": filters})},
