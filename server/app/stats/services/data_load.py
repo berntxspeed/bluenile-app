@@ -238,7 +238,6 @@ class DataLoadService(DbService):
             csv.load_data()
         except Exception as exc:
             print('ALERT: problem loading journey_sends.csv'+str(exc))
-        csv.clean_up()
         try:
             # execute separate load of exported Journey-based opens information
             filename = 'journey_opens.csv'
@@ -261,11 +260,10 @@ class DataLoadService(DbService):
             csv.load_data()
         except Exception as exc:
             print('ALERT: problem loading journey_opens.csv'+str(exc))
-        csv.clean_up()
         try:
             # execute separate load of exported Journey-based clicks information
             filename = 'journey_clicks.csv'
-            filepath = '/Export'
+            filepath = '/Export/'
             csv = CsvFile(file=filename,
                           db_session=self.db.session,
                           db_model=EmlClick,
@@ -284,7 +282,6 @@ class DataLoadService(DbService):
             csv.load_data()
         except Exception as exc:
             print('ALERT: problem loading journey_clicks.csv'+str(exc))
-        csv.clean_up()
 
         # TODO: append county FIPS codes to open and click data
 
