@@ -30,22 +30,22 @@ class BaseTask(celery.Task):
 
 
 celery.conf.beat_schedule = {
-    'every-1-hours_lead_perfection': {
+    """'every-1-hours_lead_perfection': {
         'task': 'server.app.stats.workers.load_lead_perfection',
         'schedule': crontab(minute=0, hour='*/1'),
         'kwargs': {'task_type': 'lead_perfection'}
     },
-    """ 'every-4-hours_web_tracking': {
+    'every-4-hours_web_tracking': {
         'task': 'server.app.stats.workers.load_web_tracking',
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'web-tracking'}
     },"""
-    'every-4-hours_mc_journeys': {
+    'every-12-hours_mc_journeys': {
         'task': 'server.app.stats.workers.load_mc_journeys',
-        'schedule': crontab(minute=0, hour='*/4'),
+        'schedule': crontab(minute=0, hour='*/12'),
         'kwargs': {'task_type': 'mc-journeys'}
     },
-    'every-4-hours_mc_email_data': {
+    'every-12-hours_mc_email_data': {
         'task': 'server.app.stats.workers.load_mc_email_data',
         'schedule': crontab(minute=0, hour='*/12'),
         'kwargs': {'task_type': 'mc-email-data'}
