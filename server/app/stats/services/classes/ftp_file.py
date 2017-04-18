@@ -147,7 +147,7 @@ class CsvFile(SqlDataLoader, FtpFile):
             except KeyError as exc:
                 raise KeyError(str(exc))
 
-
+            os.chdir('..')
             yield (True, import_items)
         except Exception as exc:
             os.chdir('..')
