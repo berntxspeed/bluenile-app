@@ -235,7 +235,7 @@ class DataLoadService(DbService):
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
-                          file_encoding='utf8')
+                          file_encoding='utf16')
 
             # load journey send data to db
             csv.load_data()
@@ -258,7 +258,7 @@ class DataLoadService(DbService):
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
-                          file_encoding='utf8')
+                          file_encoding='utf16')
 
             # load journey opens data to db
             csv.load_data()
@@ -268,7 +268,7 @@ class DataLoadService(DbService):
         try:
             # execute separate load of exported Journey-based clicks information
             filename = 'journey_clicks.csv'
-            filepath = '/Export'
+            filepath = '/Export/'
             csv = CsvFile(file=filename,
                           db_session=self.db.session,
                           db_model=EmlClick,
@@ -281,7 +281,7 @@ class DataLoadService(DbService):
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
-                          file_encoding='utf8')
+                          file_encoding='utf16')
 
             # load journey click data to db
             csv.load_data()
