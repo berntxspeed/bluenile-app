@@ -241,7 +241,7 @@ class DataLoadService(DbService):
             csv.load_data()
         except Exception as exc:
             print('ALERT: problem loading journey_sends.csv'+str(exc))
-    
+
         try:
             # execute separate load of exported Journey-based opens information
             filename = 'journey_opens.csv'
