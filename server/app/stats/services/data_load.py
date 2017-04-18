@@ -235,7 +235,7 @@ class DataLoadService(DbService):
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
-                          file_encoding='utf16')
+                          file_encoding='utf8')
 
             # load journey send data to db
             csv.load_data()
@@ -258,7 +258,7 @@ class DataLoadService(DbService):
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
-                          file_encoding='utf16')
+                          file_encoding='utf8')
 
             # load journey opens data to db
             csv.load_data()
@@ -281,7 +281,7 @@ class DataLoadService(DbService):
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
-                          file_encoding='utf16')
+                          file_encoding='utf8')
 
             # load journey click data to db
             csv.load_data()
