@@ -233,7 +233,7 @@ class DataLoadService(DbService):
                               'SendID': 'SendID',
                               'SubscriberKey': 'SubscriberKey',
                               'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                              'EventDate': 'EventDate',
+                              'EventDate': 'EventDate'
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
@@ -256,7 +256,7 @@ class DataLoadService(DbService):
                               'SendID': 'SendID',
                               'SubscriberKey': 'SubscriberKey',
                               'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                              'EventDate': 'EventDate',
+                              'EventDate': 'EventDate'
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
@@ -279,7 +279,7 @@ class DataLoadService(DbService):
                               'SendID': 'SendID',
                               'SubscriberKey': 'SubscriberKey',
                               'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                              'EventDate': 'EventDate',
+                              'EventDate': 'EventDate'
                           },
                           ftp_path=filepath,
                           ftp_cfg=cfg,
