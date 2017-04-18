@@ -76,7 +76,7 @@ class PieChartEmlStats {
           $.ajax({
               url: '/send-info/trig-send-id/' + obj.sendId.toUpperCase(),
               success: function(data) {
-                  console.log(obj.sendId + " has number of " + table + "s: " + data["numSends"]);
+                  console.log(obj.sendId + " has number of sends: " + data["numSends"]);
                   obj.counts['send'] = data["numSends"];
                   obj.counts['open'] = data["numOpens"];
                   obj.counts['click'] = data["numClicks"];
@@ -105,7 +105,7 @@ class PieChartEmlStats {
               }
           };
 
-          obj.self.statsApiRequest(obj, function(err, obj){
+          this.statsApiRequest(obj, function(err, obj){
               if(err) { return console.error('error getting stats for sendid: '+obj.sendId+' err:'+JSON.stringify(err)); }
               obj.self.renderChart(obj.chartSelector,
                                obj.sizeW,
