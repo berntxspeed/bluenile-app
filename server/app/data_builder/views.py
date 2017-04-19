@@ -5,6 +5,7 @@ from io import StringIO
 
 from flask import Response
 from flask import make_response, redirect, request, url_for
+from flask_login import login_required
 from injector import inject
 from sqlalchemy import func
 
@@ -16,6 +17,12 @@ from . import databuilder
 from .services.data_builder_query import DataBuilderQuery
 from .services.query_service import SqlQueryService
 
+
+# Pass this function to require login for every request
+@databuilder.before_request
+@login_required
+def before_request():
+    pass
 
 @databuilder.route('/data-builder/')
 @databuilder.route('/data-builder/<query_id>')
