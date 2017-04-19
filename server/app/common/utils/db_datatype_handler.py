@@ -3,7 +3,13 @@ import datetime
 
 def set_db_instance_attr(inst, attr_name, str_val):
     if not isinstance(str_val, str):
-        raise ValueError('str_val must be of type string')
+        if str_val is None:
+            return None
+        else:
+            try:
+                str_val = str(str_val)
+            except Exception as exc:
+                raise ValueError('str_val must be of type string.  exception: '+repr(exc))
 
     # determine type of db attr
     type_of_attr = str(inst.__table__.c[attr_name].type)
