@@ -49,9 +49,6 @@ class PieChartEmlStats {
               }
           });
   }
-  getSendCount(obj, callback){
-          this.statsApiRequest(obj, callback);
-  }
   statsApiRequest(obj, callback){
           /*$.ajax({
               url: '/api/' + tables[table],
@@ -68,7 +65,7 @@ class PieChartEmlStats {
               }
           });*/
           $.ajax({
-              url: '/send-info/trig-send-id/' + obj.sendId.toUpperCase(),
+              url: '/send-info/trig-send-id/' + obj.sendId,
               success: function(data) {
                   console.log(obj.sendId + " has number of sends: " + data["numSends"]);
                   obj.counts['send'] = data["numSends"];

@@ -107,7 +107,7 @@ $(document).ready(function () {
         renderEmlStats: function() {
             if(this.model.get('sendId')){
                 var bbox = this.model.getBBox();
-                var sendId = this.model.get('sendId');
+                var sendId = this.model.get('sendId').toUpperCase();
                 var id = this.model.get('id');
                 this.$box.find('.drill-down-checkboxA, .drill-down-checkboxB')
                     .attr('value', sendId)
@@ -123,7 +123,7 @@ $(document).ready(function () {
                     counts: {},
                     self: this
                 };
-                pieChartEmlStats.getSendCount(obj, function(err){
+                pieChartEmlStats.statsApiRequest(obj, function(err, obj){
                     if(err){
                         console.error('problem accessing send count for sendid: ' + obj.sendId + ' err: ' + JSON.stringify(err));
                         return obj.self.$box.find('label.sendCnt').text('**error**');
