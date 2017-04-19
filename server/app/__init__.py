@@ -64,16 +64,6 @@ def init_db(app):
     with app.app_context():
         db.session = scoped_session(sessionmaker(bind=db.engine))
 
-    # create the Flask-Restless API manager
-    manager = Restless.APIManager(app, flask_sqlalchemy_db=db)
-
-    # create the api endpoints, which will be available by /api/<tblname>
-    manager.create_api(SendJob, methods=['GET'])
-    manager.create_api(EmlSend, methods=['GET'])
-    manager.create_api(EmlOpen, methods=['GET'])
-    manager.create_api(EmlClick, methods=['GET'])
-    manager.create_api(Customer, methods=['GET'])
-
 
 def init_mongo(app, mongo):
     mongo.init_app(app)
