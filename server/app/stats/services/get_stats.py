@@ -123,8 +123,8 @@ class GetStatsService(DbService):
                     xsendid = eml_send.SendID
                     send = SendJob.query.filter(SendJob.SendID == xsendid).first()
                     send.num_sends = self.db.session.query(func.count('*')).filter(EmlSend.TriggeredSendExternalKey == sendid).first()[0]
-                    send.num_opens = self.db.session.query(func.count('*')).filter(EmlOpen.TriggeredSendExternalKey == sendid).first()[0]
-                    send.num_clicks = self.db.session.query(func.count('*')).filter(EmlClick.TriggeredSendExternalKey == sendid).first()[0]
+                    send.num_opens = self.db.session.query(func.count('*')).filter(EmlOpen.TriggeredSendExternalKey == sendid).filter(EmlOpen.IsUnique == True).first()[0]
+                    send.num_clicks = self.db.session.query(func.count('*')).filter(EmlClick.TriggeredSendExternalKey == sendid).filter(EmlClick.IsUnique == True).first()[0]
                 elif option == 'mult-send-id':
                     sends = SendJob.query.filter(SendJob.SendID.in_(sendid[1: len(sendid)-1].split(', '))).all()
                     send = sends[0]
