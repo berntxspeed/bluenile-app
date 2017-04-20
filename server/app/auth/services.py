@@ -82,12 +82,12 @@ class AuthService(DbService):
 
         # Login user
         login_user(user, remember_me)
-        return redirect(url_for('stats.special_logged_in_page'))
+        return redirect(url_for('main.index'))
 
     def __next_url(self, request):
         next_url = request.args.get('next')
         if next_url:
-            next_url = url_for('stats.special_logged_in_page')
+            next_url = url_for('main.index')
         else:
-            next_url = url_for('stats.special_logged_in_page')
+            next_url = url_for('main.index')
         return next_url

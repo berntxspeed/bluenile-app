@@ -1,5 +1,5 @@
-import traceback, sys
 import requests
+import traceback, sys
 from pprint import pprint as pp 
 
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
@@ -13,6 +13,15 @@ class DataLoadService(DbService):
     def __init__(self, config, db, logger, mongo):
         super(DataLoadService, self).__init__(config, db, logger)
         self.mongo = mongo
+
+    def exec_safe_session(self, load_func=None, *args):
+        if load_func:
+            try:
+                load_func(*args)
+            except:
+                self.db.session.rollback()
+            finally:
+                self.db.session.remove()
 
     def load_customers(self):
         # load customer table here
@@ -105,7 +114,7 @@ class DataLoadService(DbService):
                            auth=auth,
                            headers=headers,
                            params=params,
-                           db_session=self.db.session,
+                           db_session=self.db.session(),
                            db_model=Purchase,
                            primary_keys=primary_keys,
                            db_field_map=db_field_map,
@@ -143,7 +152,7 @@ class DataLoadService(DbService):
                          })
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing SendJobs.csv'+repr(exc)+traceback.print_tb(exc_traceback))
+            print('ALERT: problem importing SendJobs.csv'+traceback.print_tb(exc_traceback))
         try:
             zf.load_data(file='Sent.csv',
                          db_session=self.db.session,
@@ -157,7 +166,7 @@ class DataLoadService(DbService):
                          })
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing Sent.csv'+repr(exc)+traceback.print_tb(exc_traceback))
+            print('ALERT: problem importing Sent.csv'+traceback.print_tb(exc_traceback))
         try:
             # load Opens data to db
             zf.load_data(file='Opens.csv',
@@ -185,7 +194,7 @@ class DataLoadService(DbService):
                          })
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing Opens.csv'+repr(exc)+traceback.print_tb(exc_traceback))
+            print('ALERT: problem importing Opens.csv'+traceback.print_tb(exc_traceback))
         try:
             # load Clicks data to db
             zf.load_data(file='Clicks.csv',
@@ -217,12 +226,9 @@ class DataLoadService(DbService):
                          })
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing Clicks.csv' +repr(exc)+traceback.print_tb(exc_traceback))
-        finally:
-            try:
-                zf.clean_up() # delete downloaded files
-            except Exception as exc:
-                print('ALERT: problem cleaning up downloaded files: '+str(exc))
+            print('ALERT: problem importing Clicks.csv'+traceback.print_tb(exc_traceback))
+
+        zf.clean_up() # delete downloaded files
 
         try:
             # execute separate load of exported Journey-based sends information
@@ -246,8 +252,7 @@ class DataLoadService(DbService):
             csv.load_data()
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem loading journey_sends.csv'+repr(exc)+traceback.print_tb(exc_traceback))
-
+            print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))
         try:
             # execute separate load of exported Journey-based opens information
             filename = 'journey_opens.csv'
@@ -270,8 +275,7 @@ class DataLoadService(DbService):
             csv.load_data()
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem loading journey_opens.csv'+repr(exc)+traceback.print_tb(exc_traceback))
-
+            print('ALERT: problem loading journey_opens.csv'+traceback.print_tb(exc_traceback))
         try:
             # execute separate load of exported Journey-based clicks information
             filename = 'journey_clicks.csv'
@@ -294,7 +298,7 @@ class DataLoadService(DbService):
             csv.load_data()
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem loading journey_clicks.csv'+repr(exc)+traceback.print_tb(exc_traceback))
+            print('ALERT: problem loading journey_clicks.csv'+str(exc)+traceback.print_tb(exc_traceback))
 
         # TODO: append county FIPS codes to open and click data
 

@@ -107,7 +107,7 @@ $(document).ready(function () {
         renderEmlStats: function() {
             if(this.model.get('sendId')){
                 var bbox = this.model.getBBox();
-                var sendId = this.model.get('sendId').toUpperCase();
+                var sendId = this.model.get('sendId');
                 var id = this.model.get('id');
                 this.$box.find('.drill-down-checkboxA, .drill-down-checkboxB')
                     .attr('value', sendId)

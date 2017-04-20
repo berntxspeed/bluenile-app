@@ -41,5 +41,5 @@ def sync_query_to_mc(mongo, query_name):
     status, query_rules = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
 
     from .workers import sync_query_to_mc
-    result = sync_query_to_mc.delay(query_rules)
+    result = sync_query_to_mc.delay(query_rules, task_type='data-push', query_name=query_name)
     return dict(task_id=result.id, query_names=[ a_query['name'] for a_query in all_q_result])

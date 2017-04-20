@@ -53,7 +53,7 @@ $(function(){
                     // add check back to the currently selected box
                     $(this).prop('checked', true);
 
-                    var trigSendKey = $(this).val().toUpperCase();
+                    var trigSendKey = $(this).val();
                     //alert('drill down on: ' + sendId);
 
                     var filter;
@@ -102,7 +102,7 @@ $(function(){
                     // add check back to the currently selected box
                     $(this).prop('checked', true);
 
-                    var trigSendKey = $(this).val().toUpperCase();
+                    var trigSendKey = $(this).val();
                     //alert('drill down on: ' + sendId);
 
                     var filter;

@@ -1,6 +1,8 @@
 from manage import celery, injector, app
 from celery.schedules import crontab
 from .injector_keys import DataLoadServ
+from ...app.injector_keys import MongoDB
+
 
 
 class BaseTask(celery.Task):
@@ -17,14 +19,19 @@ class BaseTask(celery.Task):
         task = {'status': status,
                 'task_id': task_id,
                 'retval': str(retval),
-                'task_type': kwargs['task_type'],
+                'task_type': kwargs.get('task_type'),
                 'einfo': str(einfo)
                 }
 
         with app.app_context():
-            service = injector.get(DataLoadServ)
+            mongo = injector.get(MongoDB)
             from server.app.task_admin.services.mongo_task_loader import MongoTaskLoader
-            success, error = MongoTaskLoader(service.mongo.db).save_task(task)
+            success, error = MongoTaskLoader(mongo.db).save_task(task)
+            if kwargs.get('task_type') == 'data-push':
+                if kwargs.get('query_name') is not None:
+                    from server.app.data_builder.services.data_builder_query import DataBuilderQuery
+                    status, result = DataBuilderQuery(mongo.db).update_last_run_info(kwargs['query_name'])
+
 
         super(BaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
@@ -47,8 +54,13 @@ celery.conf.beat_schedule = {
     },
     'every-12-hours_mc_email_data': {
         'task': 'server.app.stats.workers.load_mc_email_data',
-        'schedule': crontab(minute=0, hour='*/12'),
+        'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'mc-email-data'}
+    },
+    'every-hour_periodic_sync_to_mc': {
+        'task': 'server.app.stats.workers.periodic_sync_to_mc',
+        'schedule': crontab(minute=0, hour='*'),
+        'kwargs': {'task_type': 'periodic-sync'}
     }
 }
 
@@ -56,49 +68,49 @@ celery.conf.beat_schedule = {
 def load_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.load_customers()
+        service.exec_safe_session(service.load_customers)
 
 
 @celery.task(base=BaseTask)
 def load_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.load_purchases()
+        service.exec_safe_session(service.load_purchases)
 
 
 @celery.task(base=BaseTask)
 def load_mc_email_data(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.load_mc_email_data()
+        service.exec_safe_session(service.load_mc_email_data)
 
 
 @celery.task
 def load_artists():
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.load_artists()
+        service.exec_safe_session(service.load_artists)
 
 
 @celery.task(base=BaseTask)
 def load_mc_journeys(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.load_mc_journeys()
+        service.exec_safe_session(service.load_mc_journeys)
 
 
 @celery.task(base=BaseTask)
 def load_web_tracking(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.load_web_tracking()
+        service.exec_safe_session(service.load_web_tracking)
 
 
 @celery.task
 def add_fips_location_emlopen(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.add_fips_location_data('EmlOpen')
+        service.exec_safe_session(service.add_fips_location_data, 'EmlOpen')
 
 
 @celery.task
@@ -106,13 +118,29 @@ def add_fips_location_emlclick(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.add_fips_location_data('EmlClick')
+        service.exec_safe_session(service.add_fips_location_data, 'EmlClick')
 
 
 @celery.task(base=BaseTask)
+def periodic_sync_to_mc(**kwargs):
+    from server.app.data_builder.services.data_builder_query import DataBuilderQuery
+    from .services.classes.stats_utils import find_relevant_periodic_tasks
+
+    with app.app_context():
+        mongo = injector.get(MongoDB)
+        status, all_queries = DataBuilderQuery(mongo.db).get_all_queries()
+        relevant_queries = find_relevant_periodic_tasks(all_queries)
+
+        if len(relevant_queries):
+            from ..data.workers import sync_query_to_mc
+            for a_query in relevant_queries:
+                sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
+
+
 def load_lead_perfection(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.load_lead_perfection()
+        service.exec_safe_session(service.load_lead_perfection)
 
 
 NUM_OBJ_TO_CREATE = 30;
