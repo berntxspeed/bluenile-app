@@ -28,7 +28,6 @@ def create_app():
                 template_folder=config_obj.TEMPLATE_FOLDER,
                 static_url_path=config_obj.STATIC_URL_PATH)
 
-    # app.debug = True
     app.debug = False
     app.config.from_object(config_obj)
     config_obj.init_app(app)
@@ -61,16 +60,6 @@ def create_injector(app=None):
 def init_db(app):
     from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer
     db.init_app(app)
-
-    # create the Flask-Restless API manager
-    manager = Restless.APIManager(app, flask_sqlalchemy_db=db)
-
-    # create the api endpoints, which will be available by /api/<tblname>
-    manager.create_api(SendJob, methods=['GET'])
-    manager.create_api(EmlSend, methods=['GET'])
-    manager.create_api(EmlOpen, methods=['GET'])
-    manager.create_api(EmlClick, methods=['GET'])
-    manager.create_api(Customer, methods=['GET'])
 
 
 def init_mongo(app, mongo):
