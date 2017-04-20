@@ -16,17 +16,17 @@ class EventMgr(object):
     def log_insert_events(self, session):
         self.refresh_event_defs()
         for target in session.new:
-            self._log_event(target, 'insert')
+            self._log_event(session, target, 'insert')
 
     def log_update_events(self, session):
         self.refresh_event_defs()
         for target in session.dirty:
-            self._log_event(target, 'update')
+            self._log_event(session, target, 'update')
 
     def refresh_event_defs(self):
         self._event_defs = self._get_event_defs()
 
-    def _log_event(self, target, op):
+    def _log_event(self, session, target, op):
         if op not in ['update', 'insert']:
             raise ValueError('invalid operation to log event for.  can only log for insert and update')
 
@@ -61,11 +61,11 @@ class EventMgr(object):
                                 event = self._Event(def_id=event_def.id,
                                                     rec_id=target.id,
                                                     new_val=safe_list_get(newVal, 0, None))
-                                self._db.session.add(event)
+                                session.add(event)
                         else:
                             event = self._Event(def_id=event_def.id,
                                                 rec_id=target.id)
-                            self._db.session.add(event)
+                            session.add(event)
                     elif event_def.dml_op == 'update':
                         change = changes.get(event_def.column, None)
                         oldVal = safe_list_get(safe_list_get(change, 0, None), 0, None)
@@ -83,7 +83,7 @@ class EventMgr(object):
                                                   rec_id=target.id,
                                                   old_val=oldVal,
                                                   new_val=newVal)
-                                    self._db.session.add(event)
+                                    session.add(event)
 
     def _get_event_defs(self):
         edefs = {}

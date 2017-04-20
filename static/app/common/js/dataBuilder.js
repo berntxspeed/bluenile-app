@@ -13,7 +13,8 @@ $(document).ready(function() {
         var g_current_query = {
                                 name: null,
                                 rules: l_empty_rules,
-                                sqlalchemy: null
+                                sqlalchemy: null,
+                                current_row: null
                               }
     }
     else{
@@ -222,7 +223,6 @@ $(document).ready(function() {
     var init = function(){
         if (!g_name) {
             buildUI(g_rules)
-            hideElement($("#gotopage"), export_data_button, sync_to_mc_button)
         }
         else{
             setupLoadedQuery(g_rules)
@@ -248,13 +248,13 @@ $(document).ready(function() {
         $("#alertModal").modal({'backdrop': false, 'keyboard': true})
     }
 
-    var changeModalHeader = function(title) {
-        document.getElementById('modal-table-header').innerHTML = '<span class="glyphicon glyphicon-hand-down"></span> ' + title
+    var changeModalHeader = function(header, title) {
+        document.getElementById(header).innerHTML = '<span class="glyphicon glyphicon-hand-down"></span> ' + title
     }
 
     var showExploreColumns = function(table_id){
         g_explore.state = 'column'
-        changeModalHeader(table_id + ': Choose A Field')
+        changeModalHeader('modal-table-header', table_id + ': Choose A Field')
         columns =  [{
                         field: 'key',
                         title: 'Field Name'
@@ -277,10 +277,10 @@ $(document).ready(function() {
         showElement($("#back-explore-tables"))
     }
 
-    var showExploreValuesTable = function(columns, data) {
+    var showExploreValuesTable = function(columns, data, pagination=false) {
         destroyTable(explore_values_table)
         explore_values_table.bootstrapTable( {
-              	pagination: false,
+              	pagination: pagination,
               	showRefresh: false,
               	showToggle: false,
               	showColumns: false,
@@ -288,8 +288,19 @@ $(document).ready(function() {
               	striped: true,
               	clickToSelect: true,
               	columns: columns,
-                data: data
+                data: data,
+                rowStyle: rowStyleFunc
         })
+    }
+
+    var rowStyleFunc = function (row, index){
+        return {
+            css: {
+                  "word-wrap": "break-word",
+                  "in-width": "250px",
+                  "max-width": "250px"
+                  }
+        }
     }
 
   	function getSelectedRow() {
@@ -325,21 +336,20 @@ $(document).ready(function() {
                             request.setRequestHeader("X-CSRFToken", g_csrf_token)
                         },
                         success: function(data) {
-                            //data = [{'info': 'Brevity is the sister of talent'}]
                             if (data.length === 0) { data.push({ value: 'No data for' + row.key + ' in Database'}) }
                             else {
                                 columns.push({
                                     field: 'count',
-                                    title: 'Times it appears in the data'
+                                    title: 'Appearances in the data'
                                 })
                             }
-                            showExploreValuesTable(columns, data)
-                            changeModalHeader(row.key)
+                            showExploreValuesTable(columns, data, true)
+                            changeModalHeader('modal-table-header', row.key)
                             g_explore.state = 'info'
                         },
                         error: function(err) {
                         //                    TODO: handle the error or retry
-                            changeModalHeader(row.key)
+                            changeModalHeader('modal-table-header', row.key)
                             data = [{ value: 'Values preview not available'}]
                             showExploreValuesTable(columns, data)
                             g_explore.state = 'info'
@@ -370,7 +380,7 @@ $(document).ready(function() {
             dataType: "json",
             success: function(data) {
                 showExploreValuesTable(data.columns, data.data)
-                changeModalHeader('Click To Preview Results')
+                changeModalHeader('modal-table-header', 'Click To Preview Results')
                 hideElement($("#back-explore-tables"))
             },
             error: function(err) {
@@ -399,7 +409,7 @@ $(document).ready(function() {
 
         $("#explore-values-modal").on('show.bs.modal', function () {
             showExploreValuesTable(columns, data)
-            changeModalHeader('Click To Choose A Table')
+            changeModalHeader('modal-table-header', 'Click To Choose A Table')
             hideElement($("#back-explore-tables"))
         })
         $("#explore-values-modal").modal("show")
@@ -409,7 +419,10 @@ $(document).ready(function() {
     $("#btn-manage-queries").on('click', function() {
         destroyTable(saved_queries_table)
         destroyTable(explore_values_table)
-        changeModalHeader('Saved Queries')
+        changeModalHeader('saved-queries-modal', 'Saved Queries')
+        hideElement($("#frequency-buttons"))
+        hideElement($("#frequency-selector"))
+        showElement($("#saved-queries-buttons"))
         $("#modalTable").on('show.bs.modal', function () {
             $.ajax({
                 url: "/builder/get-queries",
@@ -426,7 +439,7 @@ $(document).ready(function() {
                 }
             })
         })
-        $("#modalTable").modal("toggle")//{backdrop: "static"})
+        $("#modalTable").modal("show")//{backdrop: "static"})
     })
 
   	saved_queries_table.on('click-row.bs.table', function (e, row, $element) {
@@ -462,14 +475,15 @@ $(document).ready(function() {
 
     $("#btn-load-saved-query").click(function () {
         var row = getSelectedRow()
+        if (row == null) { return }
         g_current_query.name = row.name
         setupLoadedQuery(row)
         hideElement(progress_bar)
     })
 
-
     $("#btn-delete-saved-query").click(function () {
         var row = getSelectedRow()
+        if (row == null) { return }
         query_name = row.name
         $.ajax({
                  url: "/builder/delete-query/"+query_name,
@@ -497,6 +511,102 @@ $(document).ready(function() {
 
     });
 
+    $("#btn-periodic-sync").click(function () {
+        var row = getSelectedRow()
+        if (row == null) { return }
+        changeModalHeader('saved-queries-modal', row.name)
+        document.getElementById('periodic-footer').innerHTML = ""
+        destroyTable(saved_queries_table)
+        hideElement($("#saved-queries-buttons"))
+        showElement($("#frequency-buttons"))
+        showElement($("#frequency-selector"))
+        g_current_query.current_row = row
+
+//        $("#frequency-date").datepicker({
+//            maxViewMode: 0,
+//            todayBtn: "linked",
+//            clearBtn: true,
+//            autoclose: true,
+//            todayHighlight: true,
+//            toggleActive: true
+//        });
+        if (row.periodic_sync != null) {
+            $("#frequency").val(row.periodic_sync)
+            //TODO: fill in every_x_hours value
+            if (row.periodic_sync === '1')  {
+                showElement($("#every-x-hours-block"))
+                $("#every-x-hours").val(row.hourly_frequency)
+            }
+            else {
+                hideElement($("#every-x-hours-block"))
+                $("#every-x-hours").val("")
+            }
+        }
+        else {
+            $("#frequency").val("0")
+            hideElement($("#every-x-hours-block"))
+        }
+    })
+
+    $("#btn-return-to-saved-queries").click(function () {
+        $("#btn-manage-queries").click()
+    })
+
+    $("#frequency").on('change', function() {
+        if (this.value === '1'){
+            showElement($("#every-x-hours-block"))
+            $("#every-x-hours").val("")
+        }
+        else {hideElement($("#every-x-hours-block"))}
+    })
+
+    $("#btn-save-periodic-sync").click(function (e) {
+        changed = false
+        save_query = g_current_query.current_row
+        current_frequency = g_current_query.current_row.periodic_sync
+        new_periodic_sync= $("#frequency").val()
+        if (new_periodic_sync == '1') {
+            //check for valid entry values
+            if ( ($("#every-x-hours").val() === "") || (!(0 < parseInt($("#every-x-hours").val()) < 24)) ){
+                document.getElementById('periodic-footer').innerHTML = "Enter Value between 1 and 23"
+            }
+            //check if frequency changed
+            else if ( (current_frequency === new_periodic_sync) && (g_current_query.current_row.hourly_frequency === $("#every-x-hours").val()) ) {
+                document.getElementById('periodic-footer').innerHTML = "Change Hourly Frequency Before Save"
+            }
+            else {
+                save_query.hourly_frequency = $("#every-x-hours").val()
+                changed = true
+            }
+        }
+        else if ( (new_periodic_sync === current_frequency) || ((new_periodic_sync === "0") && (current_frequency == null)) ){
+            $("#btn-return-to-saved-queries").click()
+        }
+        else {changed = true}
+        if (changed) {
+            save_query.periodic_sync = new_periodic_sync
+            $.ajax({
+                 url: "/builder/save-query/" + save_query.name,
+                 method: "POST",
+                 data: JSON.stringify(save_query),
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
+                 },
+                 success: function(data) {
+                    document.getElementById('periodic-footer').innerHTML = "Saved!"
+                 },
+                 error: function(err) {
+                         //TODO: handle the error here
+                 }
+            })
+
+            clearTimeout($(this).data('hideInterval'));
+            $(this).data('hideInterval', setTimeout(function(){
+                $("#btn-return-to-saved-queries").click()
+            }, 1000));
+        }
+    })
 
     saved_queries_table.on('dbl-click-row.bs.table', function (e, row, $element) {
         $("#modalTable").modal("toggle")//{backdrop: "static"});
@@ -504,7 +614,6 @@ $(document).ready(function() {
         g_current_query.name = row.name
         setupLoadedQuery(row)
     })
-
 
     $("#saveDialog").on('show.bs.modal', function () {
         document.getElementById("save-query-form").reset()
@@ -536,8 +645,7 @@ $(document).ready(function() {
                     alertUser("Saved!")
                  },
                  error: function(err) {
-//                         //TODO: handle the error here
-                     //handle the error or retry
+                         //TODO: handle the error here
                  }
              })
     }
@@ -638,7 +746,6 @@ $(document).ready(function() {
       	paginationPreText: 'Previous',
       	paginationNextText: 'Next'
         })
-//      	showPaginationSwitch: true,
 
 
     $("#page-button").click(function () {
