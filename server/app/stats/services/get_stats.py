@@ -109,7 +109,8 @@ class GetStatsService(DbService):
             'reports': reports
         }
 
-    def send_info(self, option, sendid):
+    def send_info(self, option, request):
+        sendid = request.form.get('sendid', None)
         try:
             if sendid is not None and option in ['send-id', 'trig-send-id', 'mult-send-id']:
                 if option == 'send-id':

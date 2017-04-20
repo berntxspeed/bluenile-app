@@ -1,6 +1,6 @@
 from json import dumps, loads
 
-from flask import Response
+from flask import Response, Request
 from flask import request
 from flask import session
 from flask_login import login_required
@@ -52,11 +52,11 @@ def report_view(get_stats_service):
     # passes all send ids to view
     return get_stats_service.report_view()
 
-@stats.route('/send-info/<option>/<sendid>')
-@inject(get_stats_service=GetStatsServ)
-def send_info(get_stats_service, option, sendid):
+@stats.route('/send-info/<option>', methods=['POST'])
+@inject(request=Request, get_stats_service=GetStatsServ)
+def send_info(request, get_stats_service, option):
     # sends info about a single email send
-    return get_stats_service.send_info(option, sendid)
+    return get_stats_service.send_info(option, request)
 
 
 @stats.route('/celery-task-test')
