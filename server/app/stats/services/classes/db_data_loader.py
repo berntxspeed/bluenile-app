@@ -48,10 +48,12 @@ class SqlDataLoader(object):
                 print('inserting new records: ' + str(len(items)))
 
                 self._db_session.add_all(items.values())
-                self._db_session.commit()
+                #removing every batch commit to speed up load for yeti
+                #self._db_session.commit()
 
                 if last_batch:
                     print('done loading records')
+                    self._db_session.commit()
                     break
             else: # no records to update
                 return
