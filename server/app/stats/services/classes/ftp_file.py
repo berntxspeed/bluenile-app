@@ -90,7 +90,7 @@ class CsvFile(SqlDataLoader, FtpFile):
 
         SqlDataLoader.load_to_db(self, self._get_data, delimiter=self._delimiter)
 
-    def _get_data(self, chunk_size=500, delimiter=','):
+    def _get_data(self, chunk_size=10000, delimiter=','):
         num_recs = 0
         filename = self._filename
         """Load csv file into the database
@@ -209,7 +209,7 @@ class ZipFile(FtpFile):
         finally:
             os.chdir('..')
 
-    def load_data(self, file, db_session, db_model, primary_keys, db_field_map, chunk_size=500):
+    def load_data(self, file, db_session, db_model, primary_keys, db_field_map):
 
         if not self._downloaded_yet:
             FtpFile.download(self)
@@ -222,7 +222,7 @@ class ZipFile(FtpFile):
         file = self._extracted_files_dir + '/' + file
         if file.split('.')[-1] == 'csv':
             cf = CsvFile(file, db_session, db_model, primary_keys, db_field_map)
-            cf.load_data(chunk_size=chunk_size)
+            cf.load_data()
         else:
             raise TypeError('requested file type is not supported yet.  current support: csv')
 
