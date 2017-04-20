@@ -18,8 +18,9 @@ class DataLoadService(DbService):
         if load_func:
             try:
                 load_func(*args)
-            except:
+            except Exception as exc:
                 self.db.session.rollback()
+                raise exc
             finally:
                 self.db.session.remove()
 
