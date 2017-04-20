@@ -67,17 +67,159 @@
     </div>
     <div class="row">
         <div class="col-md-12 center-block">
-            <strong>Drill Down into One Email (A SIDE)</strong>
             <div class="well" id="drill-down-well">
-                <div id="drill-down-areaA" style="background-color: ghostwhite"></div>
+                <div id="drill-down-areaA" style="background-color: ghostwhite">
+                    <strong>Drill Down into One Email (A SIDE)</strong>
+                    <div class="well form-well" id="send-info"></div>
+                    <div class="well form-well col-md-6">
+                        <label>Data:</label>
+                        <select id="data-selection">
+                            <option value="">--select an table--</option>
+                            <option value="SendJob">Send Jobs</option>
+                            <option value="EmlSend">Email Sends</option>
+                            <option value="EmlOpen">Email Opens</option>
+                            <option value="EmlClick">Email Clicks</option>
+                        </select>
+
+                        <br/>
+                        <label>Group Data By:</label>
+                        <select id="data-grouping" disabled>
+                            <option value="">-- select one --</option>
+                        </select>
+                        <label>and</label>
+                        <select id="data-grouping2" disabled>
+                            <option value="">-- optional --</option>
+                        </select>
+                    </div>
+
+                    <div class="well form-well col-md-6">
+                        <label>Calculate:</label>
+                        <select id="aggregate-op">
+                            <option value="count">Count</option>
+                            <option value="average">Average</option>
+                            <option value="max">Maximum</option>
+                            <option value="min">Minimum</option>
+                            <option value="sum">Sum</option>
+                        </select>
+                        <select id="aggregate-field" disabled>
+                            <option value="">-- select one--</option>
+                        </select>
+
+                        <br/>
+                        <label>Graph Type:</label>
+                        <select id="graph-type" disabled>
+                            <option value="">-- select one --</option>
+                        </select>
+
+                        <br/>
+                        <input type="button" value="update" name="update" class="drill-down-button update-button btn btn-default">
+                        <input type="button" value="save" name="save" class="drill-down-button save-button btn btn-default">
+                        <input type="button" value="save-as" name="save-as" class="drill-down-button save-as-button btn btn-default">
+                    </div>
+
+                    <div class="well form-well">
+                        <label>Limit data by:</label>
+                        <input type="button" value="add" name="add" id="limit-by-add" class="updateView btn btn-default btn-xs">
+
+                        <div id="limit-by-items">
+                            <div class="limit-by-item">
+                                <select id="limit-by-field" disabled>
+                                    <option value="">-- select one --</option>
+                                </select>
+                                <select id="limit-by-op" disabled>
+                                    <option value="">-- select one --</option>
+                                </select>
+                                <label>Value:</label>
+                                <input type="text" id="limit-by-val1" disabled/>
+                                <input type="text" id="limit-by-val2" disabled hidden/>
+                                <input type="button" value="delete" name="delete" id="limit-by-delete" class="btn btn-default btn-xs" style="display:none;"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="well form-well">
+                        <div id="drill-down-graph" style="background-color: ghostwhite"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12 center-block">
-            <strong>Drill Down into One Email (B SIDE)</strong>
             <div class="well" id="drill-down-well">
-                <div id="drill-down-areaB" style="background-color: ghostwhite"></div>
+                <div id="drill-down-areaB" style="background-color: ghostwhite">
+                    <strong>Drill Down into One Email (B SIDE)</strong>
+                    <div class="well form-well" id="send-info"></div>
+                    <div class="well form-well col-md-6">
+                        <label>Data:</label>
+                        <select id="data-selection">
+                            <option value="">--select an table--</option>
+                            <option value="SendJob">Send Jobs</option>
+                            <option value="EmlSend">Email Sends</option>
+                            <option value="EmlOpen">Email Opens</option>
+                            <option value="EmlClick">Email Clicks</option>
+                        </select>
+
+                        <br/>
+                        <label>Group Data By:</label>
+                        <select id="data-grouping" disabled>
+                            <option value="">-- select one --</option>
+                        </select>
+                        <label>and</label>
+                        <select id="data-grouping2" disabled>
+                            <option value="">-- optional --</option>
+                        </select>
+                    </div>
+
+                    <div class="well form-well col-md-6">
+                        <label>Calculate:</label>
+                        <select id="aggregate-op">
+                            <option value="count">Count</option>
+                            <option value="average">Average</option>
+                            <option value="max">Maximum</option>
+                            <option value="min">Minimum</option>
+                            <option value="sum">Sum</option>
+                        </select>
+                        <select id="aggregate-field" disabled>
+                            <option value="">-- select one--</option>
+                        </select>
+
+                        <br/>
+                        <label>Graph Type:</label>
+                        <select id="graph-type" disabled>
+                            <option value="">-- select one --</option>
+                        </select>
+
+                        <br/>
+                        <input type="button" value="update" name="update" class="drill-down-button update-button btn btn-default">
+                        <input type="button" value="save" name="save" class="drill-down-button save-button btn btn-default">
+                        <input type="button" value="save-as" name="save-as" class="drill-down-button save-as-button btn btn-default">
+                    </div>
+
+                    <div class="well form-well">
+                        <label>Limit data by:</label>
+                        <input type="button" value="add" name="add" id="limit-by-add" class="updateView btn btn-default btn-xs">
+
+                        <div id="limit-by-items">
+                            <div class="limit-by-item">
+                                <select id="limit-by-field" disabled>
+                                    <option value="">-- select one --</option>
+                                </select>
+                                <select id="limit-by-op" disabled>
+                                    <option value="">-- select one --</option>
+                                </select>
+                                <label>Value:</label>
+                                <input type="text" id="limit-by-val1" disabled/>
+                                <input type="text" id="limit-by-val2" disabled hidden/>
+                                <input type="button" value="delete" name="delete" id="limit-by-delete" class="btn btn-default btn-xs" style="display:none;"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="well form-well">
+                        <div id="drill-down-graph" style="background-color: ghostwhite"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -49,27 +49,8 @@ class PieChartEmlStats {
               }
           });
   }
-  getSendCount(obj, callback){
-          this.statsApiRequest('send', obj, callback);
-  }
-  getOpenCount(obj, callback){
-          this.statsApiRequest('open', obj, callback);
-  }
-  getClickCount(obj, callback){
-          this.statsApiRequest('click', obj, callback);
-  }
-  statsApiRequest(table, obj, callback){
-          var tables = {
-              send: 'eml_send',
-              open: 'eml_open',
-              click: 'eml_click'
-          };
-
-          var filters = [{"name": "TriggeredSendExternalKey", "op": "eq", "val": obj.sendId}];
-          if(table == 'open' || table == 'click') {
-              filters.push({"name": "IsUnique", "op": "eq", "val": "True"});
-          }
-          $.ajax({
+  statsApiRequest(obj, callback){
+          /*$.ajax({
               url: '/api/' + tables[table],
               data: {"q": JSON.stringify({"filters": filters})},
               dataType: "json",
@@ -77,6 +58,19 @@ class PieChartEmlStats {
               success: function(data) {
                   console.log(obj.sendId + " has number of " + table + "s: " + data["num_results"]);
                   obj.counts[table] = data["num_results"];
+                  callback(null, obj);
+              },
+              error: function(err) {
+                  callback(err, obj);
+              }
+          });*/
+          $.ajax({
+              url: '/send-info/trig-send-id/' + obj.sendId,
+              success: function(data) {
+                  console.log(obj.sendId + " has number of sends: " + data["numSends"]);
+                  obj.counts['send'] = data["numSends"];
+                  obj.counts['open'] = data["numOpens"];
+                  obj.counts['click'] = data["numClicks"];
                   callback(null, obj);
               },
               error: function(err) {
@@ -102,20 +96,14 @@ class PieChartEmlStats {
               }
           };
 
-          obj.self.getSendCount(obj, function(err, obj){
-              if(err) { return console.error('error getting send stats for sendid: '+obj.sendId+' err:'+ JSON.stringify(err)); }
-              obj.self.getOpenCount(obj, function(err, obj){
-                  if(err) { return console.error('error getting open stats for sendid: '+obj.sendId+' err:'+ JSON.stringify(err)); }
-                  obj.self.getClickCount(obj, function(err, obj){
-                      if(err) { return console.error('error getting click stats for sendid: '+obj.sendId+' err:'+JSON.stringify(err)); }
-                      obj.self.renderChart(obj.chartSelector,
-                                       obj.sizeW,
-                                       obj.sizeH,
-                                       obj.counts.send,
-                                       obj.counts.open,
-                                       obj.counts.click);
-                  });
-              });
+          this.statsApiRequest(obj, function(err, obj){
+              if(err) { return console.error('error getting stats for sendid: '+obj.sendId+' err:'+JSON.stringify(err)); }
+              obj.self.renderChart(obj.chartSelector,
+                               obj.sizeW,
+                               obj.sizeH,
+                               obj.counts.send,
+                               obj.counts.open,
+                               obj.counts.click);
           });
   }
 }

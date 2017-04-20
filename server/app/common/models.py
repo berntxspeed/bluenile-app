@@ -16,7 +16,10 @@ from werkzeug.security import generate_password_hash
 
 from .utils.event_mgr import EventMgr
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={
+                                'autocommit': False,
+                                'autoflush': False
+                                })
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -59,8 +62,7 @@ class User(UserMixin, db.Model):
     @staticmethod
     def insert_users():
         users = [
-            User(username='bernt', password='pass', id=1),
-            User(username='val', password='pass', id=2)
+            User(username='bernt', password='Temp@12345', id=1)
         ]
         for user in users:
             usr = User.query.filter_by(id=user.id).first()
@@ -515,6 +517,14 @@ class Customer(db.Model):
     total_spent_so_far = db.Column(db.Float)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
+    city = db.Column(db.String(255))
+    state = db.Column(db.String(255))
+    interest_area = db.Column(db.String(255))
+    status = db.Column(db.String(255))
+    source = db.Column(db.String(255))
+    last_communication = db.Column(TIMESTAMP)
+    sales_rep = db.Column(db.String(255))
+
     purchases = relationship(Purchase, backref='customer',
                              primaryjoin='Customer.customer_id==Purchase.customer_id',
                              foreign_keys=[Purchase.customer_id],

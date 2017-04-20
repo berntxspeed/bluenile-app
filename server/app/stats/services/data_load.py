@@ -1,8 +1,9 @@
 import requests
+import traceback, sys
 from pprint import pprint as pp 
 
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
-from .classes.ftp_file import ZipFile
+from .classes.ftp_file import ZipFile, CsvFile
 from ...common.services import DbService
 from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
@@ -12,6 +13,15 @@ class DataLoadService(DbService):
     def __init__(self, config, db, logger, mongo):
         super(DataLoadService, self).__init__(config, db, logger)
         self.mongo = mongo
+
+    def exec_safe_session(self, load_func=None, *args):
+        if load_func:
+            try:
+                load_func(*args)
+            except:
+                self.db.session.rollback()
+            finally:
+                self.db.session.remove()
 
     def load_customers(self):
         # load customer table here
@@ -45,6 +55,41 @@ class DataLoadService(DbService):
 
         ad1.load_data()
 
+    def load_lead_perfection(self):
+        config = self.config
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('CUSTOMER_DATA_SOURCE'))
+        cfg = {
+            'host': mc_data_creds.get('ftp_url'),
+            'username': mc_data_creds.get('ftp_user'),
+            'password': mc_data_creds.get('ftp_pass')
+        }
+        filename = mc_data_creds.get('filename')
+        filepath = mc_data_creds.get('filepath')
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=Customer,
+                      primary_keys=['customer_id'],
+                      db_field_map=dict(
+                          customer_id='SubscriberKey',
+                          email_address='EmailAddress',
+                          fname='firstname',
+                          lname='lastname',
+                          created_at='EntryDate',
+                          city='City',
+                          state='State',
+                          interest_area='Productid',
+                          status='ds_id',
+                          source='src_id',
+                          sales_rep='SalesRepName',
+                          last_communication='LastCall'
+                      ),
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load lead perfection data to db
+        csv.load_data()
+
     def load_purchases(self):
         config = self.config
         data_source = config.get('PURCHASE_DATA_SOURCE')
@@ -69,34 +114,12 @@ class DataLoadService(DbService):
                            auth=auth,
                            headers=headers,
                            params=params,
-                           db_session=self.db.session,
+                           db_session=self.db.session(),
                            db_model=Purchase,
                            primary_keys=primary_keys,
                            db_field_map=db_field_map,
                            json_data_keys=json_data_keys)
         ad1.load_data()
-
-    # def load_artists(self):
-    #     artist_data_source = self.config.get('ARTIST_DATA_SOURCE')
-    #     endpoint = self.config.get('EXT_DATA_CREDS')[artist_data_source]['endpoint']
-    #     headers = {'Content-Type': 'application/json'}
-    #     params = dict(q='year:2016', type='artist', market='us', limit=20)
-    #     db_field_map = dict(name='name', popularity='popularity', uri='uri', href='href')
-    #     primary_keys = ['name']
-    #     json_data_keys = 'artists.items'
-    #
-    #     ad = ApiDataToSql(endpoint=endpoint,
-    #                       auth=None,
-    #                       headers=headers,
-    #                       params=params,
-    #                       db_session=self.db.session,
-    #                       db_model=Artist,
-    #                       primary_keys=primary_keys,
-    #                       db_field_map=db_field_map,
-    #                       json_data_keys=json_data_keys)
-    #
-    #     ad.load_data()
-    #     pp(ad._get_data().keys())
 
     def load_mc_email_data(self):
         config = self.config
@@ -112,90 +135,170 @@ class DataLoadService(DbService):
                      ftp_path=filepath,
                      ftp_cfg=cfg)
 
-        # load Sendjobs data to db
-        zf.load_data(file='SendJobs.csv',
-                     db_session=self.db.session,
-                     db_model=SendJob,
-                     primary_keys=['SendID'],
-                     db_field_map={
-                         'SendID': 'SendID',
-                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey',
-                         'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
-                         'EmailName': 'EmailName',
-                         'SchedTime': 'SchedTime',
-                         'SentTime': 'SentTime',
-                         'Subject': 'Subject',
-                         'PreviewURL': 'PreviewURL'
-                     })
+        try:
+            # load Sendjobs data to db
+            zf.load_data(file='SendJobs.csv',
+                         db_session=self.db.session,
+                         db_model=SendJob,
+                         primary_keys=['SendID'],
+                         db_field_map={
+                             'SendID': 'SendID',
+                             'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
+                             'EmailName': 'EmailName',
+                             'SchedTime': 'SchedTime',
+                             'SentTime': 'SentTime',
+                             'Subject': 'Subject',
+                             'PreviewURL': 'PreviewURL'
+                         })
+        except Exception as exc:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print('ALERT: problem importing SendJobs.csv'+traceback.print_tb(exc_traceback))
+        try:
+            zf.load_data(file='Sent.csv',
+                         db_session=self.db.session,
+                         db_model=EmlSend,
+                         primary_keys=['SubscriberKey', 'EventDate'],
+                         db_field_map={
+                             'SendID': 'SendID',
+                             'SubscriberKey': 'SubscriberKey',
+                             'EmailAddress': 'EmailAddress',
+                             'EventDate': 'EventDate'
+                         })
+        except Exception as exc:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print('ALERT: problem importing Sent.csv'+traceback.print_tb(exc_traceback))
+        try:
+            # load Opens data to db
+            zf.load_data(file='Opens.csv',
+                         db_session=self.db.session,
+                         db_model=EmlOpen,
+                         primary_keys=['SubscriberKey', 'EventDate'],
+                         db_field_map={
+                             'SendID': 'SendID',
+                             'SubscriberKey': 'SubscriberKey',
+                             'EmailAddress': 'EmailAddress',
+                             'EventDate': 'EventDate',
+                             'IsUnique': 'IsUnique',
+                             'IpAddress': 'IpAddress',
+                             'Country': 'Country',
+                             'Region': 'Region',
+                             'City': 'City',
+                             'Latitude': 'Latitude',
+                             'Longitude': 'Longitude',
+                             'MetroCode': 'MetroCode',
+                             'AreaCode': 'AreaCode',
+                             'Browser': 'Browser',
+                             'EmailClient': 'EmailClient',
+                             'OperatingSystem': 'OperatingSystem',
+                             'Device': 'Device'
+                         })
+        except Exception as exc:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print('ALERT: problem importing Opens.csv'+traceback.print_tb(exc_traceback))
+        try:
+            # load Clicks data to db
+            zf.load_data(file='Clicks.csv',
+                         db_session=self.db.session,
+                         db_model=EmlClick,
+                         primary_keys=['SubscriberKey', 'EventDate'],
+                         db_field_map={
+                             'SendID': 'SendID',
+                             'SubscriberKey': 'SubscriberKey',
+                             'EmailAddress': 'EmailAddress',
+                             'EventDate': 'EventDate',
+                             'SendURLID': 'SendURLID',
+                             'URLID': 'URLID',
+                             'URL': 'URL',
+                             'Alias': 'Alias',
+                             'IsUnique': 'IsUnique',
+                             'IpAddress': 'IpAddress',
+                             'Country': 'Country',
+                             'Region': 'Region',
+                             'City': 'City',
+                             'Latitude': 'Latitude',
+                             'Longitude': 'Longitude',
+                             'MetroCode': 'MetroCode',
+                             'AreaCode': 'AreaCode',
+                             'Browser': 'Browser',
+                             'EmailClient': 'EmailClient',
+                             'OperatingSystem': 'OperatingSystem',
+                             'Device': 'Device'
+                         })
+        except Exception as exc:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print('ALERT: problem importing Clicks.csv'+traceback.print_tb(exc_traceback))
 
-        zf.load_data(file='Sent.csv',
-                     db_session=self.db.session,
-                     db_model=EmlSend,
-                     primary_keys=['SubscriberKey', 'EventDate'],
-                     db_field_map={
-                         'SendID': 'SendID',
-                         'SubscriberKey': 'SubscriberKey',
-                         'EmailAddress': 'EmailAddress',
-                         'EventDate': 'EventDate',
-                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey'
-                     })
-
-        # load Opens data to db
-        zf.load_data(file='Opens.csv',
-                     db_session=self.db.session,
-                     db_model=EmlOpen,
-                     primary_keys=['SubscriberKey', 'EventDate'],
-                     db_field_map={
-                         'SendID': 'SendID',
-                         'SubscriberKey': 'SubscriberKey',
-                         'EmailAddress': 'EmailAddress',
-                         'EventDate': 'EventDate',
-                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey',
-                         'IsUnique': 'IsUnique',
-                         'IpAddress': 'IpAddress',
-                         'Country': 'Country',
-                         'Region': 'Region',
-                         'City': 'City',
-                         'Latitude': 'Latitude',
-                         'Longitude': 'Longitude',
-                         'MetroCode': 'MetroCode',
-                         'AreaCode': 'AreaCode',
-                         'Browser': 'Browser',
-                         'EmailClient': 'EmailClient',
-                         'OperatingSystem': 'OperatingSystem',
-                         'Device': 'Device'
-                     })
-
-        # load Clicks data to db
-        zf.load_data(file='Clicks.csv',
-                     db_session=self.db.session,
-                     db_model=EmlClick,
-                     primary_keys=['SubscriberKey', 'EventDate'],
-                     db_field_map={
-                         'SendID': 'SendID',
-                         'SubscriberKey': 'SubscriberKey',
-                         'EmailAddress': 'EmailAddress',
-                         'EventDate': 'EventDate',
-                         'SendURLID': 'SendURLID',
-                         'URLID': 'URLID',
-                         'URL': 'URL',
-                         'Alias': 'Alias',
-                         'TriggeredSendExternalKey': 'TriggeredSendExternalKey',
-                         'IsUnique': 'IsUnique',
-                         'IpAddress': 'IpAddress',
-                         'Country': 'Country',
-                         'Region': 'Region',
-                         'City': 'City',
-                         'Latitude': 'Latitude',
-                         'Longitude': 'Longitude',
-                         'MetroCode': 'MetroCode',
-                         'AreaCode': 'AreaCode',
-                         'Browser': 'Browser',
-                         'EmailClient': 'EmailClient',
-                         'OperatingSystem': 'OperatingSystem',
-                         'Device': 'Device'
-                     })
         zf.clean_up() # delete downloaded files
+
+        try:
+            # execute separate load of exported Journey-based sends information
+            filename = 'journey_sends.csv'
+            filepath = '/Export/'
+            csv = CsvFile(file=filename,
+                          db_session=self.db.session,
+                          db_model=EmlSend,
+                          primary_keys=['SubscriberKey', 'EventDate'],
+                          db_field_map={
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate'
+                          },
+                          ftp_path=filepath,
+                          ftp_cfg=cfg,
+                          file_encoding='utf16')
+
+            # load journey send data to db
+            csv.load_data()
+        except Exception as exc:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))
+        try:
+            # execute separate load of exported Journey-based opens information
+            filename = 'journey_opens.csv'
+            filepath = '/Export/'
+            csv = CsvFile(file=filename,
+                          db_session=self.db.session,
+                          db_model=EmlOpen,
+                          primary_keys=['SubscriberKey', 'EventDate'],
+                          db_field_map={
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate'
+                          },
+                          ftp_path=filepath,
+                          ftp_cfg=cfg,
+                          file_encoding='utf16')
+
+            # load journey opens data to db
+            csv.load_data()
+        except Exception as exc:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print('ALERT: problem loading journey_opens.csv'+traceback.print_tb(exc_traceback))
+        try:
+            # execute separate load of exported Journey-based clicks information
+            filename = 'journey_clicks.csv'
+            filepath = '/Export/'
+            csv = CsvFile(file=filename,
+                          db_session=self.db.session,
+                          db_model=EmlClick,
+                          primary_keys=['SubscriberKey', 'EventDate'],
+                          db_field_map={
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate'
+                          },
+                          ftp_path=filepath,
+                          ftp_cfg=cfg,
+                          file_encoding='utf16')
+
+            # load journey click data to db
+            csv.load_data()
+        except Exception as exc:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print('ALERT: problem loading journey_clicks.csv'+str(exc)+traceback.print_tb(exc_traceback))
 
         # TODO: append county FIPS codes to open and click data
 
@@ -211,10 +314,12 @@ class DataLoadService(DbService):
 
     def __get_mc_auth(self):
         #TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
+        config = self.config
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('EMAIL_DATA_DEST'))
         # get auth token
-        url = 'https://auth.exacttargetapis.com/v1/requestToken'
-        body = dict(clientId='pmbrqffimjnc2p9hfdnvg1sn',
-                    clientSecret='R1HWMpHIpzqx0l2vp9glolND')
+        url = mc_data_creds.get('auth_url') # was 'https://auth.exacttargetapis.com/v1/requestToken'
+        body = dict(clientId=mc_data_creds.get('id'), # was '3t1ch44ej7pb4p117oyr7m4g',
+                    clientSecret=mc_data_creds.get('secret')) # was '2Cegvz6Oe9qTmc8HMUn2RWKh')
         r = requests.post(url, data=body)
         if r.status_code != 200:
             raise PermissionError('ET auth code retrieval: failed to get auth token')
@@ -238,15 +343,18 @@ class DataLoadService(DbService):
         collection = self.mongo.db.journeys
 
         for journey in journeys['items']:
-            adm = ApiDataToMongo(
-                endpoint='https://www.exacttargetapis.com/interaction/v1/interactions/' + journey['id'],
-                auth=None,
-                headers={'Content-Type': 'application/json',
-                         'Authorization': 'Bearer ' + token},
-                params=None,
-                collection=collection,
-                primary_keys=['id'])
-            adm.load_data()
+            try:
+                adm = ApiDataToMongo(
+                    endpoint='https://www.exacttargetapis.com/interaction/v1/interactions/' + journey['id'],
+                    auth=None,
+                    headers={'Content-Type': 'application/json',
+                             'Authorization': 'Bearer ' + token},
+                    params=None,
+                    collection=collection,
+                    primary_keys=['id'])
+                adm.load_data()
+            except KeyError as exc:
+                print('problem with journey id ['+journey['id']+']')
 
     def load_web_tracking(self, startDate=None, endDate=None):
 

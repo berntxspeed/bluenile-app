@@ -49,7 +49,7 @@ class FtpFile(object):
 
 class CsvFile(SqlDataLoader, FtpFile):
 
-    def __init__(self, file, db_session, db_model, primary_keys, db_field_map, ftp_path=None, ftp_cfg=None):
+    def __init__(self, file, db_session, db_model, primary_keys, db_field_map, ftp_path=None, ftp_cfg=None, file_encoding='utf8', delimiter=None):
 
         """Instantiates the Csvfile class
 
@@ -66,8 +66,6 @@ class CsvFile(SqlDataLoader, FtpFile):
             instance of the Csvfile class
         """
 
-        if file.split('.')[-1] != 'csv':
-            raise ValueError('filetype must be csv')
 
         SqlDataLoader.__init__(self, db_session, db_model, primary_keys)
         self._no_dl = True
@@ -77,13 +75,20 @@ class CsvFile(SqlDataLoader, FtpFile):
             FtpFile.__init__(self, file, ftp_path, ftp_cfg)
             self._no_dl = False
 
+        if delimiter:
+            self._delimiter = delimiter
+        else:
+            self._delimiter = ','
+
         self._db_field_map = db_field_map
+
+        self._file_encoding = file_encoding
 
     def load_data(self):
         if not self._no_dl:
             FtpFile.download(self)
 
-        SqlDataLoader.load_to_db(self, self._get_data)
+        SqlDataLoader.load_to_db(self, self._get_data, delimiter=self._delimiter)
 
     def _get_data(self, chunk_size=500, delimiter=','):
         num_recs = 0
@@ -113,13 +118,13 @@ class CsvFile(SqlDataLoader, FtpFile):
         try:
             os.chdir(tmp_directory)
             try:
-                with open(filename, 'r') as csvfile:
+                with open(filename, 'r', encoding=self._file_encoding) as csvfile:
                     csvfile_reader = csv.DictReader(csvfile, delimiter=delimiter)
                     # create a dict of all the new records by their primary key
                     import_items = {}
                     for row in csvfile_reader:
                         item = SqlDataLoader.db_model(self)
-                        for csv_field, db_field in self._db_field_map.items():
+                        for db_field, csv_field in self._db_field_map.items():
                             item.__setattr__(db_field,
                                              set_db_instance_attr(item,
                                                                   db_field,
@@ -147,6 +152,14 @@ class CsvFile(SqlDataLoader, FtpFile):
         except Exception as exc:
             os.chdir('..')
             raise exc
+
+    def clean_up(self):
+
+        try:
+            os.chdir(tmp_directory)
+            os.remove(self._filename)
+        finally:
+            os.chdir('..')
 
 
 class ZipFile(FtpFile):

@@ -16,6 +16,7 @@
 <script type="text/javascript">
         var g_csrf_token = '{{ csrf_token() }}';
         var g_rules = {{ data|tojson|safe }};
+        var g_name = g_rules.name
         var get_filters = function(model){
             filters_result = []
             for(table in model){
@@ -27,14 +28,28 @@
                         type: column_obj.type,
                         placeholder: ('Enter' + column_obj.label.split(':')[1]).toLowerCase()
                     }
-                    if (column_obj.type == 'boolean'){
+                    if (column_obj.type === 'boolean'){
                         filter.operators = ['equal']
                         filter.input = 'radio'
                         filter.values = {1 :'true', 0: 'false'}
                         filter.colors = {1 :'success', 0: 'danger'}
                         filter.default_value = 1
                         filter.description = 'Optional Filter Description'
-                        filter.vertical = 'Optional Filter Description'
+                    }
+                    else if (column_obj.type === 'datetime') {
+                        filter.operators = ['equal', 'not_equal', 'less', 'greater', 'between', 'not_between', 'is_empty', 'is_not_empty']
+                        filter.validation = {
+                          format: 'YYYY/MM/DD'
+                        }
+                        filter.plugin = 'datepicker'
+                        filter.plugin_config = {
+                          format: 'yyyy/mm/dd',
+                          todayBtn: 'linked',
+                          todayHighlight: true,
+                          autoclose: true,
+                          orientation: 'bottom'
+                        }
+                        filter.placeholder = 'yyyy/mm/dd'
                     }
                     filters_result.push(filter)
                 }
@@ -114,7 +129,8 @@
                     </ul>
                     <ul class="nav">
                         <li class="navbar-right"><button id="btn-preview" class="btn btn-default navbar-btn">Preview Results</button></li>
-                        <button id="btn-export-data" type="submit" class= "btn btn-default navbar-btn pull-right">Export All Data</button>
+                        <button id="sync-to-mc" href="{{ url_for('data_builder.sync_current_query_to_mc', query_id=g_query) }}" class="btn btn-default navbar-btn" style="display: none;">Sync Results</button>
+                        <button id="btn-export-data" type="submit" class= "btn btn-default navbar-btn pull-right" style="display: none;" >Export All Data</button>
                     </ul>
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
@@ -154,7 +170,7 @@
                 <table id="preview-table"></table>
             </div>
             <div class="row" align="right">
-                <div id="gotopage" class="form-inline">
+                <div id="gotopage" class="form-inline" style="display: none;">
                     <input id="page" class="form-control" style="width: 60px" type="number" value="1">
                     <button id="page-button" class="btn btn-primary">Go to Page</button>
                 </div>
@@ -233,21 +249,52 @@
                 <div class="modal-header" style="padding:25px 50px;">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span></button>
-                    <h4><span class="glyphicon glyphicon-menu-hamburger"></span> Saved Queries</h4>
+                    <h4 id="saved-queries-modal"> <span class="glyphicon glyphicon-menu-hamburger"></span> Saved Queries</h4>
                 </div>
                 <div class="modal-body">
                     <table id="saved-queries-table"></table>
+                    <div class="row" id="frequency-selector" style="display: none">
+                        <th>Repeats:</th>
+                        <select id="frequency" title="Repeats Weekly">
+                            <option value="0" title="Never">Never</option>
+                            <option value="1" title="Every X Hours">Every X Hours</option>
+                            <option value="2" title="Daily">Daily</option>
+                            <option value="3" title="Every weekday (Monday to Friday)">Every weekday (Monday to Friday)</option>
+                            <option value="4" title="Every Monday, Wednesday and Friday">Every Monday, Wednesday and Friday</option>
+                            <option value="5" title="Every Tuesday and Thursday">Every Tuesday and Thursday</option>
+                            <option value="6" title="Weekly">Weekly</option>
+                            <option value="7" title="Monthly">Monthly</option>
+                            <option value="8" title="Yearly">Yearly</option>
+                        </select>
+                        <div id="every-x-hours-block" style="display: none">
+                            <input id="every-x-hours" type="number" name="quantity" min="1" max="23">
+                        </div>
+                        <div></div>
+                        <!--<th>Starts On:</th>-->
+                        <!--<input id="frequency-start" type="datetime-local">-->
+                        <!--<div></div>-->
+                        <!--<th>Ends On  : </th>-->
+                        <!--<input id="frequency-end" type="datetime-local">-->
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
-                    <button type="submit" id='btn-load-saved-query' class="btn btn-success btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Load</button>
-                    <button type="submit" id='btn-delete-saved-query' class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-thumbs-down"></span> Delete</button>
+                    <div class="row" id="saved-queries-buttons">
+                        <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                        <button type="submit" id="btn-load-saved-query" class="btn btn-success btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Load</button>
+                        <button type="submit" id="btn-delete-saved-query" class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-thumbs-down"></span> Delete</button>
+                        <button type="submit" id="btn-periodic-sync" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-ok"></span> Sync Frequency</button>
+                    </div>
+                    <div class="row" id="frequency-buttons" style="display: none">
+                        <button id="btn-save-periodic-sync" class="btn btn-success btn-default pull-right"><span class="glyphicon glyphicon-ok"></span> Save</button>
+                        <button type="submit" id="btn-return-to-saved-queries" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
+                        <h4 id="periodic-footer" style="text-align: center"></h4>
+                    </div>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
     <!-- Modal Table For Explore Values -->
-    <div id="modal2" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div id="explore-values-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header" style="padding:25px 50px;">
@@ -261,26 +308,6 @@
                 <div class="modal-footer">
                     <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
                     <button type="submit" id='back-explore-tables' class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
-    <div id="modalValuesExplorer" class="modal fade" tabindex="-2" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="padding:25px 50px;">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span></button>
-                    <h4><span class="glyphicon glyphicon-menu-hamburger"></span> Values Explorer</h4>
-                </div>
-                <div class="modal-body">
-                    <select id="selected-value-explore" class="form-control"></select>
-                    <table id="values-explorer-table"/>
-                </div>
-                <div class="modal-footer">
-                    <button type="cancel" class="btn btn-success btn-default pull-right" data-dismiss="modal">
-                         Close
-                    </button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->

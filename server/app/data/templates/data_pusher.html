@@ -24,11 +24,6 @@
             <div class="well form-well">
                 <ul>
                     {% for query_name in query_names %}
-                    <!--<li><a href="{{ url_for('data.sync_data_to_mc', table='artist') }}">Load Artists</a></li>-->
-                    <!--<li><a href="{{ url_for('data.sync_data_to_mc', table='customer') }}">Load Customers</a></li>-->
-                    <!--<li><a href="{{ url_for('data.sync_query_to_mc', query_name='query1') }}">Load Customers who have purchased twice or more</a></li>-->
-                    <!--<li><a href="{{ url_for('data.sync_query_to_mc', query_name='query2') }}">Load Customers who have viewed Widget 2 page</a></li>-->
-                    <!--<li><a href="{{ url_for('data.sync_query_to_mc', query_name='query3') }}">Load Customers who have clicked an email</a></li>-->
                         <li><a href="{{ url_for('data.sync_query_to_mc', query_name=query_name) }}">{{ query_name }}</a></li>
                     {% endfor %}
                 </ul>

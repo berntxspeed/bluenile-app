@@ -1020,7 +1020,7 @@ class DataGrapher {
                             position: 'outer-center'
                         },
                         tick: {
-                            format: '%Y-%m-%d' // how the date is displayed
+                            format: '%Y-%m-%d %H:%M' // how the date is displayed
                         }
                     },
                     y: {

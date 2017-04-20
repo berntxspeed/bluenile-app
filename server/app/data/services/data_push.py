@@ -1,3 +1,4 @@
+import datetime
 from sqlalchemy import func
 
 from .classes.data_pusher import DataPusher
@@ -13,6 +14,15 @@ class DataPushService(DbService):
             # 'artist': Artist,
             'customer': Customer
         }
+
+    def exec_safe_session(self, service_func=None, *args):
+        if service_func:
+            try:
+                service_func(*args)
+            except:
+                self.db.session.rollback()
+            finally:
+                self.db.session.remove()
 
     def sync_data_to_mc(self, table):
         if table not in self._models.keys():
