@@ -209,7 +209,7 @@ class ZipFile(FtpFile):
         finally:
             os.chdir('..')
 
-    def load_data(self, file, db_session, db_model, primary_keys, db_field_map):
+    def load_data(self, file, db_session, db_model, primary_keys, db_field_map, chunk_size=500):
 
         if not self._downloaded_yet:
             FtpFile.download(self)
@@ -222,7 +222,7 @@ class ZipFile(FtpFile):
         file = self._extracted_files_dir + '/' + file
         if file.split('.')[-1] == 'csv':
             cf = CsvFile(file, db_session, db_model, primary_keys, db_field_map)
-            cf.load_data()
+            cf.load_data(chunk_size=chunk_size)
         else:
             raise TypeError('requested file type is not supported yet.  current support: csv')
 

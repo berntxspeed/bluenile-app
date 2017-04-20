@@ -163,7 +163,8 @@ class DataLoadService(DbService):
                              'SubscriberKey': 'SubscriberKey',
                              'EmailAddress': 'EmailAddress',
                              'EventDate': 'EventDate'
-                         })
+                         },
+                         chunk_size=10000)
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing Sent.csv'+traceback.print_tb(exc_traceback))
@@ -191,7 +192,8 @@ class DataLoadService(DbService):
                              'EmailClient': 'EmailClient',
                              'OperatingSystem': 'OperatingSystem',
                              'Device': 'Device'
-                         })
+                         },
+                         chunk_size=10000)
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing Opens.csv'+traceback.print_tb(exc_traceback))
@@ -223,7 +225,8 @@ class DataLoadService(DbService):
                              'EmailClient': 'EmailClient',
                              'OperatingSystem': 'OperatingSystem',
                              'Device': 'Device'
-                         })
+                         },
+                         chunk_size=10000)
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing Clicks.csv'+traceback.print_tb(exc_traceback))
@@ -249,7 +252,7 @@ class DataLoadService(DbService):
                           file_encoding='utf16')
 
             # load journey send data to db
-            csv.load_data()
+            csv.load_data(chunk_size=10000)
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))
@@ -272,7 +275,7 @@ class DataLoadService(DbService):
                           file_encoding='utf16')
 
             # load journey opens data to db
-            csv.load_data()
+            csv.load_data(chunk_size=10000)
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem loading journey_opens.csv'+traceback.print_tb(exc_traceback))
@@ -295,7 +298,7 @@ class DataLoadService(DbService):
                           file_encoding='utf16')
 
             # load journey click data to db
-            csv.load_data()
+            csv.load_data(chunk_size=10000)
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem loading journey_clicks.csv'+str(exc)+traceback.print_tb(exc_traceback))

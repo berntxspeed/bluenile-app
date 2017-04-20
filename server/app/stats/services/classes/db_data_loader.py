@@ -32,16 +32,23 @@ class SqlDataLoader(object):
                 model_composite_key = model_composite_key.concat(getattr(self._db_model, pk))
 
             composite_key_list = list(items.keys())
+            chunk_size = self._db_processing_chunk_size
+            for chunk in range(1, int(len(composite_key_list) / chunk_size) + 2):
 
-            if len(composite_key_list) > 0:
-                for each in self._db_model.query.filter(model_composite_key.in_(composite_key_list)):
+                start_index = int((chunk - 1) * chunk_size)
+                end_index = int((chunk * chunk_size))
+                if end_index > len(composite_key_list):
+                    end_index = len(composite_key_list)
+                print('processing chunk ' + str(chunk) + ' with start index ' + str(
+                    start_index) + ' and end index ' + str(
+                    end_index))
+                for each in self._db_model.query.filter(
+                        model_composite_key.in_(composite_key_list[start_index:end_index])):
                     # use composite key to reference records on the items dict
                     composite_key = ''
                     for pk in self._primary_keys:
                         composite_key += str(getattr(each, pk))
-                    inst_to_update = items.pop(composite_key)
-                    inst_to_update.id = each.id
-                    self._db_session.merge(inst_to_update)
+                    self._db_session.merge(items.pop(composite_key))
                     update_cnt += 1
 
                 print('updating existing records: ' + str(update_cnt))
