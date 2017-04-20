@@ -90,7 +90,7 @@ class CsvFile(SqlDataLoader, FtpFile):
 
         SqlDataLoader.load_to_db(self, self._get_data, delimiter=self._delimiter)
 
-    def _get_data(self, chunk_size=100000, delimiter=','):
+    def _get_data(self, chunk_size=500, delimiter=','):
         num_recs = 0
         filename = self._filename
         """Load csv file into the database
