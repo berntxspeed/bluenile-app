@@ -50,11 +50,10 @@ class SqlDataLoader(object):
                 print('updating existing records: ' + str(update_cnt))
                 print('inserting new records: ' + str(len(items)))
                 self._db_session.add_all(items.values())
-                self._db_session.commit()
-
 
                 if last_batch:
                     print('done loading records')
+                    self._db_session.commit()
                     break
             else:  # no records to update
                 return
