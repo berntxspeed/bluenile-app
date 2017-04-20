@@ -147,12 +147,19 @@ class CsvFile(SqlDataLoader, FtpFile):
             except KeyError as exc:
                 raise KeyError(str(exc))
 
-
             os.chdir('..')
             yield (True, import_items)
         except Exception as exc:
             os.chdir('..')
             raise exc
+
+    def clean_up(self):
+
+        try:
+            os.chdir(tmp_directory)
+            os.remove(self._filename)
+        finally:
+            os.chdir('..')
 
 
 class ZipFile(FtpFile):
