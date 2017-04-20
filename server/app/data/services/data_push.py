@@ -15,6 +15,15 @@ class DataPushService(DbService):
             'customer': Customer
         }
 
+    def exec_safe_session(self, service_func=None, *args):
+        if service_func:
+            try:
+                service_func(*args)
+            except:
+                self.db.session.rollback()
+            finally:
+                self.db.session.remove()
+
     def sync_data_to_mc(self, table):
         if table not in self._models.keys():
             self.logger.warn('error, selected table is not available for mc sync')

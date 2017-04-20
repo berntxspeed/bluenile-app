@@ -13,6 +13,15 @@ class DataLoadService(DbService):
         super(DataLoadService, self).__init__(config, db, logger)
         self.mongo = mongo
 
+    def exec_safe_session(self, load_func=None, *args):
+        if load_func:
+            try:
+                load_func(*args)
+            except:
+                self.db.session.rollback()
+            finally:
+                self.db.session.remove()
+
     def load_customers(self):
         # load customer table here
         config = self.config
