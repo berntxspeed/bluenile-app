@@ -39,11 +39,13 @@ class SqlDataLoader(object):
                     composite_key = ''
                     for pk in self._primary_keys:
                         composite_key += str(getattr(each, pk))
-                    print('existing record composite key: ' + composite_key)
-                    inst_to_update = items.pop(composite_key)
-                    inst_to_update.id = each.id
-                    self._db_session.merge(inst_to_update)
-                    update_cnt += 1
+                    inst_to_update = items.pop(composite_key, None)
+                    if inst_to_update is not None:
+                        inst_to_update.id = each.id
+                        self._db_session.merge(inst_to_update)
+                        update_cnt += 1
+                    else:
+                        print('item not found: '+composite_key)
 
                 print('updating existing records: ' + str(update_cnt))
                 print('inserting new records: ' + str(len(items)))
