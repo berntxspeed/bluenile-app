@@ -135,24 +135,20 @@ class DataLoadService(DbService):
                      ftp_path=filepath,
                      ftp_cfg=cfg)
 
-        try:
-            # load Sendjobs data to db
-            zf.load_data(file='SendJobs.csv',
-                         db_session=self.db.session,
-                         db_model=SendJob,
-                         primary_keys=['SendID'],
-                         db_field_map={
-                             'SendID': 'SendID',
-                             'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
-                             'EmailName': 'EmailName',
-                             'SchedTime': 'SchedTime',
-                             'SentTime': 'SentTime',
-                             'Subject': 'Subject',
-                             'PreviewURL': 'PreviewURL'
-                         })
-        except Exception as exc:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing SendJobs.csv'+traceback.print_tb(exc_traceback))
+        # load Sendjobs data to db
+        zf.load_data(file='SendJobs.csv',
+                     db_session=self.db.session,
+                     db_model=SendJob,
+                     primary_keys=['SendID'],
+                     db_field_map={
+                         'SendID': 'SendID',
+                         'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
+                         'EmailName': 'EmailName',
+                         'SchedTime': 'SchedTime',
+                         'SentTime': 'SentTime',
+                         'Subject': 'Subject',
+                         'PreviewURL': 'PreviewURL'
+                     })
         try:
             zf.load_data(file='Sent.csv',
                          db_session=self.db.session,
