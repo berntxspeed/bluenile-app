@@ -139,9 +139,10 @@ class CsvFile(SqlDataLoader, FtpFile):
                         num_recs += 1
                         if num_recs >= chunk_size:
                             num_recs = 0
+                            print('new item comp key: ' + composite_key)
                             yield (False, import_items)
                             import_items = {}
-                            print('new item comp key: '+composite_key)
+
 
             except FileNotFoundError as exc:
                 raise FileNotFoundError('could not locate file: {}, error: {}'.format(filename, str(exc)))
