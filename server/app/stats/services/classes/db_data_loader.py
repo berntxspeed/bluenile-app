@@ -53,15 +53,15 @@ class SqlDataLoader(object):
                     self._db_session.merge(inst_to_update)
                     update_cnt += 1
 
-                print('updating existing records: ' + str(update_cnt))
-                print('inserting new records: ' + str(len(items)))
+            print('updating existing records: ' + str(update_cnt))
+            print('inserting new records: ' + str(len(items)))
 
-                self._db_session.add_all(items.values())
-                self._db_session.commit()
+            self._db_session.add_all(items.values())
+            self._db_session.commit()
 
-                if last_batch:
-                    print('done loading records')
-                    break
+            if last_batch:
+                print('done loading records')
+                break
 
 class MongoDataLoader(object):
     def __init__(self, collection, primary_keys):
