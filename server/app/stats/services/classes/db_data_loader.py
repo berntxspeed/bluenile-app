@@ -32,7 +32,6 @@ class SqlDataLoader(object):
                 model_composite_key = model_composite_key.concat(getattr(self._db_model, pk))
 
             composite_key_list = list(items.keys())
-            print('getting existing recs')
             if len(composite_key_list) > 0:
                 for each in self._db_model.query.filter(model_composite_key.in_(composite_key_list)):
                     # use composite key to reference records on the items dict
