@@ -48,7 +48,9 @@ class SqlDataLoader(object):
                     composite_key = ''
                     for pk in self._primary_keys:
                         composite_key += str(getattr(each, pk))
-                    self._db_session.merge(items.pop(composite_key))
+                    inst_to_update = items.pop(composite_key)
+                    inst_to_update.id = each.id
+                    self._db_session.merge(inst_to_update)
                     update_cnt += 1
 
                 print('updating existing records: ' + str(update_cnt))
