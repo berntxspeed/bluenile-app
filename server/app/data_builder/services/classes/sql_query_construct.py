@@ -17,6 +17,9 @@ class SqlQueryConstructor(object):
         if self.rules_query.get('rules', None):
             joined_query_obj, filter_expression = self.get_joined_query_and_filter()
             final_query = joined_query_obj.filter(filter_expression)
+        elif self.rules_query.get('custom_sql') is not None:
+            from sqlalchemy import func
+            final_query = eval('self.db.session.' + self.rules_query['custom_sql'])
         else:
             final_query = self.db.session.query(Customer)
 
