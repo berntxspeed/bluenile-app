@@ -137,8 +137,18 @@
                             <option value="{{ send[1]['sendids'] }}">{{ send[0] }} with {{ send[1]['num_sendids'] }} send jobs and {{ send[1]['num_sent'] }} sent</option>
                         {% endif %}
                     {% endfor %}
+                </select> <input type="button" value="load" name="load" id="load-sendids" class="btn btn-default">
+                <br/><br/>
+                <label>Limit the send times:</label>
+                <br/>
+                <select id="sendids-date-limit">
+                    <option value="null">Don't Care</option>
+                    <option value="after">After </option>
+                    <option value="before">Before </option>
+                    <option value="between">Between </option>
                 </select>
-
+                <input type="date" id="sendids-date-1"/> and <input type="date" id="sendids-date-2"/>
+                <br/>
                 <div id="drill-down-areaEMAIL" class="row" style="background-color: ghostwhite">
 
                     <div class="well form-well" id="send-info"></div>
