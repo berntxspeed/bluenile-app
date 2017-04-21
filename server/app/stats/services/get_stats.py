@@ -102,9 +102,14 @@ class GetStatsService(DbService):
 
         sends_by_sendid.sort(key=lambda send: send['num_sent'], reverse=True)
 
+        sends_w_mult_sendids = {}
+        for key, value in sends_by_emailname.items():
+            if value['num_sendids'] > 1:
+                sends_w_mult_sendids[key] = value
+
         return {
             'sends_by_sendid': sends_by_sendid,
-            'sends_by_emailname': sends_by_emailname,
+            'sends_by_emailname': sends_w_mult_sendids,
             'tables': tables,
             'reports': reports
         }
