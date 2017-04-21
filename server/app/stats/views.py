@@ -115,7 +115,7 @@ def get_columns(get_stats_service, tbl):
     return get_stats_service.get_columns(tbl)
 
 
-@stats.route('/metrics-grouped-by/<tbl>/<grp_by>/<agg_op>/<agg_field>')
+@stats.route('/metrics-grouped-by/<tbl>/<grp_by>/<agg_op>/<agg_field>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
 def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
     """
@@ -141,7 +141,10 @@ def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
     if grp_by is None:
         return Exception('Must provide a column to group by')
     filters = None
-    q = request.args.get('q')
+    if request.method == 'GET':
+        q = request.args.get('q', None)
+    else:
+        q = request.form.get('q', None)
     if q:
         q = loads(q)
         filters = q.get('filters')
