@@ -213,4 +213,15 @@ class GetStatsService(DbService):
         else:
             return jsonify(error='report not found'), 404
 
+    def delete_report(self, rpt_id):
+
+        rpt = Report.query.filter(Report.id == rpt_id).first()
+
+        if rpt is not None:
+            try:
+                self.db.session.delete(rpt)
+                self.db.session.commit()
+                return jsonify(status='deleted')
+            except Exception as exc:
+                return jsonify(error='problem deleting report'), 500
 

@@ -181,3 +181,8 @@ def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, ag
 @inject(get_stats_service=GetStatsServ)
 def report(get_stats_service, rpt_id):
     return get_stats_service.get_report(rpt_id)
+
+@stats.route('/delete-report/<rpt_id>')
+@inject(get_stats_service=GetStatsServ)
+def delete_report(get_stats_service, rpt_id):
+    return get_stats_service.delete_report(rpt_id)
