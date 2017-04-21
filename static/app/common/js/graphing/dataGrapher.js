@@ -758,10 +758,12 @@ class DataGrapher {
             }
 
             $.ajax({
+                type: 'POST',
                 url: endpoint+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField,
-                data: {"q": JSON.stringify({'filters': filters})},
-                dataType: "json",
-                contentType: "application/json",
+                data: {
+                    q: JSON.stringify({'filters': filters}),
+                    csrf: $('#csrf-token').text()
+                },
                 success: successFunc
             });
 
