@@ -1,6 +1,6 @@
 from json import dumps, loads
 
-from flask import Response
+from flask import Response, Request
 from flask import request
 from flask import session
 from flask_login import login_required
@@ -52,11 +52,11 @@ def report_view(get_stats_service):
     # passes all send ids to view
     return get_stats_service.report_view()
 
-@stats.route('/send-info/<option>/<sendid>')
-@inject(get_stats_service=GetStatsServ)
-def send_info(get_stats_service, option, sendid):
+@stats.route('/send-info/<option>', methods=['POST'])
+@inject(request=Request, get_stats_service=GetStatsServ)
+def send_info(request, get_stats_service, option):
     # sends info about a single email send
-    return get_stats_service.send_info(option, sendid)
+    return get_stats_service.send_info(option, request)
 
 
 @stats.route('/celery-task-test')
@@ -115,7 +115,7 @@ def get_columns(get_stats_service, tbl):
     return get_stats_service.get_columns(tbl)
 
 
-@stats.route('/metrics-grouped-by/<tbl>/<grp_by>/<agg_op>/<agg_field>')
+@stats.route('/metrics-grouped-by/<tbl>/<grp_by>/<agg_op>/<agg_field>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
 def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
     """
@@ -141,7 +141,10 @@ def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
     if grp_by is None:
         return Exception('Must provide a column to group by')
     filters = None
-    q = request.args.get('q')
+    if request.method == 'GET':
+        q = request.args.get('q', None)
+    else:
+        q = request.form.get('q', None)
     if q:
         q = loads(q)
         filters = q.get('filters')
@@ -156,13 +159,16 @@ def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
 def map_graph():
     return {}
 
-@stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>')
+@stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
 def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field):
     if rpt_id == 'null':
         rpt_id = None
     filters = None
-    q = request.args.get('q')
+    if request.method == 'GET':
+        q = request.args.get('q', None)
+    else:
+        q = request.form.get('q', None)
     if q:
         q = loads(q)
         filters = q.get('filters')

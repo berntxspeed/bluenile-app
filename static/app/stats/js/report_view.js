@@ -56,7 +56,12 @@ $(function(){
             }
 
             $.ajax({
-                url: '/send-info/' + sendInfoOption + '/' + sendIds,
+                type: 'POST',
+                url: '/send-info/' + sendInfoOption,
+                data: {
+                    sendid: sendIds,
+                    csrf: $('#csrf-token').text()
+                },
                 success: function(data) {
                     var sendInfo = data;
                     window.sendInfo = data;
