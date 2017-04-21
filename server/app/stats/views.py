@@ -159,13 +159,16 @@ def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
 def map_graph():
     return {}
 
-@stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>')
+@stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
 def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field):
     if rpt_id == 'null':
         rpt_id = None
     filters = None
-    q = request.args.get('q')
+    if request.method == 'GET':
+        q = request.args.get('q', None)
+    else:
+        q = request.form.get('q', None)
     if q:
         q = loads(q)
         filters = q.get('filters')
