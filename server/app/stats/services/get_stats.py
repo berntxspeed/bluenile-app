@@ -102,9 +102,14 @@ class GetStatsService(DbService):
 
         sends_by_sendid.sort(key=lambda send: send['num_sent'], reverse=True)
 
+        sends_w_mult_sendids = {}
+        for key, value in sends_by_emailname.items():
+            if value['num_sendids'] > 1:
+                sends_w_mult_sendids[key] = value
+
         return {
             'sends_by_sendid': sends_by_sendid,
-            'sends_by_emailname': sends_by_emailname,
+            'sends_by_emailname': sends_w_mult_sendids,
             'tables': tables,
             'reports': reports
         }
@@ -213,4 +218,15 @@ class GetStatsService(DbService):
         else:
             return jsonify(error='report not found'), 404
 
+    def delete_report(self, rpt_id):
+
+        rpt = Report.query.filter(Report.id == rpt_id).first()
+
+        if rpt is not None:
+            try:
+                self.db.session.delete(rpt)
+                self.db.session.commit()
+                return jsonify(status='deleted')
+            except Exception as exc:
+                return jsonify(error='problem deleting report'), 500
 
