@@ -69,7 +69,7 @@ class PieChartEmlStats {
               url: '/send-info/trig-send-id/',
               data: {
                   sendid: obj.sendId,
-                  csrf: $('#csrf_token').text()
+                  csrf: $('#csrf-token').text()
               },
               success: function(data) {
                   console.log(obj.sendId + " has number of sends: " + data["numSends"]);
