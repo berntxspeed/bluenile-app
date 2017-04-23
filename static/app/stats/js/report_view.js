@@ -24,14 +24,8 @@ $(function(){
             loadReport: '#load-report'
         };
 
-        var dataGrapher = new DataGrapher();
-        dataGrapher.init('#drill-down-areaC', bindings, null);
-
-        // render drill down view B for a specific email
-        $("#email-side #send-select, #email-side #email-select").change(function () {
-            var sendIds = $(this).val();
-
-            var filter;
+        var init_email_drilldown = function (sendIds){
+        var filter;
             if (sendIds[0] == '[') {
                 filter = { "name": "SendID", "op": "in", "val": sendIds };
             } else {
@@ -56,7 +50,12 @@ $(function(){
             }
 
             $.ajax({
-                url: '/send-info/' + sendInfoOption + '/' + sendIds,
+                type: 'POST',
+                url: '/send-info/' + sendInfoOption,
+                data: {
+                    sendid: sendIds,
+                    csrf: $('#csrf-token').text()
+                },
                 success: function(data) {
                     var sendInfo = data;
                     window.sendInfo = data;
@@ -72,8 +71,59 @@ $(function(){
 
             var emailDataGrapher = new DataGrapher();
             emailDataGrapher.init('#drill-down-areaEMAIL', bindings, filter);
+    };
 
+        var dataGrapher = new DataGrapher();
+        dataGrapher.init('#drill-down-areaC', bindings, null);
+
+        // render drill down view B for a specific email
+        $("#email-side #send-select").change(function(){
+            init_email_drilldown($(this).val());
+        });
+
+        $("#load-sendids").click(function(){
+            var sendIds = $("#email-side #email-select").val();
+
+            var filters = [];
+            filters.push({ "name": "SendID", "op": "in", "val": sendIds });
+
+            var dateCriteria = $("#sendids-date-limit").val();
+            if (dateCriteria == 'after'){
+                filters.push({"name": "SentTime", "op": "gt", "val": $("#sendids-date-1").val()});
+            } else if (dateCriteria == 'before'){
+                filters.push({"name": "SentTime", "op": "lt", "val": $("#sendids-date-1").val()});
+            } else if (dateCriteria == 'between'){
+                filters.push({"name": "SentTime", "op": "gt", "val": $("#sendids-date-1").val()});
+                filters.push({"name": "SentTime", "op": "lt", "val": $("#sendids-date-2").val()});
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: '/metrics-grouped-by/SendJob/SendID/count/none',
+                data: {
+                    q: JSON.stringify({'filters': filters}),
+                    csrf: $('#csrf-token').text()
+                },
+                success: function(data){
+                    var limitedSendIds = "[";
+                    if (data.results.length > 0){
+                        data.results.forEach(function(item, index){
+                            if (index === data.results.length - 1){
+                                limitedSendIds = limitedSendIds.concat(item[0]);
+                            } else {
+                                limitedSendIds = limitedSendIds.concat(item[0]+', ');
+                            }
+                        });
+                        limitedSendIds = limitedSendIds.concat("]");
+                        return init_email_drilldown(limitedSendIds);
+                    }
+                    alert('no sends in that date range found for this email');
+                }
+            });
         });
     });
+
+
+
 });
 
