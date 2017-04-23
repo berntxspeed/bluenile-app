@@ -66,7 +66,7 @@ class PieChartEmlStats {
           });*/
           $.ajax({
               type: 'POST',
-              url: '/send-info/trig-send-id/',
+              url: '/send-info/trig-send-id',
               data: {
                   sendid: obj.sendId,
                   csrf: $('#csrf-token').text()
