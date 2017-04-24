@@ -16,17 +16,17 @@ class EventMgr(object):
     def log_insert_events(self, session):
         self.refresh_event_defs()
         for target in session.new:
-            self._log_event(target, 'insert')
+            self._log_event(session, target, 'insert')
 
     def log_update_events(self, session):
         self.refresh_event_defs()
         for target in session.dirty:
-            self._log_event(target, 'update')
+            self._log_event(session, target, 'update')
 
     def refresh_event_defs(self):
         self._event_defs = self._get_event_defs()
 
-    def _log_event(self, target, op):
+    def _log_event(self, session, target, op):
         if op not in ['update', 'insert']:
             raise ValueError('invalid operation to log event for.  can only log for insert and update')
 
@@ -53,25 +53,37 @@ class EventMgr(object):
                     if event_def.dml_op == 'insert':
                         if event_def.column is not None:
                             change = changes.get(event_def.column, None)
-                            if change is not None:
-                                if event_def.new_val is None or event_def.new_val == str(change[1][0]):
-                                    event = self._Event(def_id=event_def.id,
-                                                        rec_id=target.id,
-                                                        new_val=change[1][0])
-                                    self._db.session.add(event)
+                            newVal = safe_list_get(change, 1, None)
+                            if event_def.new_val is None \
+                                            or (event_def.new_val == str(safe_list_get(newVal, 0, None))) \
+                                            or (event_def.new_val == 'notnull' and newVal != None)\
+                                            or (event_def.new_val == 'null' and newVal == None):
+                                event = self._Event(def_id=event_def.id,
+                                                    rec_id=target.id,
+                                                    new_val=safe_list_get(newVal, 0, None))
+                                session.add(event)
                         else:
                             event = self._Event(def_id=event_def.id,
                                                 rec_id=target.id)
-                            self._db.session.add(event)
-                    elif event_def.dml_op == 'update' and changes.get(event_def.column, None) is not None:
+                            session.add(event)
+                    elif event_def.dml_op == 'update':
                         change = changes.get(event_def.column, None)
-                        if event_def.old_val is None or event_def.old_val == str(change[0][0]):
-                            if event_def.new_val is None or event_def.new_val == str(change[1][0]):
-                                event = self._Event(def_id=event_def.id,
-                                              rec_id=target.id,
-                                              old_val=change[0][0],
-                                              new_val=change[1][0])
-                                self._db.session.add(event)
+                        oldVal = safe_list_get(safe_list_get(change, 0, None), 0, None)
+                        newVal = safe_list_get(safe_list_get(change, 1, None), 0, None)
+                        if event_def.old_val is None \
+                                        or (event_def.old_val == str(oldVal)) \
+                                        or (event_def.old_val == 'notnull' and oldVal != None) \
+                                        or (event_def.old_val == 'null' and oldVal == None):
+                            if event_def.new_val is None \
+                                            or (event_def.new_val == str(newVal)) \
+                                            or (event_def.new_val == 'notnull' and newVal != None) \
+                                            or (event_def.new_val == 'null' and newVal == None):
+                                if oldVal != newVal:
+                                    event = self._Event(def_id=event_def.id,
+                                                  rec_id=target.id,
+                                                  old_val=oldVal,
+                                                  new_val=newVal)
+                                    session.add(event)
 
     def _get_event_defs(self):
         edefs = {}
@@ -81,3 +93,9 @@ class EventMgr(object):
             else:
                 edefs.get(edef.table).append(edef)
         return edefs
+
+def safe_list_get (l, idx, default):
+  try:
+    return l[idx]
+  except:
+    return default

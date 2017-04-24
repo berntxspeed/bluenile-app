@@ -16,7 +16,10 @@ from werkzeug.security import generate_password_hash
 
 from .utils.event_mgr import EventMgr
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={
+                                'autocommit': False,
+                                'autoflush': False
+                                })
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -59,8 +62,7 @@ class User(UserMixin, db.Model):
     @staticmethod
     def insert_users():
         users = [
-            User(username='bernt', password='pass', id=1),
-            User(username='val', password='pass', id=2)
+            User(username='bernt', password='Temp@12345', id=1)
         ]
         for user in users:
             usr = User.query.filter_by(id=user.id).first()
@@ -347,9 +349,11 @@ class SendJob(db.Model):
     __tablename__ = 'send_job'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer, unique=True) # SendID Field
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    SendDefinitionExternalKey = db.Column(db.String(255))
     SchedTime = db.Column(TIMESTAMP)
     SentTime = db.Column(TIMESTAMP)
-    EmailName= db.Column(db.String(64))
+    EmailName = db.Column(db.String(255))
     Subject = db.Column(db.String(1024))
     PreviewURL = db.Column(db.String(1024))
     _last_updated = db.Column(TIMESTAMP)
@@ -372,8 +376,8 @@ class SendJob(db.Model):
 
     def _get_stats(self):
         self.num_sends = db.session.object_session(self).query(EmlSend).with_parent(self, "eml_sends").count()
-        self.num_opens = db.session.object_session(self).query(EmlOpen).with_parent(self, "eml_opens").count()
-        self.num_clicks = db.session.object_session(self).query(EmlClick).with_parent(self, "eml_clicks").count()
+        self.num_opens = db.session.object_session(self).query(EmlOpen).filter(EmlOpen.IsUnique == True).with_parent(self, "eml_opens").count()
+        self.num_clicks = db.session.object_session(self).query(EmlClick).filter(EmlClick.IsUnique == True).with_parent(self, "eml_clicks").count()
         db.session.add(self)
         db.session.commit()
 
@@ -513,6 +517,14 @@ class Customer(db.Model):
     total_spent_so_far = db.Column(db.Float)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
+    city = db.Column(db.String(255))
+    state = db.Column(db.String(255))
+    interest_area = db.Column(db.String(255))
+    status = db.Column(db.String(255))
+    source = db.Column(db.String(255))
+    last_communication = db.Column(TIMESTAMP)
+    sales_rep = db.Column(db.String(255))
+
     purchases = relationship(Purchase, backref='customer',
                              primaryjoin='Customer.customer_id==Purchase.customer_id',
                              foreign_keys=[Purchase.customer_id],
@@ -622,4 +634,26 @@ def on_update(mapper, connection, target):
     target.last_modified = datetime.datetime.utcnow()
     return target
 
+class Report(db.Model):
+    __tablename__ = 'report'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    table = db.Column(db.String(255))
+    grp_by_first = db.Column(db.String(255))
+    grp_by_second = db.Column(db.String(255))
+    aggregate_op = db.Column(db.String(255))
+    aggregate_field = db.Column(db.String(255))
+    graph_type = db.Column(db.String(255))
+    filters_json = db.Column(JSON(astext_type=Text()))
+    created = db.Column(TIMESTAMP)
+    last_modified = db.Column(TIMESTAMP)
 
+@db.event.listens_for(Report, 'before_insert', retval=True)
+def on_update(mapper, connection, target):
+    target.created = datetime.datetime.utcnow()
+    return target
+
+@db.event.listens_for(Report, 'before_update', retval=True)
+def on_update(mapper, connection, target):
+    target.last_modified = datetime.datetime.utcnow()
+    return target

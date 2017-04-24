@@ -1,16 +1,7 @@
 <div id="common-header-view-model" class="site-header navbar navbar-default navbar-fixed-top">
     <div class="container">
         <div class="navbar-header">
-            <div class="drawer-header">
-                <button class="navbar-toggle drawer-toggle">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-            </div>
-            <div class="navbar-brand">
-                <a href="{{ url_for('main.index') }}">Home</a>
-            </div>
+            <a href="{{ url_for('main.index') }}"><img width="140px" src="/img/bluenile_logo.png"/></a>
         </div>
         <ul id="main-menu" class="nav navbar-nav navbar-right">
             {% if not current_user.is_authenticated %}
@@ -22,23 +13,26 @@
                 </li>-->
             {% else %}
                 <li>
-                    <a href="{{ url_for('emails.mosaico_index') }}">Email Builder</a>
+                    <a href="{{ url_for('emails.mosaico_index') }}"><span style="color:#a0a0a5;font-size:18px;">Blue</span><span style="color:#1c4072;font-size:18px;">Email</span></a>
                 </li>
                 <li>
-                    <a href="{{ url_for('stats.journey_view') }}">Journeys</a>
+                    <a href="{{ url_for('stats.journey_view') }}"><span style="color:#a0a0a5;font-size:18px;">Blue</span><span style="color:#1c4072;font-size:18px;">Journeys</span></a>
                 </li>
                 <li>
-                    <a href="{{ url_for('stats.send_view') }}">Emails</a>
+                    <a href="{{ url_for('stats.report_view') }}"><span style="color:#a0a0a5;font-size:18px;">Blue</span><span style="color:#1c4072;font-size:18px;">Analytics</span></a>
                 </li>
                 <li>
-                    <a href="{{ url_for('data_builder.data_builder', query_id='demo') }}">Data Builder</a>
+                    <a href="{{ url_for('data_builder.data_builder') }}"><span style="color:#a0a0a5;font-size:18px;">Blue</span><span style="color:#1c4072;font-size:18px;">Segments</span></a>
                 </li>
-                <li>
+                <!--<li>
                     <a href="{{ url_for('stats.data_manager') }}">Data Manager</a>
                 </li>
                 <li>
                     <a href="{{ url_for('data.data_pusher') }}">Data Push</a>
                 </li>
+                <li>
+                    <a href="{{ url_for('task_admin.task_admin') }}">Task Admin</a>
+                </li>-->
                 <li>
                     <a href="{{ url_for('auth.logout') }}">Log Out</a>
                 </li>
