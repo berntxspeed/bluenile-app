@@ -128,6 +128,7 @@ class GetStatsService(DbService):
                         raise ValueError('no emails sent with that TriggeredSendExternalKey')
                     xsendid = eml_send.SendID
                     send = SendJob.query.filter(SendJob.SendID == xsendid).first()
+                    #TODO: add check that a record was yielded from SendJob before proceeding
                     send.num_sends = self.db.session.query(func.count('*')).filter(EmlSend.TriggeredSendExternalKey == sendid).first()[0]
                     send.num_opens = self.db.session.query(func.count('*')).filter(EmlOpen.TriggeredSendExternalKey == sendid).filter(EmlOpen.IsUnique == True).first()[0]
                     send.num_clicks = self.db.session.query(func.count('*')).filter(EmlClick.TriggeredSendExternalKey == sendid).filter(EmlClick.IsUnique == True).first()[0]
