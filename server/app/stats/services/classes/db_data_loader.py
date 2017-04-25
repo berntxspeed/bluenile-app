@@ -24,7 +24,15 @@ class SqlDataLoader(object):
 
         for last_batch, items in item_generator(**kwargs):
 
-            update_cnt = 0  # keep track of updated records
+            items = [item for _, item in items.items()]
+            self._db_session.bulk_save_objects(items)
+            self._db_session.commit()
+
+            if last_batch:
+                print('copying from stg table to main table...')
+                break
+
+            """update_cnt = 0  # keep track of updated records
 
             # build sqlalchemy composite key expression for use in finding pre-existing records
             model_composite_key = getattr(self._db_model, self._primary_keys[0])
@@ -54,7 +62,7 @@ class SqlDataLoader(object):
                     print('done loading records')
                     break
             else: # no records to update
-                return
+                return"""
 
 class MongoDataLoader(object):
     def __init__(self, collection, primary_keys):
