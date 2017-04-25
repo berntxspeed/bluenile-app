@@ -188,17 +188,6 @@ class DataLoadService(DbService):
             res = self.db.engine.execute(sql)
             print('inserted '+str(res.rowcount)+' sends')
 
-            """sql = 'UPDATE eml_send ' \
-                  'SET "SendID" = a."SendID", ' \
-                  '"EmailAddress" = a."EmailAddress" ' \
-                  'FROM stg_eml_send a ' \
-                  'LEFT JOIN eml_send b ' \
-                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
-                  'AND b."EventDate" = a."EventDate" ' \
-                  'WHERE b."SubscriberKey" IS NOT NULL '
-            res = self.db.engine.execute(sql)
-            print('updated '+str(res.rowcount)+' sends')"""
-
             sql = 'DELETE FROM stg_eml_send'
             self.db.engine.execute(sql)
 
@@ -240,29 +229,6 @@ class DataLoadService(DbService):
                   'WHERE b."SubscriberKey" IS NULL '
             res = self.db.engine.execute(sql)
             print('inserted '+str(res.rowcount)+' opens')
-
-            """sql = 'UPDATE eml_open ' \
-                  'SET "EmailAddress" = a."EmailAddress", ' \
-                  '"IsUnique" = a."IsUnique", ' \
-                  '"IpAddress" = a."IpAddress", ' \
-                  '"Country" = a."Country", ' \
-                  '"Region" = a."Region", ' \
-                  '"City" = a."City", ' \
-                  '"Latitude" = a."Latitude", ' \
-                  '"Longitude" = a."Longitude", ' \
-                  '"MetroCode" = a."MetroCode", ' \
-                  '"AreaCode" = a."AreaCode", ' \
-                  '"Browser" = a."Browser", ' \
-                  '"EmailClient" = a."EmailClient", ' \
-                  '"OperatingSystem" = a."OperatingSystem", ' \
-                  '"Device" = a."Device"  ' \
-                  'FROM stg_eml_open a  ' \
-                  'LEFT JOIN eml_open b  ' \
-                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
-                  'AND b."EventDate" = a."EventDate" ' \
-                  'WHERE b."SubscriberKey" IS NOT NULL '
-            res = self.db.engine.execute(sql)
-            print('updated '+str(res.rowcount)+' opens')"""
 
             sql = 'DELETE FROM stg_eml_open'
             self.db.engine.execute(sql)
@@ -310,32 +276,6 @@ class DataLoadService(DbService):
             res = self.db.engine.execute(sql)
             print('inserted '+str(res.rowcount)+' clicks')
 
-            """sql = 'UPDATE eml_click ' \
-                  'SET "EmailAddress" = a."EmailAddress", ' \
-                  '"SendURLID" = a."SendURLID", ' \
-                  '"URL" = a."URL", ' \
-                  '"Alias" = a."Alias", ' \
-                  '"IsUnique" = a."IsUnique", ' \
-                  '"IpAddress" = a."IpAddress", ' \
-                  '"Country" = a."Country", ' \
-                  '"Region" = a."Region", ' \
-                  '"City" = a."City", ' \
-                  '"Latitude" = a."Latitude", ' \
-                  '"Longitude" = a."Longitude", ' \
-                  '"MetroCode" = a."MetroCode", ' \
-                  '"AreaCode" = a."AreaCode", ' \
-                  '"Browser" = a."Browser", ' \
-                  '"EmailClient" = a."EmailClient", ' \
-                  '"OperatingSystem" = a."OperatingSystem", ' \
-                  '"Device" = a."Device"  ' \
-                  'FROM stg_eml_click a  ' \
-                  'LEFT JOIN eml_click b  ' \
-                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
-                  'AND b."EventDate" = a."EventDate" ' \
-                  'WHERE b."SubscriberKey" IS NOT NULL '
-            res = self.db.engine.execute(sql)
-            print('updated '+str(res.rowcount)+' clicks')"""
-
             sql = 'DELETE FROM stg_eml_click'
             self.db.engine.execute(sql)
 
@@ -377,12 +317,11 @@ class DataLoadService(DbService):
             print('inserted '+str(res.rowcount)+' sends')
 
             sql = 'UPDATE eml_send ' \
-                  'SET "TriggeredSendExternalKey" = a."TriggeredSendExternalKey" ' \
+                  'SET "TriggeredSendExternalKey" = ' \
+                  '(SELECT "TriggeredSendExternalKey" ' \
                   'FROM stg_eml_send a ' \
-                  'LEFT JOIN eml_send b ' \
-                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
-                  'AND b."EventDate" = a."EventDate" ' \
-                  'WHERE b."SubscriberKey" IS NOT NULL '
+                  'WHERE a."SubscriberKey" = eml_send."SubscriberKey" ' \
+                  'AND a."EventDate" = eml_send."EventDate")'
             res = self.db.engine.execute(sql)
             print('updated '+str(res.rowcount)+' sends')
 
@@ -424,12 +363,11 @@ class DataLoadService(DbService):
             print('inserted '+str(res.rowcount)+' opens')
 
             sql = 'UPDATE eml_open ' \
-                  'SET "TriggeredSendExternalKey" = a."TriggeredSendExternalKey" ' \
+                  'SET "TriggeredSendExternalKey" = ' \
+                  '(SELECT "TriggeredSendExternalKey" ' \
                   'FROM stg_eml_open a ' \
-                  'LEFT JOIN eml_open b ' \
-                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
-                  'AND b."EventDate" = a."EventDate" ' \
-                  'WHERE b."SubscriberKey" IS NOT NULL '
+                  'WHERE a."SubscriberKey" = eml_open."SubscriberKey" ' \
+                  'AND a."EventDate" = eml_open."EventDate")'
             res = self.db.engine.execute(sql)
             print('updated '+str(res.rowcount)+' opens')
 
@@ -471,12 +409,11 @@ class DataLoadService(DbService):
             print('inserted '+str(res.rowcount)+' clicks')
 
             sql = 'UPDATE eml_click ' \
-                  'SET "TriggeredSendExternalKey" = a."TriggeredSendExternalKey" ' \
+                  'SET "TriggeredSendExternalKey" = ' \
+                  '(SELECT "TriggeredSendExternalKey" ' \
                   'FROM stg_eml_click a ' \
-                  'LEFT JOIN eml_click b ' \
-                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
-                  'AND b."EventDate" = a."EventDate" ' \
-                  'WHERE b."SubscriberKey" IS NOT NULL '
+                  'WHERE a."SubscriberKey" = eml_click."SubscriberKey" ' \
+                  'AND a."EventDate" = eml_click."EventDate")'
             self.db.engine.execute(sql)
 
             sql = 'DELETE FROM stg_eml_click'
