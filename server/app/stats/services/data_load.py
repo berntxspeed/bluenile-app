@@ -5,7 +5,7 @@ from pprint import pprint as pp
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile, CsvFile
 from ...common.services import DbService
-from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
+from ...common.models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
 
 class DataLoadService(DbService):
@@ -139,7 +139,7 @@ class DataLoadService(DbService):
             # load Sendjobs data to db
             zf.load_data(file='SendJobs.csv',
                          db_session=self.db.session,
-                         db_model=SendJob,
+                         db_model=StgSendJob,
                          primary_keys=['SendID'],
                          db_field_map={
                              'SendID': 'SendID',
@@ -150,13 +150,26 @@ class DataLoadService(DbService):
                              'Subject': 'Subject',
                              'PreviewURL': 'PreviewURL'
                          })
+
+            sql = 'INSERT INTO send_job("SendID", "SendDefinitionExternalKey", "EmailName", "SchedTime", "SentTime", "Subject", "PreviewURL") ' \
+                  'SELECT DISTINCT ON (a."SendID") a."SendID", a."SendDefinitionExternalKey", a."EmailName", a."SchedTime", a."SentTime", a."Subject", a."PreviewURL" ' \
+                  'FROM stg_send_job a ' \
+                  'LEFT JOIN send_job b ' \
+                  'ON b."SendID" = a."SendID" ' \
+                  'WHERE b."SendID" IS NULL '
+            res = self.db.engine.execute(sql)
+            print('inserted '+str(res.rowcount)+' sendjobs')
+
+            sql = 'DELETE FROM stg_send_job'
+            self.db.engine.execute(sql)
+
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing SendJobs.csv'+traceback.print_tb(exc_traceback))
         try:
             zf.load_data(file='Sent.csv',
                          db_session=self.db.session,
-                         db_model=EmlSend,
+                         db_model=StgEmlSend,
                          primary_keys=['SubscriberKey', 'EventDate'],
                          db_field_map={
                              'SendID': 'SendID',
@@ -164,6 +177,31 @@ class DataLoadService(DbService):
                              'EmailAddress': 'EmailAddress',
                              'EventDate': 'EventDate'
                          })
+
+            sql = 'INSERT INTO eml_send ("SendID", "SubscriberKey", "EmailAddress", "EventDate") ' \
+                  'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate" ' \
+                  'FROM stg_eml_send a ' \
+                  'LEFT JOIN eml_send b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NULL '
+            res = self.db.engine.execute(sql)
+            print('inserted '+str(res.rowcount)+' sends')
+
+            sql = 'UPDATE eml_send ' \
+                  'SET "SendID" = a."SendID", ' \
+                  '"EmailAddress" = a."EmailAddress" ' \
+                  'FROM stg_eml_send a ' \
+                  'LEFT JOIN eml_send b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NOT NULL '
+            res = self.db.engine.execute(sql)
+            print('updated '+str(res.rowcount)+' sends')
+
+            sql = 'DELETE FROM stg_eml_send'
+            self.db.engine.execute(sql)
+
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing Sent.csv'+traceback.print_tb(exc_traceback))
@@ -171,7 +209,7 @@ class DataLoadService(DbService):
             # load Opens data to db
             zf.load_data(file='Opens.csv',
                          db_session=self.db.session,
-                         db_model=EmlOpen,
+                         db_model=StgEmlOpen,
                          primary_keys=['SubscriberKey', 'EventDate'],
                          db_field_map={
                              'SendID': 'SendID',
@@ -192,6 +230,43 @@ class DataLoadService(DbService):
                              'OperatingSystem': 'OperatingSystem',
                              'Device': 'Device'
                          })
+
+            sql = 'INSERT INTO eml_open("SendID", "SubscriberKey", "EmailAddress", "EventDate", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device") ' \
+                  'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device" ' \
+                  'FROM stg_eml_open a ' \
+                  'LEFT JOIN eml_open b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NULL '
+            res = self.db.engine.execute(sql)
+            print('inserted '+str(res.rowcount)+' opens')
+
+            sql = 'UPDATE eml_open ' \
+                  'SET "EmailAddress" = a."EmailAddress", ' \
+                  '"IsUnique" = a."IsUnique", ' \
+                  '"IpAddress" = a."IpAddress", ' \
+                  '"Country" = a."Country", ' \
+                  '"Region" = a."Region", ' \
+                  '"City" = a."City", ' \
+                  '"Latitude" = a."Latitude", ' \
+                  '"Longitude" = a."Longitude", ' \
+                  '"MetroCode" = a."MetroCode", ' \
+                  '"AreaCode" = a."AreaCode", ' \
+                  '"Browser" = a."Browser", ' \
+                  '"EmailClient" = a."EmailClient", ' \
+                  '"OperatingSystem" = a."OperatingSystem", ' \
+                  '"Device" = a."Device"  ' \
+                  'FROM stg_eml_open a  ' \
+                  'LEFT JOIN eml_open b  ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NOT NULL '
+            res = self.db.engine.execute(sql)
+            print('updated '+str(res.rowcount)+' opens')
+
+            sql = 'DELETE FROM stg_eml_open'
+            self.db.engine.execute(sql)
+
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing Opens.csv'+traceback.print_tb(exc_traceback))
@@ -199,7 +274,7 @@ class DataLoadService(DbService):
             # load Clicks data to db
             zf.load_data(file='Clicks.csv',
                          db_session=self.db.session,
-                         db_model=EmlClick,
+                         db_model=StgEmlClick,
                          primary_keys=['SubscriberKey', 'EventDate'],
                          db_field_map={
                              'SendID': 'SendID',
@@ -224,6 +299,46 @@ class DataLoadService(DbService):
                              'OperatingSystem': 'OperatingSystem',
                              'Device': 'Device'
                          })
+
+            sql = 'INSERT INTO eml_click("SendID", "SubscriberKey", "EmailAddress", "EventDate", "URLID", "URL", "Alias", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device") ' \
+                  'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."URLID", a."URL", a."Alias", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device" ' \
+                  'FROM stg_eml_click a ' \
+                  'LEFT JOIN eml_click b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NULL '
+            res = self.db.engine.execute(sql)
+            print('inserted '+str(res.rowcount)+' clicks')
+
+            sql = 'UPDATE eml_click ' \
+                  'SET "EmailAddress" = a."EmailAddress", ' \
+                  '"SendURLID" = a."SendURLID", ' \
+                  '"URL" = a."URL", ' \
+                  '"Alias" = a."Alias", ' \
+                  '"IsUnique" = a."IsUnique", ' \
+                  '"IpAddress" = a."IpAddress", ' \
+                  '"Country" = a."Country", ' \
+                  '"Region" = a."Region", ' \
+                  '"City" = a."City", ' \
+                  '"Latitude" = a."Latitude", ' \
+                  '"Longitude" = a."Longitude", ' \
+                  '"MetroCode" = a."MetroCode", ' \
+                  '"AreaCode" = a."AreaCode", ' \
+                  '"Browser" = a."Browser", ' \
+                  '"EmailClient" = a."EmailClient", ' \
+                  '"OperatingSystem" = a."OperatingSystem", ' \
+                  '"Device" = a."Device"  ' \
+                  'FROM stg_eml_click a  ' \
+                  'LEFT JOIN eml_click b  ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NOT NULL '
+            res = self.db.engine.execute(sql)
+            print('updated '+str(res.rowcount)+' clicks')
+
+            sql = 'DELETE FROM stg_eml_click'
+            self.db.engine.execute(sql)
+
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing Clicks.csv'+traceback.print_tb(exc_traceback))
@@ -236,7 +351,7 @@ class DataLoadService(DbService):
             filepath = '/Export/'
             csv = CsvFile(file=filename,
                           db_session=self.db.session,
-                          db_model=EmlSend,
+                          db_model=StgEmlSend,
                           primary_keys=['SubscriberKey', 'EventDate'],
                           db_field_map={
                               'SendID': 'SendID',
@@ -250,6 +365,30 @@ class DataLoadService(DbService):
 
             # load journey send data to db
             csv.load_data()
+
+            sql = 'INSERT INTO eml_send ("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
+                  'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
+                  'FROM stg_eml_send a ' \
+                  'LEFT JOIN eml_send b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NULL '
+            res = self.db.engine.execute(sql)
+            print('inserted '+str(res.rowcount)+' sends')
+
+            sql = 'UPDATE eml_send ' \
+                  'SET "TriggeredSendExternalKey" = a."TriggeredSendExternalKey" ' \
+                  'FROM stg_eml_send a ' \
+                  'LEFT JOIN eml_send b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NOT NULL '
+            res = self.db.engine.execute(sql)
+            print('updated '+str(res.rowcount)+' sends')
+
+            sql = 'DELETE FROM stg_eml_send'
+            self.db.engine.execute(sql)
+
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))
@@ -259,7 +398,7 @@ class DataLoadService(DbService):
             filepath = '/Export/'
             csv = CsvFile(file=filename,
                           db_session=self.db.session,
-                          db_model=EmlOpen,
+                          db_model=StgEmlOpen,
                           primary_keys=['SubscriberKey', 'EventDate'],
                           db_field_map={
                               'SendID': 'SendID',
@@ -273,6 +412,30 @@ class DataLoadService(DbService):
 
             # load journey opens data to db
             csv.load_data()
+
+            sql = 'INSERT INTO eml_open("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
+                  'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
+                  'FROM stg_eml_open a ' \
+                  'LEFT JOIN eml_open b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NULL '
+            res = self.db.engine.execute(sql)
+            print('inserted '+str(res.rowcount)+' opens')
+
+            sql = 'UPDATE eml_open ' \
+                  'SET "TriggeredSendExternalKey" = a."TriggeredSendExternalKey" ' \
+                  'FROM stg_eml_open a ' \
+                  'LEFT JOIN eml_open b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NOT NULL '
+            res = self.db.engine.execute(sql)
+            print('updated '+str(res.rowcount)+' opens')
+
+            sql = 'DELETE FROM stg_eml_open'
+            self.db.engine.execute(sql)
+
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem loading journey_opens.csv'+traceback.print_tb(exc_traceback))
@@ -282,7 +445,7 @@ class DataLoadService(DbService):
             filepath = '/Export/'
             csv = CsvFile(file=filename,
                           db_session=self.db.session,
-                          db_model=EmlClick,
+                          db_model=StgEmlClick,
                           primary_keys=['SubscriberKey', 'EventDate'],
                           db_field_map={
                               'SendID': 'SendID',
@@ -296,6 +459,30 @@ class DataLoadService(DbService):
 
             # load journey click data to db
             csv.load_data()
+
+            sql = 'INSERT INTO eml_click("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
+                  'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
+                  'FROM stg_eml_click a ' \
+                  'LEFT JOIN eml_click b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NULL '
+            res = self.db.engine.execute(sql)
+            print('inserted '+str(res.rowcount)+' clicks')
+
+            sql = 'UPDATE eml_click ' \
+                  'SET "TriggeredSendExternalKey" = a."TriggeredSendExternalKey" ' \
+                  'FROM stg_eml_click a ' \
+                  'LEFT JOIN eml_click b ' \
+                  'ON b."SubscriberKey" = a."SubscriberKey" ' \
+                  'AND b."EventDate" = a."EventDate" ' \
+                  'WHERE b."SubscriberKey" IS NOT NULL '
+            self.db.engine.execute(sql)
+
+            sql = 'DELETE FROM stg_eml_click'
+            res = self.db.engine.execute(sql)
+            print('updated '+str(res.rowcount)+' clicks')
+
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem loading journey_clicks.csv'+str(exc)+traceback.print_tb(exc_traceback))
