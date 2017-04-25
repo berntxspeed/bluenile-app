@@ -188,6 +188,15 @@ class DataLoadService(DbService):
             res = self.db.engine.execute(sql)
             print('inserted '+str(res.rowcount)+' sends')
 
+            sql = 'UPDATE eml_send ' \
+                  'SET "SendID" = ' \
+                  '(SELECT "SendID" ' \
+                  'FROM stg_eml_send a ' \
+                  'WHERE a."SubscriberKey" = eml_send."SubscriberKey" ' \
+                  'AND a."EventDate" = eml_send."EventDate")'
+            res = self.db.engine.execute(sql)
+            print('updated ' + str(res.rowcount) + ' sends')
+
             sql = 'DELETE FROM stg_eml_send'
             self.db.engine.execute(sql)
 
