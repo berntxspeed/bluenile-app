@@ -205,6 +205,16 @@ def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
 
+class StgEmlSend(db.Model):
+    __tablename__ = 'stg_eml_send'
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer)
+    SubscriberKey = db.Column(db.String(255))
+    EmailAddress = db.Column(db.String(255))
+    EventDate = db.Column(TIMESTAMP)
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
 
 class EmlSend(db.Model):
     __tablename__ = 'eml_send'
@@ -241,6 +251,30 @@ def on_insert(mapper, connection, target):
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
+class StgEmlOpen(db.Model):
+    __tablename__ = 'stg_eml_open'
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer)
+    SubscriberKey = db.Column(db.String(255))
+    EmailAddress = db.Column(db.String(255))
+    EventDate = db.Column(TIMESTAMP)
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    IsUnique = db.Column(db.Boolean)
+    IpAddress = db.Column(db.String(255))
+    Country = db.Column(db.String(255))
+    Region = db.Column(db.String(255))
+    City = db.Column(db.String(255))
+    Latitude = db.Column(db.Float)
+    Longitude = db.Column(db.Float)
+    MetroCode = db.Column(db.String(255))
+    AreaCode = db.Column(db.String(255))
+    Browser = db.Column(db.String(255))
+    EmailClient = db.Column(db.String(255))
+    OperatingSystem = db.Column(db.String(255))
+    Device = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
 
 class EmlOpen(db.Model):
     __tablename__ = 'eml_open'
@@ -290,6 +324,34 @@ def on_insert(mapper, connection, target):
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
+class StgEmlClick(db.Model):
+    __tablename__ = 'stg_eml_click'
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer)
+    SubscriberKey = db.Column(db.String(255))
+    EmailAddress = db.Column(db.String(255))
+    EventDate = db.Column(TIMESTAMP)
+    SendURLID = db.Column(db.String(255))
+    URLID = db.Column(db.String(255))
+    URL = db.Column(db.String(1024))
+    Alias = db.Column(db.String(255))
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    IsUnique = db.Column(db.Boolean)
+    IpAddress = db.Column(db.String(255))
+    Country = db.Column(db.String(255))
+    Region = db.Column(db.String(255))
+    City = db.Column(db.String(255))
+    Latitude = db.Column(db.Float)
+    Longitude = db.Column(db.Float)
+    MetroCode = db.Column(db.String(255))
+    AreaCode = db.Column(db.String(255))
+    Browser = db.Column(db.String(255))
+    EmailClient = db.Column(db.String(255))
+    OperatingSystem = db.Column(db.String(255))
+    Device = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
 
 class EmlClick(db.Model):
     __tablename__ = 'eml_click'
@@ -344,6 +406,18 @@ def on_insert(mapper, connection, target):
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
+class StgSendJob(db.Model):
+    __tablename__ = 'stg_send_job'
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer, unique=True) # SendID Field
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    SendDefinitionExternalKey = db.Column(db.String(255))
+    SchedTime = db.Column(TIMESTAMP)
+    SentTime = db.Column(TIMESTAMP)
+    EmailName = db.Column(db.String(255))
+    Subject = db.Column(db.String(1024))
+    PreviewURL = db.Column(db.String(1024))
 
 class SendJob(db.Model):
     __tablename__ = 'send_job'

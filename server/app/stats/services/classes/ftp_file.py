@@ -43,9 +43,7 @@ class FtpFile(object):
         except (pysftp.SSHException, AttributeError) as exc:
             raise ConnectionRefusedError('failed to connect to ftp, and thus cannot download file: {}'.format(str(exc)))
         except FileNotFoundError:
-            raise FileNotFoundError(
-                'could not find file on server with directory: {} and filename: {}'
-                    .format(self._file, self._path))
+            raise FileNotFoundError('could not find file on server with directory: {} and filename: {}'.format(self._file, self._path))
 
 class CsvFile(SqlDataLoader, FtpFile):
 
