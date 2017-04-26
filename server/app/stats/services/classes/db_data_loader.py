@@ -27,6 +27,7 @@ class SqlDataLoader(object):
             items = [item for _, item in items.items()]
             self._db_session.bulk_save_objects(items)
             self._db_session.commit()
+            print('wrote 10,000 records to staging table')
 
             if last_batch:
                 print('copying from stg table to main table...')
