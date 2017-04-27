@@ -202,7 +202,7 @@ class DataLoadService(DbService):
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing Sent.csv'+traceback.print_tb(exc_traceback))"""
+            print('ALERT: problem importing Sent.csv'+traceback.print_tb(exc_traceback))
         try:
             # load Opens data to db
             zf.load_data(file='Opens.csv',
@@ -339,7 +339,7 @@ class DataLoadService(DbService):
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))
+            print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))"""
         try:
             # execute separate load of exported Journey-based opens information
             filename = 'journey_opens.csv'
@@ -377,11 +377,11 @@ class DataLoadService(DbService):
                   'FROM stg_eml_open a ' \
                   'WHERE a."SubscriberKey" = eml_open."SubscriberKey" ' \
                   'AND a."EventDate" = eml_open."EventDate")'
-            res = self.db.engine.execute(sql)
-            print('updated '+str(res.rowcount)+' opens')
+            #res = self.db.engine.execute(sql)
+            #print('updated '+str(res.rowcount)+' opens')
 
-            sql = 'DELETE FROM stg_eml_open'
-            self.db.engine.execute(sql)
+            #sql = 'DELETE FROM stg_eml_open'
+            #self.db.engine.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -423,11 +423,11 @@ class DataLoadService(DbService):
                   'FROM stg_eml_click a ' \
                   'WHERE a."SubscriberKey" = eml_click."SubscriberKey" ' \
                   'AND a."EventDate" = eml_click."EventDate")'
-            self.db.engine.execute(sql)
+            #self.db.engine.execute(sql)
+            # print('updated '+str(res.rowcount)+' clicks')
 
-            sql = 'DELETE FROM stg_eml_click'
-            res = self.db.engine.execute(sql)
-            print('updated '+str(res.rowcount)+' clicks')
+            #sql = 'DELETE FROM stg_eml_click'
+            #res = self.db.engine.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
