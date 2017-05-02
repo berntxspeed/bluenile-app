@@ -135,7 +135,7 @@ class DataLoadService(DbService):
                      ftp_path=filepath,
                      ftp_cfg=cfg)
 
-        """try:
+        try:
             # load Sendjobs data to db
             zf.load_data(file='SendJobs.csv',
                          db_session=self.db.session,
@@ -339,7 +339,7 @@ class DataLoadService(DbService):
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))"""
+            print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))
         try:
             # execute separate load of exported Journey-based opens information
             filename = 'journey_opens.csv'
