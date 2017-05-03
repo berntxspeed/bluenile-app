@@ -132,7 +132,7 @@ class CsvFile(SqlDataLoader, FtpFile):
                         for pk in self._primary_keys:
                             composite_key += str(getattr(item, pk))
                         # place item on dict, w key reference to composite key, and value of dbModel instance
-                        import_items[composite_key] = item
+                        import_items[composite_key] = item._add_metadata()
 
                         num_recs += 1
                         if num_recs >= chunk_size:

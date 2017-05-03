@@ -52,11 +52,11 @@ celery.conf.beat_schedule = {
         'schedule': crontab(minute=0, hour='*/12'),
         'kwargs': {'task_type': 'mc-journeys'}
     },
-    """'every-12-hours_mc_email_data': {
+    'every-12-hours_mc_email_data': {
         'task': 'server.app.stats.workers.load_mc_email_data',
-        'schedule': crontab(minute=0, hour='*/4'),
+        'schedule': crontab(minute=0, hour='*/12'),
         'kwargs': {'task_type': 'mc-email-data'}
-    },"""
+    },
     'every-hour_periodic_sync_to_mc': {
         'task': 'server.app.stats.workers.periodic_sync_to_mc',
         'schedule': crontab(minute=0, hour='*'),

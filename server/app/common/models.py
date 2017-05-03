@@ -186,6 +186,9 @@ class Purchase(db.Model):
     user_agent = db.Column(db.String(255))
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
+    purchase_date = db.Column(TIMESTAMP)
+    _day = db.Column(TIMESTAMP)
+    _hour = db.Column(TIMESTAMP)
 
     events = relationship(Event, backref='purchase',
                           primaryjoin='Purchase.id==Event.rec_id',
@@ -194,6 +197,14 @@ class Purchase(db.Model):
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
+
+    def _add_metadata(self):
+        if self.purchase_date is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        if self.created_at is None:
+            self.created_at = datetime.datetime.utcnow()
+        return self
 
 @db.event.listens_for(Purchase, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
@@ -216,6 +227,12 @@ class StgEmlSend(db.Model):
     _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
     _hour = db.Column(db.Integer)
 
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
+
 class EmlSend(db.Model):
     __tablename__ = 'eml_send'
     id = db.Column(db.Integer, primary_key=True)
@@ -237,6 +254,12 @@ class EmlSend(db.Model):
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
+
     def __repr__(self):
         return '<EmlSend %r>' % self.SubscriberKey
 
@@ -251,6 +274,37 @@ def on_insert(mapper, connection, target):
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
+
+class JourneyEmlSend(db.Model):
+    __tablename__ = 'journey_eml_send'
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer)
+    SubscriberKey = db.Column(db.String(255))
+    EmailAddress = db.Column(db.String(255))
+    EventDate = db.Column(TIMESTAMP)
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+
+    events = relationship(Event, backref='journey_eml_send',
+                          primaryjoin='JourneyEmlSend.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
+
+    def __repr__(self):
+        return '<JourneyEmlSend %r>' % self.SubscriberKey
 
 class StgEmlOpen(db.Model):
     __tablename__ = 'stg_eml_open'
@@ -275,6 +329,12 @@ class StgEmlOpen(db.Model):
     Device = db.Column(db.String(255))
     _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
     _hour = db.Column(db.Integer)
+
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
 
 class EmlOpen(db.Model):
     __tablename__ = 'eml_open'
@@ -310,6 +370,12 @@ class EmlOpen(db.Model):
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
+
     def __repr__(self):
         return '<EmlOpen %r>' % self.SubscriberKey
 
@@ -324,6 +390,50 @@ def on_insert(mapper, connection, target):
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
+
+class JourneyEmlOpen(db.Model):
+    __tablename__ = 'journey_eml_open'
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer)
+    SubscriberKey = db.Column(db.String(255))
+    EmailAddress = db.Column(db.String(255))
+    EventDate = db.Column(TIMESTAMP)
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    IsUnique = db.Column(db.Boolean)
+    IpAddress = db.Column(db.String(255))
+    Country = db.Column(db.String(255))
+    Region = db.Column(db.String(255))
+    City = db.Column(db.String(255))
+    Latitude = db.Column(db.Float)
+    Longitude = db.Column(db.Float)
+    MetroCode = db.Column(db.String(255))
+    AreaCode = db.Column(db.String(255))
+    Browser = db.Column(db.String(255))
+    EmailClient = db.Column(db.String(255))
+    OperatingSystem = db.Column(db.String(255))
+    Device = db.Column(db.String(255))
+    _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+
+    events = relationship(Event, backref='journey_eml_open',
+                          primaryjoin='JourneyEmlOpen.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
+
+    def __repr__(self):
+        return '<JourneyEmlOpen %r>' % self.SubscriberKey
 
 class StgEmlClick(db.Model):
     __tablename__ = 'stg_eml_click'
@@ -352,6 +462,12 @@ class StgEmlClick(db.Model):
     Device = db.Column(db.String(255))
     _day = db.Column(db.Integer) # auto-calculated 0-mon 6-sun
     _hour = db.Column(db.Integer)
+
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
 
 class EmlClick(db.Model):
     __tablename__ = 'eml_click'
@@ -392,6 +508,12 @@ class EmlClick(db.Model):
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
+
     def __repr__(self):
         return '<EmlClick %r>' % self.SubscriberKey
 
@@ -407,6 +529,54 @@ def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
 
+
+class JourneyEmlClick(db.Model):
+    __tablename__ = 'journey_eml_click'
+    id = db.Column(db.Integer, primary_key=True)
+    SendID = db.Column(db.Integer)
+    SubscriberKey = db.Column(db.String(255))
+    EmailAddress = db.Column(db.String(255))
+    EventDate = db.Column(TIMESTAMP)
+    SendURLID = db.Column(db.String(255))
+    URLID = db.Column(db.String(255))
+    URL = db.Column(db.String(1024))
+    Alias = db.Column(db.String(255))
+    TriggeredSendExternalKey = db.Column(db.String(255))
+    IsUnique = db.Column(db.Boolean)
+    IpAddress = db.Column(db.String(255))
+    Country = db.Column(db.String(255))
+    Region = db.Column(db.String(255))
+    City = db.Column(db.String(255))
+    Latitude = db.Column(db.Float)
+    Longitude = db.Column(db.Float)
+    MetroCode = db.Column(db.String(255))
+    AreaCode = db.Column(db.String(255))
+    Browser = db.Column(db.String(255))
+    EmailClient = db.Column(db.String(255))
+    OperatingSystem = db.Column(db.String(255))
+    Device = db.Column(db.String(255))
+    _day = db.Column(db.Integer)  # auto-calculated 0-mon 6-sun
+    _hour = db.Column(db.Integer)
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+
+    events = relationship(Event, backref='journey_eml_click',
+                          primaryjoin='JourneyEmlClick.id==Event.rec_id',
+                          foreign_keys=[Event.rec_id],
+                          passive_deletes='all')
+
+    def _update_last_ext_sync(self):
+        self._last_ext_sync = datetime.datetime.utcnow()
+
+    def _add_metadata(self):
+        if self.EventDate is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
+
+    def __repr__(self):
+        return '<JourneyEmlClick %r>' % self.SubscriberKey
+
 class StgSendJob(db.Model):
     __tablename__ = 'stg_send_job'
     id = db.Column(db.Integer, primary_key=True)
@@ -418,6 +588,14 @@ class StgSendJob(db.Model):
     EmailName = db.Column(db.String(255))
     Subject = db.Column(db.String(1024))
     PreviewURL = db.Column(db.String(1024))
+    _day = db.Column(TIMESTAMP)
+    _hour = db.Column(TIMESTAMP)
+
+    def _add_metadata(self):
+        if self.SentTime is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
 
 class SendJob(db.Model):
     __tablename__ = 'send_job'
@@ -432,6 +610,8 @@ class SendJob(db.Model):
     PreviewURL = db.Column(db.String(1024))
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
+    _day = db.Column(TIMESTAMP)
+    _hour = db.Column(TIMESTAMP)
     eml_sends = relationship(EmlSend, backref='send_job',
                              primaryjoin='SendJob.SendID==EmlSend.SendID',
                              foreign_keys=[EmlSend.SendID],
@@ -459,6 +639,12 @@ class SendJob(db.Model):
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
 
+    def _add_metadata(self):
+        if self.SentTime is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        return self
+
     def __repr__(self):
         return '<SendJob %r>' % self.SendID
 
@@ -477,6 +663,9 @@ class Artist(db.Model):
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
+
+    def _add_metadata(self):
+        return self
 
     def __repr__(self):
         return '<Artist %r>' % self.name
@@ -517,6 +706,9 @@ class WebTrackingEvent(db.Model):
                           foreign_keys=[Event.rec_id],
                           passive_deletes='all')
 
+    def _add_metadata(self):
+        return self
+
 class WebTrackingPageView(db.Model):
     __tablename__ = 'web_tracking_page_view'
     id = db.Column(db.Integer, primary_key=True)
@@ -547,6 +739,9 @@ class WebTrackingPageView(db.Model):
                           foreign_keys=[Event.rec_id],
                           passive_deletes='all')
 
+    def _add_metadata(self):
+        return self
+
 class WebTrackingEcomm(db.Model):
     __tablename__ = 'web_tracking_ecomm'
     id = db.Column(db.Integer, primary_key=True)
@@ -576,6 +771,8 @@ class WebTrackingEcomm(db.Model):
                           foreign_keys=[Event.rec_id],
                           passive_deletes='all')
 
+    def _add_metadata(self):
+        return self
 
 class Customer(db.Model):
     __tablename__ = 'customer'
@@ -598,6 +795,8 @@ class Customer(db.Model):
     source = db.Column(db.String(255))
     last_communication = db.Column(TIMESTAMP)
     sales_rep = db.Column(db.String(255))
+    _day = db.Column(TIMESTAMP)
+    _hour = db.Column(TIMESTAMP)
 
     purchases = relationship(Purchase, backref='customer',
                              primaryjoin='Customer.customer_id==Purchase.customer_id',
@@ -638,6 +837,18 @@ class Customer(db.Model):
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()
+
+    def _add_metadata(self):
+        if self.created_at is None:
+            self.created_at = datetime.datetime.utcnow()
+        if self.hashed_email is None:
+            self.hashed_email = base64.b64encode(hmac.new(HASH_SECRET,
+                                                    msg=target.email_address.encode('utf-8'),
+                                                    digestmod=hashlib.sha256).digest()).hex()
+        if self.created_at is not None:
+            self._day = self.created_at.weekday()
+            self._hour = self.created_at.hour
+        return self
 
     def __repr(self):
         return '<Customer %r>' % self.customer_id
