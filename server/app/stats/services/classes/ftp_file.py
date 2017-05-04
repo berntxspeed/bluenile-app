@@ -135,6 +135,8 @@ class CsvFile(SqlDataLoader, FtpFile):
                             composite_key += str(getattr(item, pk))
                         # place item on dict, w key reference to composite key, and value of dbModel instance
                         import_items[composite_key] = item._add_metadata()
+                        if num_recs == 0:
+                            print('starting load to db...')
 
                         num_recs += 1
                         if num_recs >= chunk_size:
