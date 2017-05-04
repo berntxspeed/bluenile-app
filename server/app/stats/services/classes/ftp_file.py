@@ -38,7 +38,6 @@ class FtpFile(object):
                     password=self._ftp_cfg['password']
             ) as srv:
                 with pysftp.cd(tmp_directory):
-                    print('downloading file...')
                     srv.get(self._path + self._file)
 
         except (pysftp.SSHException, AttributeError) as exc:
@@ -86,14 +85,12 @@ class CsvFile(SqlDataLoader, FtpFile):
     def load_data(self):
         if not self._no_dl:
             FtpFile.download(self)
-            print('finished downloading file')
 
         SqlDataLoader.load_to_db(self, self._get_data, delimiter=self._delimiter)
 
     def _get_data(self, chunk_size=10000, delimiter=','):
         num_recs = 0
         filename = self._filename
-        print('starting _get_data() process')
         """Load csv file into the database
 
         Args:
@@ -132,6 +129,8 @@ class CsvFile(SqlDataLoader, FtpFile):
                                              set_db_instance_attr(item,
                                                                   db_field,
                                                                   row[csv_field]))
+                            if num_recs == 0:
+                                print('setting attrs on object instance: '+str(db_field)+'<>'+str(row[csv_field]))
                         # use a composite key to reference the records on the dict
                         composite_key = ''
                         for pk in self._primary_keys:
