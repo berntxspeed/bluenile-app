@@ -93,3 +93,9 @@ BTW, i used this install of flask-sqlalchemy https://github.com/mitsuhiko/flask-
 
 ---CHANGES to GA and Site to use GA tracking linkage to EmailAddress:
 add this tracking code
+
+
+
+---if postgres is hanging due to a long running query you can see which one it is and kill it like so:
+heroku pg:locks --app <app>
+heroku pg:kill <pid> --app <app>
