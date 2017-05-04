@@ -44,6 +44,8 @@ class FtpFile(object):
             raise ConnectionRefusedError('failed to connect to ftp, and thus cannot download file: {}'.format(str(exc)))
         except FileNotFoundError:
             raise FileNotFoundError('could not find file on server with directory: {} and filename: {}'.format(self._file, self._path))
+        except Exception as exc:
+            raise exc
 
 class CsvFile(SqlDataLoader, FtpFile):
 

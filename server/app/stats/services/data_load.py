@@ -130,8 +130,8 @@ class DataLoadService(DbService):
         # load magento customer data to db
         csv.load_data()
 
-        sql = 'INSERT INTO customer("customer_id", "email_address", "fname", "lname", "created_at", "city", "state", "zipcode", "age", "purchase_count", "customer_segment", "source", "heard_about_from", "gender", "date_of_birth", "total_spent_so_far", "average_purchase_amount") ' \
-              'SELECT DISTINCT ON (a."customer_id") a."email_address", a."fname", a."lname", a."created_at", a."city", a."state", a."zipcode", a."age", a."purchase_count", a."customer_segment", a."source", a."heard_about_from", a."gender", a."date_of_birth", a."total_spent_so_far", a."average_purchase_amount" ' \
+        sql = 'INSERT INTO customer("customer_id", "email_address", "fname", "lname", "created_at", "city", "state", "zipcode", "age", "purchase_count", "customer_segment", "source", "heard_about_from", "gender", "date_of_birth", "total_spent_so_far", "average_purchase_amount", "hashed_email", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."customer_id") a."email_address", a."fname", a."lname", a."created_at", a."city", a."state", a."zipcode", a."age", a."purchase_count", a."customer_segment", a."source", a."heard_about_from", a."gender", a."date_of_birth", a."total_spent_so_far", a."average_purchase_amount", a."hashed_email", a."_day", a."_hour" ' \
               'FROM stg_customer a ' \
               'LEFT JOIN customer b ' \
               'ON b."customer_id" = a."customer_id" ' \
@@ -168,8 +168,8 @@ class DataLoadService(DbService):
         # load magento purchase data to db
         csv.load_data()
 
-        sql = 'INSERT INTO purchase("purchase_id", "customer_id", "created_at", "price", "is_paid") ' \
-              'SELECT DISTINCT ON (a."purchase_id") a."customer_id", a."created_at", a."price", a."is_paid" ' \
+        sql = 'INSERT INTO purchase("purchase_id", "customer_id", "created_at", "price", "is_paid", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."purchase_id") a."customer_id", a."created_at", a."price", a."is_paid", a."_day", a."_hour" ' \
               'FROM stg_purchase a ' \
               'LEFT JOIN purchase b ' \
               'ON b."purchase_id" = a."purchase_id" ' \
@@ -263,6 +263,109 @@ class DataLoadService(DbService):
             'username': mc_data_creds.get('ftp_user'),
             'password': mc_data_creds.get('ftp_pass')
         }
+
+        # execute separate load of exported Journey-based sends information
+        filename = 'journey_sends.csv'
+        filepath = '/Export/'
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=StgEmlSend,
+                      primary_keys=['SubscriberKey', 'EventDate'],
+                      db_field_map={
+                          'SendID': 'SendID',
+                          'SubscriberKey': 'SubscriberKey',
+                          'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                          'EventDate': 'EventDate',
+                          'IsUnique': 'IsUnique'
+                      },
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load journey send data to db
+        csv.load_data()
+
+        sql = 'INSERT INTO journey_eml_send ("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
+              'FROM stg_eml_send a ' \
+              'LEFT JOIN journey_eml_send b ' \
+              'ON b."SubscriberKey" = a."SubscriberKey" ' \
+              'AND b."EventDate" = a."EventDate" ' \
+              'WHERE b."SubscriberKey" IS NULL '
+        res = self.db.engine.execute(sql)
+        print('inserted ' + str(res.rowcount) + ' sends')
+
+        sql = 'DELETE FROM stg_eml_send'
+        self.db.engine.execute(sql)
+
+        # execute separate load of exported Journey-based opens information
+        filename = 'journey_opens.csv'
+        filepath = '/Export/'
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=StgEmlOpen,
+                      primary_keys=['SubscriberKey', 'EventDate'],
+                      db_field_map={
+                          'SendID': 'SendID',
+                          'SubscriberKey': 'SubscriberKey',
+                          'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                          'EventDate': 'EventDate'
+                      },
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load journey opens data to db
+        csv.load_data()
+
+        sql = 'INSERT INTO journey_eml_open("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
+              'FROM stg_eml_open a ' \
+              'LEFT JOIN journey_eml_open b ' \
+              'ON b."SubscriberKey" = a."SubscriberKey" ' \
+              'AND b."EventDate" = a."EventDate" ' \
+              'WHERE b."SubscriberKey" IS NULL '
+        res = self.db.engine.execute(sql)
+        print('inserted ' + str(res.rowcount) + ' opens')
+
+        sql = 'DELETE FROM stg_eml_open'
+        self.db.engine.execute(sql)
+
+        # execute separate load of exported Journey-based clicks information
+        filename = 'journey_clicks.csv'
+        filepath = '/Export/'
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=StgEmlClick,
+                      primary_keys=['SubscriberKey', 'EventDate'],
+                      db_field_map={
+                          'SendID': 'SendID',
+                          'SubscriberKey': 'SubscriberKey',
+                          'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                          'EventDate': 'EventDate'
+                      },
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load journey click data to db
+        csv.load_data()
+
+        sql = 'INSERT INTO journey_eml_click("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
+              'FROM stg_eml_click a ' \
+              'LEFT JOIN journey_eml_click b ' \
+              'ON b."SubscriberKey" = a."SubscriberKey" ' \
+              'AND b."EventDate" = a."EventDate" ' \
+              'WHERE b."SubscriberKey" IS NULL '
+        res = self.db.engine.execute(sql)
+        print('inserted ' + str(res.rowcount) + ' clicks')
+
+        sql = 'DELETE FROM stg_eml_click'
+        res = self.db.engine.execute(sql)
+
+
+
         filename = mc_data_creds.get('filename')
         filepath = mc_data_creds.get('filepath')
         zf = ZipFile(file=filename,
@@ -284,8 +387,8 @@ class DataLoadService(DbService):
                          'PreviewURL': 'PreviewURL'
                      })
 
-        sql = 'INSERT INTO send_job("SendID", "SendDefinitionExternalKey", "EmailName", "SchedTime", "SentTime", "Subject", "PreviewURL") ' \
-              'SELECT DISTINCT ON (a."SendID") a."SendID", a."SendDefinitionExternalKey", a."EmailName", a."SchedTime", a."SentTime", a."Subject", a."PreviewURL" ' \
+        sql = 'INSERT INTO send_job("SendID", "SendDefinitionExternalKey", "EmailName", "SchedTime", "SentTime", "Subject", "PreviewURL", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."SendID") a."SendID", a."SendDefinitionExternalKey", a."EmailName", a."SchedTime", a."SentTime", a."Subject", a."PreviewURL", a."_day", a."_hour" ' \
               'FROM stg_send_job a ' \
               'LEFT JOIN send_job b ' \
               'ON b."SendID" = a."SendID" ' \
@@ -307,8 +410,8 @@ class DataLoadService(DbService):
                          'EventDate': 'EventDate'
                      })
 
-        sql = 'INSERT INTO eml_send ("SendID", "SubscriberKey", "EmailAddress", "EventDate") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate" ' \
+        sql = 'INSERT INTO eml_send ("SendID", "SubscriberKey", "EmailAddress", "EventDate", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."_day", a."_hour" ' \
               'FROM stg_eml_send a ' \
               'LEFT JOIN eml_send b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
@@ -316,18 +419,6 @@ class DataLoadService(DbService):
               'WHERE b."SubscriberKey" IS NULL '
         res = self.db.engine.execute(sql)
         print('inserted '+str(res.rowcount)+' sends')
-
-        sql = 'UPDATE eml_send ' \
-              'SET "SendID" = ' \
-              '(SELECT "SendID" ' \
-              'FROM stg_eml_send a ' \
-              'WHERE a."SubscriberKey" = eml_send."SubscriberKey" ' \
-              'AND a."EventDate" = eml_send."EventDate")'
-        res = self.db.engine.execute(sql)
-        print('updated ' + str(res.rowcount) + ' sends')
-
-        sql = 'DELETE FROM stg_eml_send'
-        self.db.engine.execute(sql)
 
         # load Opens data to db
         zf.load_data(file='Opens.csv',
@@ -354,8 +445,8 @@ class DataLoadService(DbService):
                          'Device': 'Device'
                      })
 
-        sql = 'INSERT INTO eml_open("SendID", "SubscriberKey", "EmailAddress", "EventDate", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device" ' \
+        sql = 'INSERT INTO eml_open("SendID", "SubscriberKey", "EmailAddress", "EventDate", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device", a."_day", a."_hour" ' \
               'FROM stg_eml_open a ' \
               'LEFT JOIN eml_open b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
@@ -396,8 +487,8 @@ class DataLoadService(DbService):
                          'Device': 'Device'
                      })
 
-        sql = 'INSERT INTO eml_click("SendID", "SubscriberKey", "EmailAddress", "EventDate", "URLID", "URL", "Alias", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."URLID", a."URL", a."Alias", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device" ' \
+        sql = 'INSERT INTO eml_click("SendID", "SubscriberKey", "EmailAddress", "EventDate", "URLID", "URL", "Alias", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."URLID", a."URL", a."Alias", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device", a."_day", a."_hour" ' \
               'FROM stg_eml_click a ' \
               'LEFT JOIN eml_click b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
@@ -411,104 +502,7 @@ class DataLoadService(DbService):
 
         zf.clean_up() # delete downloaded files
 
-        # execute separate load of exported Journey-based sends information
-        filename = 'journey_sends.csv'
-        filepath = '/Export/'
-        csv = CsvFile(file=filename,
-                      db_session=self.db.session,
-                      db_model=StgEmlSend,
-                      primary_keys=['SubscriberKey', 'EventDate'],
-                      db_field_map={
-                          'SendID': 'SendID',
-                          'SubscriberKey': 'SubscriberKey',
-                          'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                          'EventDate': 'EventDate'
-                      },
-                      ftp_path=filepath,
-                      ftp_cfg=cfg,
-                      file_encoding='utf16')
 
-        # load journey send data to db
-        csv.load_data()
-
-        sql = 'INSERT INTO journey_eml_send ("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
-              'FROM stg_eml_send a ' \
-              'LEFT JOIN journey_eml_send b ' \
-              'ON b."SubscriberKey" = a."SubscriberKey" ' \
-              'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL '
-        res = self.db.engine.execute(sql)
-        print('inserted '+str(res.rowcount)+' sends')
-
-        sql = 'DELETE FROM stg_eml_send'
-        self.db.engine.execute(sql)
-
-        # execute separate load of exported Journey-based opens information
-        filename = 'journey_opens.csv'
-        filepath = '/Export/'
-        csv = CsvFile(file=filename,
-                      db_session=self.db.session,
-                      db_model=StgEmlOpen,
-                      primary_keys=['SubscriberKey', 'EventDate'],
-                      db_field_map={
-                          'SendID': 'SendID',
-                          'SubscriberKey': 'SubscriberKey',
-                          'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                          'EventDate': 'EventDate'
-                      },
-                      ftp_path=filepath,
-                      ftp_cfg=cfg,
-                      file_encoding='utf16')
-
-        # load journey opens data to db
-        csv.load_data()
-
-        sql = 'INSERT INTO journey_eml_open("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
-              'FROM stg_eml_open a ' \
-              'LEFT JOIN journey_eml_open b ' \
-              'ON b."SubscriberKey" = a."SubscriberKey" ' \
-              'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL '
-        res = self.db.engine.execute(sql)
-        print('inserted '+str(res.rowcount)+' opens')
-
-        sql = 'DELETE FROM stg_eml_open'
-        self.db.engine.execute(sql)
-
-        # execute separate load of exported Journey-based clicks information
-        filename = 'journey_clicks.csv'
-        filepath = '/Export/'
-        csv = CsvFile(file=filename,
-                      db_session=self.db.session,
-                      db_model=StgEmlClick,
-                      primary_keys=['SubscriberKey', 'EventDate'],
-                      db_field_map={
-                          'SendID': 'SendID',
-                          'SubscriberKey': 'SubscriberKey',
-                          'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                          'EventDate': 'EventDate'
-                      },
-                      ftp_path=filepath,
-                      ftp_cfg=cfg,
-                      file_encoding='utf16')
-
-        # load journey click data to db
-        csv.load_data()
-
-        sql = 'INSERT INTO journey_eml_click("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
-              'FROM stg_eml_click a ' \
-              'LEFT JOIN journey_eml_click b ' \
-              'ON b."SubscriberKey" = a."SubscriberKey" ' \
-              'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL '
-        res = self.db.engine.execute(sql)
-        print('inserted '+str(res.rowcount)+' clicks')
-
-        sql = 'DELETE FROM stg_eml_click'
-        res = self.db.engine.execute(sql)
 
         #TODO: append county FIPS codes to open and click data
 
