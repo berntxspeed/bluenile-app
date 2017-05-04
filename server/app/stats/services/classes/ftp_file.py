@@ -31,14 +31,14 @@ class FtpFile(object):
 
         """Download the file from the FTP"""
 
-        try:
-            with pysftp.Connection(
-                    host=self._ftp_cfg['host'],
-                    username=self._ftp_cfg['username'],
-                    password=self._ftp_cfg['password']
-            ) as srv:
-                with pysftp.cd(tmp_directory):
-                    srv.get(self._path + self._file)
+        #try:
+        with pysftp.Connection(
+                host=self._ftp_cfg['host'],
+                username=self._ftp_cfg['username'],
+                password=self._ftp_cfg['password']
+        ) as srv:
+            with pysftp.cd(tmp_directory):
+                srv.get(self._path + self._file)
 
         """except (pysftp.SSHException, AttributeError) as exc:
             raise ConnectionRefusedError('failed to connect to ftp, and thus cannot download file: {}'.format(str(exc)))
