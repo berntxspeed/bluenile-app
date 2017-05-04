@@ -431,7 +431,7 @@ class DataLoadService(DbService):
         # load journey send data to db
         csv.load_data()
 
-        sql = 'INSERT INTO eml_send ("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
+        sql = 'INSERT INTO journey_eml_send ("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
               'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
               'FROM stg_eml_send a ' \
               'LEFT JOIN journey_eml_send b ' \
@@ -464,7 +464,7 @@ class DataLoadService(DbService):
         # load journey opens data to db
         csv.load_data()
 
-        sql = 'INSERT INTO eml_open("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
+        sql = 'INSERT INTO journey_eml_open("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
               'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
               'FROM stg_eml_open a ' \
               'LEFT JOIN journey_eml_open b ' \
@@ -497,7 +497,7 @@ class DataLoadService(DbService):
         # load journey click data to db
         csv.load_data()
 
-        sql = 'INSERT INTO eml_click("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
+        sql = 'INSERT INTO journey_eml_click("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
               'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
               'FROM stg_eml_click a ' \
               'LEFT JOIN journey_eml_click b ' \
