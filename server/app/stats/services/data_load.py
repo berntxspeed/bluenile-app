@@ -5,7 +5,7 @@ from pprint import pprint as pp
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile, CsvFile
 from ...common.services import DbService
-from ...common.models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
+from ...common.models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, SendJob, Customer, Purchase, PurchaseItem, StgCustomer, StgPurchase, StgPurchaseItem, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
 
 class DataLoadService(DbService):
@@ -89,6 +89,140 @@ class DataLoadService(DbService):
 
         # load lead perfection data to db
         csv.load_data()
+
+    def load_magento(self):
+        config = self.config
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('CUSTOMER_DATA_SOURCE'))
+        cfg = {
+            'host': mc_data_creds.get('ftp_url'),
+            'username': mc_data_creds.get('ftp_user'),
+            'password': mc_data_creds.get('ftp_pass')
+        }
+        filename = mc_data_creds.get('filename')
+        filepath = mc_data_creds.get('filepath')
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=StgCustomer,
+                      primary_keys=['customer_id'],
+                      db_field_map=dict(
+                          customer_id='Customer_Id',
+                          email_address='EmailAddress',
+                          fname='First_Name',
+                          lname='Last_Name',
+                          created_at='join_date',
+                          city='City',
+                          state='Region',
+                          zipcode='PostCode',
+                          age='Age_Range',
+                          purchase_count='num_orders',
+                          customer_segment='group',
+                          source='Source',
+                          heard_about_from='Heard_About',
+                          gender='Gender',
+                          date_of_birth='Date_Of_Birth',
+                          total_spent_so_far='lifetime_sales',
+                          average_purchase_amount='avg_sales'
+                      ),
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load magento customer data to db
+        csv.load_data()
+
+        sql = 'INSERT INTO customer("customer_id", "email_address", "fname", "lname", "created_at", "city", "state", "zipcode", "age", "purchase_count", "customer_segment", "source", "heard_about_from", "gender", "date_of_birth", "total_spent_so_far", "average_purchase_amount") ' \
+              'SELECT DISTINCT ON (a."customer_id") a."email_address", a."fname", a."lname", a."created_at", a."city", a."state", a."zipcode", a."age", a."purchase_count", a."customer_segment", a."source", a."heard_about_from", a."gender", a."date_of_birth", a."total_spent_so_far", a."average_purchase_amount" ' \
+              'FROM stg_customer a ' \
+              'LEFT JOIN customer b ' \
+              'ON b."customer_id" = a."customer_id" ' \
+              'WHERE b."customer_id" IS NULL '
+        res = self.db.engine.execute(sql)
+        print('inserted ' + str(res.rowcount) + ' customers')
+
+        sql = 'DELETE FROM stg_customer'
+        self.db.engine.execute(sql)
+
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('PURCHASE_DATA_SOURCE'))
+        cfg = {
+            'host': mc_data_creds.get('ftp_url'),
+            'username': mc_data_creds.get('ftp_user'),
+            'password': mc_data_creds.get('ftp_pass')
+        }
+        filename = mc_data_creds.get('filename')
+        filepath = mc_data_creds.get('filepath')
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=StgPurchase,
+                      primary_keys=['purchase_id'],
+                      db_field_map=dict(
+                          purchase_id='order_number',
+                          customer_id='customer_id',
+                          created_at='date_ordered',
+                          price='grand_total',
+                          is_paid='total_paid'
+                      ),
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load magento purchase data to db
+        csv.load_data()
+
+        sql = 'INSERT INTO purchase("purchase_id", "customer_id", "created_at", "price", "is_paid") ' \
+              'SELECT DISTINCT ON (a."purchase_id") a."customer_id", a."created_at", a."price", a."is_paid" ' \
+              'FROM stg_purchase a ' \
+              'LEFT JOIN purchase b ' \
+              'ON b."purchase_id" = a."purchase_id" ' \
+              'WHERE b."purchase_id" IS NULL '
+        res = self.db.engine.execute(sql)
+        print('inserted ' + str(res.rowcount) + ' purchases')
+
+        sql = 'DELETE FROM stg_purchase'
+        self.db.engine.execute(sql)
+
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('PURCHASE_ITEM_DATA_SOURCE'))
+        cfg = {
+            'host': mc_data_creds.get('ftp_url'),
+            'username': mc_data_creds.get('ftp_user'),
+            'password': mc_data_creds.get('ftp_pass')
+        }
+        filename = mc_data_creds.get('filename')
+        filepath = mc_data_creds.get('filepath')
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=StgPurchaseItem,
+                      primary_keys=['item_id'],
+                      db_field_map=dict(
+                          item_id='item_id',
+                          purchase_id='order_number',
+                          product_id='product_id',
+                          qty_ordered='qty_ordered',
+                          row_total_price='row_total',
+                          unit_price='price',
+                          sku='sku',
+                          image='image',
+                          color='google_color',
+                          options='option_string',
+                          name='name',
+                      ),
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load magento purchase items data to db
+        csv.load_data()
+
+        sql = 'INSERT INTO purchase_item("item_id", "purchase_id", "product_id", "qty_ordered", "row_total_price", "unit_price", "sku", "image", "color", "options", "name") ' \
+              'SELECT DISTINCT ON (a."item_id") a."purchase_id", a."product_id", a."qty_ordered", a."row_total_price", a."unit_price", a."sku", a."image", a."color", a."options", a."name" ' \
+              'FROM stg_purchase_item a ' \
+              'LEFT JOIN purchase_item b ' \
+              'ON b."item_id" = a."item_id" ' \
+              'WHERE b."item_id" IS NULL '
+        res = self.db.engine.execute(sql)
+        print('inserted ' + str(res.rowcount) + ' purchase items')
+
+        sql = 'DELETE FROM stg_purchase_item'
+        self.db.engine.execute(sql)
 
     def load_purchases(self):
         config = self.config

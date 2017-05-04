@@ -90,7 +90,7 @@ def devpage_joint():
 @templated('data_manager')
 def load(action):
     from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, \
-        load_web_tracking, load_lead_perfection
+        load_web_tracking, load_lead_perfection, load_magento
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
 
     load_map = {'customers': load_customers,
@@ -101,7 +101,8 @@ def load(action):
                 'web-tracking': load_web_tracking,
                 'add-fips-location-emlopen': add_fips_location_emlopen,
                 'add-fips-location-emlclick': add_fips_location_emlclick,
-                'lead-perfection': load_lead_perfection}
+                'lead-perfection': load_lead_perfection,
+                'magento': load_magento}
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')

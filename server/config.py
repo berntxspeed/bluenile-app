@@ -42,6 +42,7 @@ class Config(object):
     # External Data Sources
     CUSTOMER_DATA_SOURCE = os.getenv('CUSTOMER_DATA_SOURCE')
     PURCHASE_DATA_SOURCE = os.getenv('PURCHASE_DATA_SOURCE')
+    PURCHASE_ITEM_DATA_SOURCE = os.getenv('PURCHASE_ITEM_DATA_SOURCE')
     ARTIST_DATA_SOURCE = os.getenv('ARTIST_DATA_SOURCE')
     EMAIL_DATA_SOURCE = os.getenv('EMAIL_DATA_SOURCE')
     EMAIL_DATA_DEST = os.getenv('EMAIL_DATA_DEST')
@@ -81,6 +82,27 @@ class Config(object):
             'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
             'filename': os.getenv('LEAD_PERFECTION_FILENAME'),
             'filepath': os.getenv('LEAD_PERFECTION_FILEPATH')
+        },
+        'magento-customers': {
+            'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
+            'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
+            'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
+            'filename': os.getenv('MAGENTO_CUSTOMERS_FILENAME'),
+            'filepath': os.getenv('MAGENTO_CUSTOMERS_FILEPATH')
+        },
+        'magento-purchases': {
+            'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
+            'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
+            'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
+            'filename': os.getenv('MAGENTO_PURCHASES_FILENAME'),
+            'filepath': os.getenv('MAGENTO_PURCHASES_FILEPATH')
+        },
+        'magento-purchase-items': {
+            'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
+            'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
+            'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
+            'filename': os.getenv('MAGENTO_PURCHASE_ITEMS_FILENAME'),
+            'filepath': os.getenv('MAGENTO_PURCHASE_ITEMS_FILEPATH')
         }
     }
 

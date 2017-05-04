@@ -172,6 +172,32 @@ def on_update(mapper, connection, target):
     return target
 
 
+class StgPurchase(db.Model):
+    __tablename__ = 'stg_purchase'
+    id = db.Column(db.Integer, primary_key=True)
+    purchase_id = db.Column(db.String(255), unique=True)
+    customer_id = db.Column(db.String(255))
+    created_at = db.Column(TIMESTAMP)
+    price = db.Column(db.Float)
+    is_paid = db.Column(db.Boolean)
+    referring_site = db.Column(db.String(255))
+    landing_site = db.Column(db.String(255))
+    browser_ip = db.Column(db.String(255))
+    user_agent = db.Column(db.String(255))
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+    purchase_date = db.Column(TIMESTAMP)
+    _day = db.Column(TIMESTAMP)
+    _hour = db.Column(TIMESTAMP)
+
+    def _add_metadata(self):
+        if self.purchase_date is not None:
+            self._day = self.EventDate.weekday()
+            self._hour = self.EventDate.hour
+        if self.created_at is None:
+            self.created_at = datetime.datetime.utcnow()
+        return self
+
 class Purchase(db.Model):
     __tablename__ = 'purchase'
     id = db.Column(db.Integer, primary_key=True)
@@ -215,6 +241,43 @@ def on_update(mapper, connection, target):
 def on_update(mapper, connection, target):
     target._last_updated = datetime.datetime.utcnow()
     return target
+
+
+class StgPurchaseItem(db.Model):
+    __tablename__ = 'stg_purchase_item'
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.String(255))
+    purchase_id = db.Column(db.String(255))
+    product_id = db.Column(db.String(255))
+    qty_ordered = db.Column(db.Integre)
+    row_total_price = db.Column(db.Float)
+    unit_price = db.Column(db.Float)
+    sku = db.Column(db.String(255))
+    image = db.Column(db.String(1024))
+    color = db.Column(db.String(255))
+    options = db.Column(db.String(255))
+    name = db.Column(db.String(255))
+
+    def _add_metadata(self):
+        return self
+
+class PurchaseItem(db.Model):
+    __tablename__ = 'purchase_item'
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.String(255))
+    purchase_id = db.Column(db.String(255))
+    product_id = db.Column(db.String(255))
+    qty_ordered = db.Column(db.Integre)
+    row_total_price = db.Column(db.Float)
+    unit_price = db.Column(db.Float)
+    sku = db.Column(db.String(255))
+    image = db.Column(db.String(1024))
+    color = db.Column(db.String(255))
+    options = db.Column(db.String(255))
+    name = db.Column(db.String(255))
+
+    def _add_metadata(self):
+        return self
 
 class StgEmlSend(db.Model):
     __tablename__ = 'stg_eml_send'
@@ -774,6 +837,53 @@ class WebTrackingEcomm(db.Model):
     def _add_metadata(self):
         return self
 
+
+class StgCustomer(db.Model):
+    __tablename__ = 'stg_customer'
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.String(255), unique=True)
+    email_address = db.Column(db.String(255))
+    hashed_email = db.Column(db.String(255))
+    fname = db.Column(db.String(255))
+    lname = db.Column(db.String(255))
+    marketing_allowed = db.Column(db.Boolean)
+    created_at = db.Column(TIMESTAMP)
+    purchase_count = db.Column(db.Integer)
+    total_spent_so_far = db.Column(db.Float)
+    average_purchase_amount = db.Column(db.Float)
+    _last_updated = db.Column(TIMESTAMP)
+    _last_ext_sync = db.Column(TIMESTAMP)
+    city = db.Column(db.String(255))
+    state = db.Column(db.String(255))
+    zipcode = db.Column(db.String(255))
+    age = db.Column(db.String(255))
+    gender = db.Column(db.String(255))
+    date_of_birth = db.Column(TIMESTAMP)
+    customer_segment = db.Column(db.String(255))
+    heard_about_from = db.Column(db.String(255))
+    interest_area = db.Column(db.String(255))
+    status = db.Column(db.String(255))
+    source = db.Column(db.String(255))
+    last_communication = db.Column(TIMESTAMP)
+    sales_rep = db.Column(db.String(255))
+    _day = db.Column(TIMESTAMP)
+    _hour = db.Column(TIMESTAMP)
+
+    def _add_metadata(self):
+        if self.created_at is None:
+            self.created_at = datetime.datetime.utcnow()
+        if self.hashed_email is None:
+            self.hashed_email = base64.b64encode(hmac.new(HASH_SECRET,
+                                                    msg=target.email_address.encode('utf-8'),
+                                                    digestmod=hashlib.sha256).digest()).hex()
+        if self.created_at is not None:
+            self._day = self.created_at.weekday()
+            self._hour = self.created_at.hour
+        return self
+
+    def __repr(self):
+        return '<Customer %r>' % self.customer_id
+
 class Customer(db.Model):
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True)
@@ -786,10 +896,17 @@ class Customer(db.Model):
     created_at = db.Column(TIMESTAMP)
     purchase_count = db.Column(db.Integer)
     total_spent_so_far = db.Column(db.Float)
+    average_purchase_amount = db.Column(db.Float)
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
     city = db.Column(db.String(255))
     state = db.Column(db.String(255))
+    zipcode = db.Column(db.String(255))
+    age = db.Column(db.String(255))
+    gender = db.Column(db.String(255))
+    date_of_birth = db.Column(TIMESTAMP)
+    customer_segment = db.Column(db.String(255))
+    heard_about_from = db.Column(db.String(255))
     interest_area = db.Column(db.String(255))
     status = db.Column(db.String(255))
     source = db.Column(db.String(255))

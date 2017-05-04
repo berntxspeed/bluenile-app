@@ -142,6 +142,11 @@ def load_lead_perfection(**kwargs):
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_lead_perfection)
 
+def load_magento(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.exec_safe_session(service.load_magento)
+
 
 NUM_OBJ_TO_CREATE = 30;
 
