@@ -31,21 +31,20 @@ class FtpFile(object):
 
         """Download the file from the FTP"""
 
-        #try:
-        with pysftp.Connection(
-                host=self._ftp_cfg['host'],
-                username=self._ftp_cfg['username'],
-                password=self._ftp_cfg['password']
-        ) as srv:
-            with pysftp.cd(tmp_directory):
-                srv.get(self._path + self._file)
+        try:
+            with pysftp.Connection(
+                    host=self._ftp_cfg['host'],
+                    username=self._ftp_cfg['username'],
+                    password=self._ftp_cfg['password']
+            ) as srv:
+                with pysftp.cd(tmp_directory):
+                    print('downloading file...')
+                    srv.get(self._path + self._file)
 
-        """except (pysftp.SSHException, AttributeError) as exc:
+        except (pysftp.SSHException, AttributeError) as exc:
             raise ConnectionRefusedError('failed to connect to ftp, and thus cannot download file: {}'.format(str(exc)))
         except FileNotFoundError:
             raise FileNotFoundError('could not find file on server with directory: {} and filename: {}'.format(self._file, self._path))
-        except Exception as exc:
-            raise exc"""
 
 class CsvFile(SqlDataLoader, FtpFile):
 
@@ -87,6 +86,7 @@ class CsvFile(SqlDataLoader, FtpFile):
     def load_data(self):
         if not self._no_dl:
             FtpFile.download(self)
+            print('finished downloading file')
 
         SqlDataLoader.load_to_db(self, self._get_data, delimiter=self._delimiter)
 
