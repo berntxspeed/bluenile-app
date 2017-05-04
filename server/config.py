@@ -76,28 +76,28 @@ class Config(object):
             'auth_url': os.getenv('FUELSDK_AUTH_URL'),
             # for later 'endpoint': os.getenv('FUELSDK_RAW_ENDPOINT')
         },
-        'lead-perfection': {
+        'lead_perfection': {
             'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
             'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
             'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
             'filename': os.getenv('LEAD_PERFECTION_FILENAME'),
             'filepath': os.getenv('LEAD_PERFECTION_FILEPATH')
         },
-        'magento-customers': {
+        'magento_customers': {
             'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
             'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
             'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
             'filename': os.getenv('MAGENTO_CUSTOMERS_FILENAME'),
             'filepath': os.getenv('MAGENTO_CUSTOMERS_FILEPATH')
         },
-        'magento-purchases': {
+        'magento_purchases': {
             'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
             'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
             'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
             'filename': os.getenv('MAGENTO_PURCHASES_FILENAME'),
             'filepath': os.getenv('MAGENTO_PURCHASES_FILEPATH')
         },
-        'magento-purchase-items': {
+        'magento_purchase_items': {
             'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
             'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
             'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
