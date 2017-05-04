@@ -93,6 +93,7 @@ class CsvFile(SqlDataLoader, FtpFile):
     def _get_data(self, chunk_size=10000, delimiter=','):
         num_recs = 0
         filename = self._filename
+        print('starting _get_data() process')
         """Load csv file into the database
 
         Args:
@@ -122,6 +123,8 @@ class CsvFile(SqlDataLoader, FtpFile):
                     csvfile_reader = csv.DictReader(csvfile, delimiter=delimiter)
                     # create a dict of all the new records by their primary key
                     import_items = {}
+                    if num_recs == 0:
+                        print('opening the file...')
                     for row in csvfile_reader:
                         item = SqlDataLoader.db_model(self)
                         for db_field, csv_field in self._db_field_map.items():
