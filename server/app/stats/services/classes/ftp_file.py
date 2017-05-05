@@ -123,7 +123,7 @@ class CsvFile(SqlDataLoader, FtpFile):
                     for row in csvfile_reader:
                         item = SqlDataLoader.db_model(self)
                         for db_field, csv_field in self._db_field_map.items():
-                            if num_recs % 500 == 0 or num_recs == 1:
+                            if num_recs == 0 or num_recs == 1:
                                 print('setting attrs on object instance: '+str(db_field)+'<>'+str(row[csv_field]))
                             item.__setattr__(db_field,
                                              set_db_instance_attr(item,
@@ -134,7 +134,10 @@ class CsvFile(SqlDataLoader, FtpFile):
                         for pk in self._primary_keys:
                             composite_key += str(getattr(item, pk))
                         # place item on dict, w key reference to composite key, and value of dbModel instance
-                        import_items[composite_key] = item._add_metadata()
+                        try:
+                            import_items[composite_key] = item._add_metadata()
+                        except Exception as exc:
+                            print('problem calculating metadata for '+str(composite_key)+' : message:'+str(exc))
                         if num_recs == 0:
                             print('starting load to db...')
 
