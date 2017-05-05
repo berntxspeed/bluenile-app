@@ -192,8 +192,8 @@ class StgPurchase(db.Model):
 
     def _add_metadata(self):
         if self.purchase_date is not None:
-            self._day = self.EventDate.weekday()
-            self._hour = self.EventDate.hour
+            self._day = self.purchase_date.weekday()
+            self._hour = self.purchase_date.hour
         if self.created_at is None:
             self.created_at = datetime.datetime.utcnow()
         return self
@@ -226,8 +226,8 @@ class Purchase(db.Model):
 
     def _add_metadata(self):
         if self.purchase_date is not None:
-            self._day = self.EventDate.weekday()
-            self._hour = self.EventDate.hour
+            self._day = self.purchase_date.weekday()
+            self._hour = self.purchase_date.hour
         if self.created_at is None:
             self.created_at = datetime.datetime.utcnow()
         return self
@@ -656,8 +656,8 @@ class StgSendJob(db.Model):
 
     def _add_metadata(self):
         if self.SentTime is not None:
-            self._day = self.EventDate.weekday()
-            self._hour = self.EventDate.hour
+            self._day = self.SentTime.weekday()
+            self._hour = self.SentTime.hour
         return self
 
 class SendJob(db.Model):
@@ -704,8 +704,8 @@ class SendJob(db.Model):
 
     def _add_metadata(self):
         if self.SentTime is not None:
-            self._day = self.EventDate.weekday()
-            self._hour = self.EventDate.hour
+            self._day = self.SentTime.weekday()
+            self._hour = self.SentTime.hour
         return self
 
     def __repr__(self):
@@ -874,7 +874,7 @@ class StgCustomer(db.Model):
             self.created_at = datetime.datetime.utcnow()
         if self.hashed_email is None:
             self.hashed_email = base64.b64encode(hmac.new(HASH_SECRET,
-                                                    msg=target.email_address.encode('utf-8'),
+                                                    msg=self.email_address.encode('utf-8'),
                                                     digestmod=hashlib.sha256).digest()).hex()
         if self.created_at is not None:
             self._day = self.created_at.weekday()
@@ -960,7 +960,7 @@ class Customer(db.Model):
             self.created_at = datetime.datetime.utcnow()
         if self.hashed_email is None:
             self.hashed_email = base64.b64encode(hmac.new(HASH_SECRET,
-                                                    msg=target.email_address.encode('utf-8'),
+                                                    msg=self.email_address.encode('utf-8'),
                                                     digestmod=hashlib.sha256).digest()).hex()
         if self.created_at is not None:
             self._day = self.created_at.weekday()
