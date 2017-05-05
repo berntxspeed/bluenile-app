@@ -275,8 +275,7 @@ class DataLoadService(DbService):
                           'SendID': 'SendID',
                           'SubscriberKey': 'SubscriberKey',
                           'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                          'EventDate': 'EventDate',
-                          'IsUnique': 'IsUnique'
+                          'EventDate': 'EventDate'
                       },
                       ftp_path=filepath,
                       ftp_cfg=cfg,
