@@ -120,17 +120,15 @@ class CsvFile(SqlDataLoader, FtpFile):
                     csvfile_reader = csv.DictReader(csvfile, delimiter=delimiter)
                     # create a dict of all the new records by their primary key
                     import_items = {}
-                    if num_recs == 0:
-                        print('opening the file...')
                     for row in csvfile_reader:
                         item = SqlDataLoader.db_model(self)
                         for db_field, csv_field in self._db_field_map.items():
+                            if num_recs == 0:
+                                print('setting attrs on object instance: '+str(db_field)+'<>'+str(row[csv_field]))
                             item.__setattr__(db_field,
                                              set_db_instance_attr(item,
                                                                   db_field,
                                                                   row[csv_field]))
-                            if num_recs == 0:
-                                print('setting attrs on object instance: '+str(db_field)+'<>'+str(row[csv_field]))
                         # use a composite key to reference the records on the dict
                         composite_key = ''
                         for pk in self._primary_keys:
