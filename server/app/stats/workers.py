@@ -64,21 +64,21 @@ celery.conf.beat_schedule = {
     }
 }
 
-@celery.task(base=BaseTask)
+@celery.task
 def load_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_customers)
 
 
-@celery.task(base=BaseTask)
+@celery.task
 def load_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_purchases)
 
 
-@celery.task(base=BaseTask)
+@celery.task
 def load_mc_email_data(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
