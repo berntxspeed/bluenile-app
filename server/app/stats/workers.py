@@ -142,8 +142,10 @@ def load_lead_perfection(**kwargs):
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_lead_perfection)
 
-@celery.task
-def load_magento(**kwargs):
+@celery.task(bind=True)
+def load_magento(self, **kwargs):
+    print('Executing task id {0.id}, args: {0.args!r} kwargs: {0.kwargs!r}'.format(
+        self.request))
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_magento)
