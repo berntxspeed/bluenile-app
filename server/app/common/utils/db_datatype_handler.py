@@ -38,9 +38,15 @@ def _coerce_datatype(type, str_val):
     if 'VARCHAR' in type:
         return str_val
     elif 'FLOAT' in type:
-        return float(str_val)
+        try:
+            return float(str_val)
+        except:
+            return 0.0
     elif 'INTEGER' in type:
-        return int(str_val)
+        try:
+            return int(str_val)
+        except:
+            return 0
     elif 'BOOLEAN' in type:
         return _to_boolean(str_val)
     elif 'TIMESTAMP' in type:

@@ -125,10 +125,8 @@ class CsvFile(SqlDataLoader, FtpFile):
                         for db_field, csv_field in self._db_field_map.items():
                             if num_recs == 0 or num_recs == 1:
                                 print('setting attrs on object instance: '+str(db_field)+'<>'+str(row[csv_field]))
-                            item.__setattr__(db_field,
-                                             set_db_instance_attr(item,
-                                                                  db_field,
-                                                                  row[csv_field]))
+                            set_val = set_db_instance_attr(item, db_field, row[csv_field])
+                            item.__setattr__(db_field,set_val)
                         # use a composite key to reference the records on the dict
                         composite_key = ''
                         for pk in self._primary_keys:
