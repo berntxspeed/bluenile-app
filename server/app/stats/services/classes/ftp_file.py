@@ -123,7 +123,7 @@ class CsvFile(SqlDataLoader, FtpFile):
                     for row in csvfile_reader:
                         item = SqlDataLoader.db_model(self)
                         for db_field, csv_field in self._db_field_map.items():
-                            if num_recs == 0:
+                            if num_recs % 500 == 0 or num_recs == 1:
                                 print('setting attrs on object instance: '+str(db_field)+'<>'+str(row[csv_field]))
                             item.__setattr__(db_field,
                                              set_db_instance_attr(item,
