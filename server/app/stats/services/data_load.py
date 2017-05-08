@@ -119,7 +119,7 @@ class DataLoadService(DbService):
                           source='Source',
                           heard_about_from='Heard_About',
                           gender='Gender',
-                          date_of_birth='Date_Of_Birth',
+                          date_of_birth='Date_of_Birth',
                           total_spent_so_far='lifetime_sales',
                           average_purchase_amount='avg_sales'
                       ),
