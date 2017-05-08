@@ -112,7 +112,7 @@ class DataLoadService(DbService):
                           created_at='join_date',
                           city='City',
                           state='Region',
-                          zipcode='PostCode',
+                          zipcode='Postcode',
                           age='Age_Range',
                           purchase_count='num_orders',
                           customer_segment='group',
