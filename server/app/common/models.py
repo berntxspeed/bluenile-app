@@ -187,8 +187,8 @@ class StgPurchase(db.Model):
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
     purchase_date = db.Column(TIMESTAMP)
-    _day = db.Column(TIMESTAMP)
-    _hour = db.Column(TIMESTAMP)
+    #_day = db.Column(db.Integer)
+    #_hour = db.Column(db.Integer)
 
     def _add_metadata(self):
         if self.purchase_date is not None:
@@ -213,8 +213,8 @@ class Purchase(db.Model):
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
     purchase_date = db.Column(TIMESTAMP)
-    _day = db.Column(TIMESTAMP)
-    _hour = db.Column(TIMESTAMP)
+    #_day = db.Column(db.Integer)
+    #_hour = db.Column(db.Integer)
 
     events = relationship(Event, backref='purchase',
                           primaryjoin='Purchase.id==Event.rec_id',
@@ -651,8 +651,8 @@ class StgSendJob(db.Model):
     EmailName = db.Column(db.String(255))
     Subject = db.Column(db.String(1024))
     PreviewURL = db.Column(db.String(1024))
-    _day = db.Column(TIMESTAMP)
-    _hour = db.Column(TIMESTAMP)
+    #_day = db.Column(db.Integer)
+    #_hour = db.Column(db.Integer)
 
     def _add_metadata(self):
         if self.SentTime is not None:
@@ -673,8 +673,8 @@ class SendJob(db.Model):
     PreviewURL = db.Column(db.String(1024))
     _last_updated = db.Column(TIMESTAMP)
     _last_ext_sync = db.Column(TIMESTAMP)
-    _day = db.Column(TIMESTAMP)
-    _hour = db.Column(TIMESTAMP)
+    #_day = db.Column(db.Integer)
+    #_hour = db.Column(db.Integer)
     eml_sends = relationship(EmlSend, backref='send_job',
                              primaryjoin='SendJob.SendID==EmlSend.SendID',
                              foreign_keys=[EmlSend.SendID],
@@ -866,8 +866,8 @@ class StgCustomer(db.Model):
     source = db.Column(db.String(255))
     last_communication = db.Column(TIMESTAMP)
     sales_rep = db.Column(db.String(255))
-    _day = db.Column(TIMESTAMP)
-    _hour = db.Column(TIMESTAMP)
+    #_day = db.Column(db.Integer)
+    #_hour = db.Column(db.Integer)
 
     def _add_metadata(self):
         if self.created_at is None:
@@ -912,8 +912,8 @@ class Customer(db.Model):
     source = db.Column(db.String(255))
     last_communication = db.Column(TIMESTAMP)
     sales_rep = db.Column(db.String(255))
-    _day = db.Column(TIMESTAMP)
-    _hour = db.Column(TIMESTAMP)
+    #_day = db.Column(db.Integer)
+    #_hour = db.Column(db.Integer)
 
     purchases = relationship(Purchase, backref='customer',
                              primaryjoin='Customer.customer_id==Purchase.customer_id',
