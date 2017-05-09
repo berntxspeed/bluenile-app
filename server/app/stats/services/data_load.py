@@ -419,6 +419,9 @@ class DataLoadService(DbService):
         res = self.db.engine.execute(sql)
         print('inserted '+str(res.rowcount)+' sends')
 
+        sql = 'DELETE FROM stg_eml_send'
+        self.db.engine.execute(sql)
+
         # load Opens data to db
         zf.load_data(file='Opens.csv',
                      db_session=self.db.session,
