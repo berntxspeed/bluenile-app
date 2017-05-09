@@ -3,7 +3,7 @@ import datetime
 
 def set_db_instance_attr(inst, attr_name, str_val):
     if not isinstance(str_val, str):
-        if str_val is None:
+        if str_val is None or len(str_val) < 1:
             return None
         else:
             try:
@@ -75,11 +75,14 @@ def _to_timestamp(str_val):
         lambda x: datetime.datetime.strptime(x, '%Y-%m-%d')
     ]
 
-    for conversion in conversions_available:
-        try:
-            return conversion(str_val)
-        except Exception as exc:
-            exception = exc
+    if str_val is not None:
+        for conversion in conversions_available:
+            try:
+                return conversion(str_val)
+            except Exception as exc:
+                exception = exc
+    else:
+        return None
 
     raise ValueError('date format not yet supported: ' + str_val)
 
