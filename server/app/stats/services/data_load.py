@@ -293,8 +293,8 @@ class DataLoadService(DbService):
               'FROM stg_eml_send a ' \
               'LEFT JOIN journey_eml_send b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
-              'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL'
+              'AND b."SendID" = a."SendID" ' \
+              'WHERE b."SubscriberKey" IS NULL OR b."SendID" IS NULL'
         res = self.db.engine.execute(sql)
         print('inserted ' + str(res.rowcount) + ' sends')
 
@@ -327,7 +327,8 @@ class DataLoadService(DbService):
               'LEFT JOIN journey_eml_open b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
               'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL'
+              'AND b."SendID" = a."SendID" ' \
+              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL OR b."SendID" IS NULL'
         res = self.db.engine.execute(sql)
         print('inserted ' + str(res.rowcount) + ' opens')
 
@@ -360,7 +361,8 @@ class DataLoadService(DbService):
               'LEFT JOIN journey_eml_click b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
               'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL'
+              'AND b."SendID" = a."SendID" ' \
+              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL OR b."SendID" IS NULL'
         res = self.db.engine.execute(sql)
         print('inserted ' + str(res.rowcount) + ' clicks')
 
@@ -418,8 +420,8 @@ class DataLoadService(DbService):
               'FROM stg_eml_send a ' \
               'LEFT JOIN eml_send b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
-              'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL'
+              'AND b."SendID" = a."SendID" ' \
+              'WHERE b."SubscriberKey" IS NULL OR b."SendID" IS NULL'
         res = self.db.engine.execute(sql)
         print('inserted '+str(res.rowcount)+' sends')
 
@@ -457,7 +459,8 @@ class DataLoadService(DbService):
               'LEFT JOIN eml_open b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
               'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL'
+              'AND b."SendID" = a."SendID" ' \
+              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL OR b."SendID" IS NULL'
         res = self.db.engine.execute(sql)
         print('inserted '+str(res.rowcount)+' opens')
 
@@ -499,7 +502,8 @@ class DataLoadService(DbService):
               'LEFT JOIN eml_click b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
               'AND b."EventDate" = a."EventDate" ' \
-              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL'
+              'AND b."SendID" = a."SendID" ' \
+              'WHERE b."SubscriberKey" IS NULL OR b."EventDate" IS NULL OR b."SendID" IS NULL'
         res = self.db.engine.execute(sql)
         print('inserted '+str(res.rowcount)+' clicks')
 
