@@ -92,6 +92,46 @@ class DataLoadService(DbService):
 
     def load_magento(self):
         config = self.config
+
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('PURCHASE_DATA_SOURCE'))
+        cfg = {
+            'host': mc_data_creds.get('ftp_url'),
+            'username': mc_data_creds.get('ftp_user'),
+            'password': mc_data_creds.get('ftp_pass')
+        }
+        filename = mc_data_creds.get('filename')
+        filepath = mc_data_creds.get('filepath')
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=StgPurchase,
+                      primary_keys=['purchase_id'],
+                      db_field_map=dict(
+                          purchase_id='order_number',
+                          customer_id='customer_id',
+                          created_at='date_ordered',
+                          price='grand_total',
+                          is_paid='total_paid'
+                      ),
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load magento purchase data to db
+        csv.load_data()
+
+        sql = 'INSERT INTO purchase("purchase_id", "customer_id", "created_at", "price", "is_paid", "_day", "_hour") ' \
+              'SELECT DISTINCT ON (a."purchase_id") a."purchase_id", a."customer_id", a."created_at", a."price", a."is_paid", a."_day", a."_hour" ' \
+              'FROM stg_purchase a ' \
+              'LEFT JOIN purchase b ' \
+              'ON b."purchase_id" = a."purchase_id" ' \
+              'WHERE b."purchase_id" IS NULL '
+        res = self.db.engine.execute(sql)
+        print('inserted ' + str(res.rowcount) + ' purchases')
+
+        sql = 'DELETE FROM stg_purchase'
+        self.db.engine.execute(sql)
+
+
         mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('CUSTOMER_DATA_SOURCE'))
         cfg = {
             'host': mc_data_creds.get('ftp_url'),
@@ -144,43 +184,7 @@ class DataLoadService(DbService):
         sql = 'DELETE FROM stg_customer'
         self.db.engine.execute(sql)
 
-        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('PURCHASE_DATA_SOURCE'))
-        cfg = {
-            'host': mc_data_creds.get('ftp_url'),
-            'username': mc_data_creds.get('ftp_user'),
-            'password': mc_data_creds.get('ftp_pass')
-        }
-        filename = mc_data_creds.get('filename')
-        filepath = mc_data_creds.get('filepath')
-        csv = CsvFile(file=filename,
-                      db_session=self.db.session,
-                      db_model=StgPurchase,
-                      primary_keys=['purchase_id'],
-                      db_field_map=dict(
-                          purchase_id='order_number',
-                          customer_id='customer_id',
-                          created_at='date_ordered',
-                          price='grand_total',
-                          is_paid='total_paid'
-                      ),
-                      ftp_path=filepath,
-                      ftp_cfg=cfg,
-                      file_encoding='utf16')
 
-        # load magento purchase data to db
-        csv.load_data()
-
-        sql = 'INSERT INTO purchase("purchase_id", "customer_id", "created_at", "price", "is_paid", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."purchase_id") a."purchase_id", a."customer_id", a."created_at", a."price", a."is_paid", a."_day", a."_hour" ' \
-              'FROM stg_purchase a ' \
-              'LEFT JOIN purchase b ' \
-              'ON b."purchase_id" = a."purchase_id" ' \
-              'WHERE b."purchase_id" IS NULL '
-        res = self.db.engine.execute(sql)
-        print('inserted ' + str(res.rowcount) + ' purchases')
-
-        sql = 'DELETE FROM stg_purchase'
-        self.db.engine.execute(sql)
 
         mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('PURCHASE_ITEM_DATA_SOURCE'))
         cfg = {
@@ -511,9 +515,32 @@ class DataLoadService(DbService):
         #TODO: append county FIPS codes to open and click data
 
         # append sent/open/click counts to SendJob rows
-        sends = SendJob.query.all()
-        for send in sends:
-            send._get_stats()
+        #sends = SendJob.query.all()
+        #for send in sends:
+            #send._get_stats()
+
+        print('calculating send_job stats... (sent, opens, clicks)')
+
+        sql = 'UPDATE send_job as sj ' \
+              'SET (num_sends, num_opens, num_clicks) = (s.num_sends, s.num_opens, s.num_clicks) ' \
+              'FROM ' \
+              '( ' \
+              'SELECT sj."SendID", a.num_sends, b.num_opens, c.num_clicks ' \
+              'FROM send_job as sj ' \
+              'LEFT JOIN (SELECT count(*) as num_sends, "SendID" FROM eml_send GROUP BY "SendID") as a ON a."SendID" = sj."SendID" ' \
+              'LEFT JOIN (SELECT count(*) as num_opens, "SendID" FROM eml_open GROUP BY "SendID") as b ON b."SendID" = sj."SendID" '\
+              'LEFT JOIN (SELECT count(*) as num_clicks, "SendID" FROM eml_click GROUP BY "SendID") as c ON c."SendID" = sj."SendID" ' \
+              ') as s ' \
+              'WHERE sj."SendID" = s."SendID"'
+        
+        res = self.db.engine.execute(sql)
+        print('updated '+str(res.rowcount)+' send_job records with stats')
+
+        sql = 'DELETE FROM send_job WHERE num_sends IS NULL'
+        res = self.db.engine.execute(sql)
+        print('deleted '+str(res.rowcount)+' send_job records with no emls sent')
+
+        print('done calculating send_job stats')
 
     def load_mc_journeys(self):
         token = self.__get_mc_auth()
