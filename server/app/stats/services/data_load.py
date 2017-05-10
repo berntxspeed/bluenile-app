@@ -528,11 +528,11 @@ class DataLoadService(DbService):
               'SELECT sj."SendID", a.num_sends, b.num_opens, c.num_clicks ' \
               'FROM send_job as sj ' \
               'LEFT JOIN (SELECT count(*) as num_sends, "SendID" FROM eml_send GROUP BY "SendID") as a ON a."SendID" = sj."SendID" ' \
-              'LEFT JOIN (SELECT count(*) as num_opens, "SendID" FROM eml_open GROUP BY "SendID") as b ON b."SendID" = sj."SendID" '\
-              'LEFT JOIN (SELECT count(*) as num_clicks, "SendID" FROM eml_click GROUP BY "SendID") as c ON c."SendID" = sj."SendID" ' \
+              'LEFT JOIN (SELECT count(*) as num_opens, "SendID" FROM eml_open WHERE "IsUnique" = True GROUP BY "SendID") as b ON b."SendID" = sj."SendID" '\
+              'LEFT JOIN (SELECT count(*) as num_clicks, "SendID" FROM eml_click WHERE "IsUnique" = True GROUP BY "SendID") as c ON c."SendID" = sj."SendID" ' \
               ') as s ' \
               'WHERE sj."SendID" = s."SendID"'
-        
+
         res = self.db.engine.execute(sql)
         print('updated '+str(res.rowcount)+' send_job records with stats')
 

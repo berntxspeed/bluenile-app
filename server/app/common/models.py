@@ -175,7 +175,7 @@ def on_update(mapper, connection, target):
 class StgPurchase(db.Model):
     __tablename__ = 'stg_purchase'
     id = db.Column(db.Integer, primary_key=True)
-    purchase_id = db.Column(db.String(255), unique=True)
+    purchase_id = db.Column(db.String(255))
     customer_id = db.Column(db.String(255))
     created_at = db.Column(TIMESTAMP)
     price = db.Column(db.Float)

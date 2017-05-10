@@ -99,3 +99,40 @@ add this tracking code
 ---if postgres is hanging due to a long running query you can see which one it is and kill it like so:
 heroku pg:locks --app <app>
 heroku pg:kill <pid> --app <app>
+
+
+EXAMPLE OF A QUICK RUNNING POSTGRES UPDATE STATEMENT:
+UPDATE send_job as sj
+SET (num_sends, num_opens, num_clicks) = (s.num_sends, s.num_opens, s.num_clicks)
+FROM
+(
+    SELECT sj."SendID", a.num_sends, b.num_opens, c.num_clicks
+    FROM send_job as sj
+
+    LEFT JOIN
+    (
+    SELECT count(*) as num_sends, "SendID"
+    FROM eml_send
+    GROUP BY "SendID"
+    ) as a
+    ON a."SendID" = sj."SendID"
+
+    LEFT JOIN
+    (
+    SELECT count(*) as num_opens, "SendID"
+    FROM eml_open
+    GROUP BY "SendID"
+    ) as b
+    ON b."SendID" = a."SendID"
+
+    LEFT JOIN
+    (
+    SELECT count(*) as num_clicks, "SendID"
+    FROM eml_click
+    GROUP BY "SendID"
+    ) as c
+    ON c."SendID" = a."SendID"
+) as s
+
+WHERE
+sj."SendID" = s."SendID"
