@@ -130,13 +130,19 @@ class CsvFile(SqlDataLoader, FtpFile):
                                 print('failed to set attr: '+str(db_field)+'<>'+str(row[csv_field])+' exc: '+str(exc))
                         # use a composite key to reference the records on the dict
                         composite_key = ''
+                        invalid_comp_key = False
                         for pk in self._primary_keys:
+                            if str(getattr(item, pk)) is None or len(str(getattr(item, pk))) < 1 or str(getattr(item, pk)) == '':
+                                invalid_comp_key = True
                             composite_key += str(getattr(item, pk))
                         # place item on dict, w key reference to composite key, and value of dbModel instance
-                        try:
-                            import_items[composite_key] = item._add_metadata()
-                        except Exception as exc:
-                            print('problem calculating metadata for '+str(composite_key)+' : message:'+str(exc))
+                        if not invalid_comp_key:
+                            try:
+                                import_items[composite_key] = item._add_metadata()
+                            except Exception as exc:
+                                print('problem calculating metadata for '+str(composite_key)+' : message:'+str(exc))
+                        else:
+                            print('invalid composite key value: ' + str(composite_key))
                         if num_recs == 0:
                             print('starting load to db...')
 
