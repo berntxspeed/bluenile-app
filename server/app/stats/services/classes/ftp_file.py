@@ -142,7 +142,8 @@ class CsvFile(SqlDataLoader, FtpFile):
                             except Exception as exc:
                                 print('problem calculating metadata for '+str(composite_key)+' : message:'+str(exc))
                         else:
-                            print('invalid composite key value: ' + str(composite_key))
+                            pass
+                            #print('invalid composite key value: ' + str(composite_key))
                         if num_recs == 0:
                             print('starting load to db...')
 

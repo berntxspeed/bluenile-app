@@ -131,11 +131,13 @@ class DataLoadService(DbService):
         csv.load_data()
 
         sql = 'INSERT INTO customer("customer_id", "email_address", "fname", "lname", "created_at", "city", "state", "zipcode", "age", "purchase_count", "customer_segment", "source", "heard_about_from", "gender", "date_of_birth", "total_spent_so_far", "average_purchase_amount", "hashed_email", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."customer_id") a."email_address", a."fname", a."lname", a."created_at", a."city", a."state", a."zipcode", a."age", a."purchase_count", a."customer_segment", a."source", a."heard_about_from", a."gender", a."date_of_birth", a."total_spent_so_far", a."average_purchase_amount", a."hashed_email", a."_day", a."_hour" ' \
+              'SELECT a."customer_id", a."email_address", a."fname", a."lname", a."created_at", a."city", a."state", a."zipcode", a."age", a."purchase_count", a."customer_segment", a."source", a."heard_about_from", a."gender", a."date_of_birth", a."total_spent_so_far", a."average_purchase_amount", a."hashed_email", a."_day", a."_hour" ' \
               'FROM stg_customer a ' \
               'LEFT JOIN customer b ' \
               'ON b."customer_id" = a."customer_id" ' \
-              'WHERE b."customer_id" IS NULL '
+              'AND b."email_address" = a."email_address" ' \
+              'WHERE b."customer_id" IS NULL ' \
+              'AND b."email_address" IS NULL'
         res = self.db.engine.execute(sql)
         print('inserted ' + str(res.rowcount) + ' customers')
 
@@ -169,7 +171,7 @@ class DataLoadService(DbService):
         csv.load_data()
 
         sql = 'INSERT INTO purchase("purchase_id", "customer_id", "created_at", "price", "is_paid", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."purchase_id") a."customer_id", a."created_at", a."price", a."is_paid", a."_day", a."_hour" ' \
+              'SELECT DISTINCT ON (a."purchase_id") a."purchase_id", a."customer_id", a."created_at", a."price", a."is_paid", a."_day", a."_hour" ' \
               'FROM stg_purchase a ' \
               'LEFT JOIN purchase b ' \
               'ON b."purchase_id" = a."purchase_id" ' \
@@ -213,7 +215,7 @@ class DataLoadService(DbService):
         csv.load_data()
 
         sql = 'INSERT INTO purchase_item("item_id", "purchase_id", "product_id", "qty_ordered", "row_total_price", "unit_price", "sku", "image", "color", "options", "name") ' \
-              'SELECT DISTINCT ON (a."item_id") a."purchase_id", a."product_id", a."qty_ordered", a."row_total_price", a."unit_price", a."sku", a."image", a."color", a."options", a."name" ' \
+              'SELECT DISTINCT ON (a."item_id") a."item_id", a."purchase_id", a."product_id", a."qty_ordered", a."row_total_price", a."unit_price", a."sku", a."image", a."color", a."options", a."name" ' \
               'FROM stg_purchase_item a ' \
               'LEFT JOIN purchase_item b ' \
               'ON b."item_id" = a."item_id" ' \

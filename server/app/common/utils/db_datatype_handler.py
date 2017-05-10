@@ -17,7 +17,8 @@ def set_db_instance_attr(inst, attr_name, str_val):
     try:
         return _coerce_datatype(type_of_attr, str_val)
     except Exception as exc:
-        print('failed to coerce ' + attr_name + ' to ' + type_of_attr + ': ' + str(exc))
+        pass
+        #print('failed to coerce ' + attr_name + ' to ' + type_of_attr + ': ' + str(exc))
 
 def convert_to_attr_datatype(attr, str_val):
     if not isinstance(str_val, str):
@@ -30,7 +31,8 @@ def convert_to_attr_datatype(attr, str_val):
     try:
         return _coerce_datatype(type_of_attr, str_val)
     except Exception as exc:
-        print('failed to coerce ' + attr_name + ' to ' + type_of_attr + ': ' + str(exc))
+        pass
+        #print('failed to coerce ' + attr_name + ' to ' + type_of_attr + ': ' + str(exc))
 
 
 def _coerce_datatype(type, str_val):
