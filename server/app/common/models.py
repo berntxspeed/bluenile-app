@@ -841,7 +841,7 @@ class WebTrackingEcomm(db.Model):
 class StgCustomer(db.Model):
     __tablename__ = 'stg_customer'
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.String(255), unique=True)
+    #customer_id = db.Column(db.String(255))
     email_address = db.Column(db.String(255))
     hashed_email = db.Column(db.String(255))
     fname = db.Column(db.String(255))
@@ -887,7 +887,7 @@ class StgCustomer(db.Model):
 class Customer(db.Model):
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.String(255), unique=True)
+    #customer_id = db.Column(db.String(255))
     email_address = db.Column(db.String(255))
     hashed_email = db.Column(db.String(255))
     fname = db.Column(db.String(255))
