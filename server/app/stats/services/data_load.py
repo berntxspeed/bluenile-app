@@ -174,10 +174,8 @@ class DataLoadService(DbService):
               'SELECT a."customer_id", a."email_address", a."fname", a."lname", a."created_at", a."city", a."state", a."zipcode", a."age", a."purchase_count", a."customer_segment", a."source", a."heard_about_from", a."gender", a."date_of_birth", a."total_spent_so_far", a."average_purchase_amount", a."hashed_email", a."_day", a."_hour" ' \
               'FROM stg_customer a ' \
               'LEFT JOIN customer b ' \
-              'ON b."customer_id" = a."customer_id" ' \
-              'AND b."email_address" = a."email_address" ' \
-              'WHERE b."customer_id" IS NULL ' \
-              'AND b."email_address" IS NULL'
+              'ON b."email_address" = a."email_address" ' \
+              'WHERE b."email_address" IS NULL '
         res = self.db.engine.execute(sql)
         print('inserted ' + str(res.rowcount) + ' customers')
 
@@ -291,7 +289,7 @@ class DataLoadService(DbService):
         csv.load_data()
 
         sql = 'INSERT INTO journey_eml_send ("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
+              'SELECT a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
               'FROM stg_eml_send a ' \
               'LEFT JOIN journey_eml_send b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
@@ -324,7 +322,7 @@ class DataLoadService(DbService):
         csv.load_data()
 
         sql = 'INSERT INTO journey_eml_open("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
+              'SELECT a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
               'FROM stg_eml_open a ' \
               'LEFT JOIN journey_eml_open b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
@@ -357,7 +355,7 @@ class DataLoadService(DbService):
         csv.load_data()
 
         sql = 'INSERT INTO journey_eml_click("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
+              'SELECT a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey", a."_day", a."_hour" ' \
               'FROM stg_eml_click a ' \
               'LEFT JOIN journey_eml_click b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
@@ -393,7 +391,7 @@ class DataLoadService(DbService):
                      })
 
         sql = 'INSERT INTO send_job("SendID", "SendDefinitionExternalKey", "EmailName", "SchedTime", "SentTime", "Subject", "PreviewURL", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."SendID") a."SendID", a."SendDefinitionExternalKey", a."EmailName", a."SchedTime", a."SentTime", a."Subject", a."PreviewURL", a."_day", a."_hour" ' \
+              'SELECT a."SendID", a."SendDefinitionExternalKey", a."EmailName", a."SchedTime", a."SentTime", a."Subject", a."PreviewURL", a."_day", a."_hour" ' \
               'FROM stg_send_job a ' \
               'LEFT JOIN send_job b ' \
               'ON b."SendID" = a."SendID" ' \
@@ -416,7 +414,7 @@ class DataLoadService(DbService):
                      })
 
         sql = 'INSERT INTO eml_send ("SendID", "SubscriberKey", "EmailAddress", "EventDate", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."_day", a."_hour" ' \
+              'SELECT a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."_day", a."_hour" ' \
               'FROM stg_eml_send a ' \
               'LEFT JOIN eml_send b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
@@ -454,7 +452,7 @@ class DataLoadService(DbService):
                      })
 
         sql = 'INSERT INTO eml_open("SendID", "SubscriberKey", "EmailAddress", "EventDate", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device", a."_day", a."_hour" ' \
+              'SELECT a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device", a."_day", a."_hour" ' \
               'FROM stg_eml_open a ' \
               'LEFT JOIN eml_open b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
@@ -496,7 +494,7 @@ class DataLoadService(DbService):
                      })
 
         sql = 'INSERT INTO eml_click("SendID", "SubscriberKey", "EmailAddress", "EventDate", "URLID", "URL", "Alias", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device", "_day", "_hour") ' \
-              'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."URLID", a."URL", a."Alias", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device", a."_day", a."_hour" ' \
+              'SELECT a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."URLID", a."URL", a."Alias", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device", a."_day", a."_hour" ' \
               'FROM stg_eml_click a ' \
               'LEFT JOIN eml_click b ' \
               'ON b."SubscriberKey" = a."SubscriberKey" ' \
