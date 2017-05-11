@@ -24,6 +24,15 @@ from .services.query_service import SqlQueryService
 def before_request():
     pass
 
+
+@databuilder.before_request
+def before_request():
+    if request.url.startswith('http://'):
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+        return redirect(url, code=code)
+
+
 @databuilder.route('/data-builder/')
 @databuilder.route('/data-builder/<query_id>')
 @inject(mongo=MongoDB)
