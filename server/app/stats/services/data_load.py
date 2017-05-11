@@ -59,6 +59,42 @@ class DataLoadService(DbService):
     def load_lead_perfection(self):
         config = self.config
 
+        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('CUSTOMER_DATA_SOURCE'))
+        cfg = {
+            'host': mc_data_creds.get('ftp_url'),
+            'username': mc_data_creds.get('ftp_user'),
+            'password': mc_data_creds.get('ftp_pass')
+        }
+        filename = mc_data_creds.get('filename')
+        filepath = mc_data_creds.get('filepath')
+        csv = CsvFile(file=filename,
+                      db_session=self.db.session,
+                      db_model=Customer,
+                      primary_keys=['customer_id'],
+                      db_field_map=dict(
+                          customer_id='SubscriberKey',
+                          email_address='EmailAddress',
+                          fname='firstname',
+                          lname='lastname',
+                          created_at='EntryDate',
+                          city='City',
+                          state='State',
+                          interest_area='Productid',
+                          status='ds_id',
+                          source='src_id',
+                          sales_rep='SalesRepName',
+                          last_communication='LastCall'
+                      ),
+                      ftp_path=filepath,
+                      ftp_cfg=cfg,
+                      file_encoding='utf16')
+
+        # load lead perfection data to db
+        csv.load_data()
+
+    def load_magento(self):
+        config = self.config
+
         mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('PURCHASE_ITEM_DATA_SOURCE'))
         cfg = {
             'host': mc_data_creds.get('ftp_url'),
@@ -102,42 +138,6 @@ class DataLoadService(DbService):
 
         sql = 'DELETE FROM stg_purchase_item'
         self.db.engine.execute(sql)
-
-        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('CUSTOMER_DATA_SOURCE'))
-        cfg = {
-            'host': mc_data_creds.get('ftp_url'),
-            'username': mc_data_creds.get('ftp_user'),
-            'password': mc_data_creds.get('ftp_pass')
-        }
-        filename = mc_data_creds.get('filename')
-        filepath = mc_data_creds.get('filepath')
-        csv = CsvFile(file=filename,
-                      db_session=self.db.session,
-                      db_model=Customer,
-                      primary_keys=['customer_id'],
-                      db_field_map=dict(
-                          customer_id='SubscriberKey',
-                          email_address='EmailAddress',
-                          fname='firstname',
-                          lname='lastname',
-                          created_at='EntryDate',
-                          city='City',
-                          state='State',
-                          interest_area='Productid',
-                          status='ds_id',
-                          source='src_id',
-                          sales_rep='SalesRepName',
-                          last_communication='LastCall'
-                      ),
-                      ftp_path=filepath,
-                      ftp_cfg=cfg,
-                      file_encoding='utf16')
-
-        # load lead perfection data to db
-        csv.load_data()
-
-    def load_magento(self):
-        config = self.config
 
         mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('PURCHASE_DATA_SOURCE'))
         cfg = {
