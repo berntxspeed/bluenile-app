@@ -1,7 +1,7 @@
 from json import dumps, loads
 
 from flask import Response, Request
-from flask import request
+from flask import request, redirect
 from flask import session
 from flask_login import login_required
 from injector import inject
@@ -17,6 +17,12 @@ from ..common.views.decorators import templated
 def before_request():
     pass
 
+@stats.before_request
+def before_request():
+    if request.url.startswith('http://'):
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+        return redirect(url, code=code)
 
 @stats.route('/special-logged-in-page')
 @inject(jb_stats_service=JbStatsServ)
