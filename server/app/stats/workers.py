@@ -136,7 +136,7 @@ def periodic_sync_to_mc(**kwargs):
             for a_query in relevant_queries:
                 sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
 
-
+@celery.task
 def load_lead_perfection(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
