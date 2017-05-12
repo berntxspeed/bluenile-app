@@ -106,14 +106,14 @@ def load_web_tracking(**kwargs):
         service.exec_safe_session(service.load_web_tracking)
 
 
-@celery.task
+@celery.task(base=BaseTask)
 def add_fips_location_emlopen(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.add_fips_location_data, 'EmlOpen')
 
 
-@celery.task
+@celery.task(base=BaseTask)
 def add_fips_location_emlclick(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
@@ -136,7 +136,7 @@ def periodic_sync_to_mc(**kwargs):
             for a_query in relevant_queries:
                 sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
 
-@celery.task
+@celery.task(base=BaseTask)
 def load_lead_perfection(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
