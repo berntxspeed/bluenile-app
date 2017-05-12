@@ -46,7 +46,7 @@ celery.conf.beat_schedule = {
         'task': 'server.app.stats.workers.load_web_tracking',
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'web-tracking'}
-    },
+    },"""
     'every-12-hours_mc_journeys': {
         'task': 'server.app.stats.workers.load_mc_journeys',
         'schedule': crontab(minute=0, hour='*/12'),
@@ -56,7 +56,7 @@ celery.conf.beat_schedule = {
         'task': 'server.app.stats.workers.load_mc_email_data',
         'schedule': crontab(minute=0, hour='*/12'),
         'kwargs': {'task_type': 'mc-email-data'}
-    },"""
+    },
     'every-hour_periodic_sync_to_mc': {
         'task': 'server.app.stats.workers.periodic_sync_to_mc',
         'schedule': crontab(minute=0, hour='*'),
