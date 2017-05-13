@@ -89,13 +89,16 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, \
-        load_web_tracking, load_lead_perfection
+    from .workers import load_shopify_customers, load_artists, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
+        load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
 
-    load_map = {'customers': load_customers,
-                'purchases': load_purchases,
-                'artists': load_artists,
+    load_map = {'x2crm_customers': load_x2crm_customers,
+                'magento_customers': load_magento_customers,
+                'magento_purchases': load_magento_purchases,
+                'shopify_customers': load_shopify_customers,
+                'shopify_purchases': load_shopify_purchases,
+                # 'artists': load_artists,
                 'mc-email-data': load_mc_email_data,
                 'mc-journeys': load_mc_journeys,
                 'web-tracking': load_web_tracking,

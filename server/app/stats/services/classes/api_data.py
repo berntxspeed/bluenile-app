@@ -112,9 +112,10 @@ class ApiDataToSql(ApiData, SqlDataLoader):
             response = preload_data
 
         # access the desired data from the full response
-        for jdk in self._json_data_keys.split('.'):
-            response = json_select(response, jdk)
-            # response = response[jdk]
+        if self._json_data_keys is not None:
+            for jdk in self._json_data_keys.split('.'):
+                response = json_select(response, jdk)
+                # response = response[jdk]
 
         # create a dict of items for loading to db,
         # - key = composite(primarykeys)

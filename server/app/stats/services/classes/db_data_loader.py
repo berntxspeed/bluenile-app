@@ -24,37 +24,39 @@ class SqlDataLoader(object):
 
         for last_batch, items in item_generator(**kwargs):
 
-            update_cnt = 0  # keep track of updated records
+            composite_key_list = list(items.keys())
+            if not len(composite_key_list): # no records to update
+                if last_batch:
+                    print('done loading records')
+                return
 
             # build sqlalchemy composite key expression for use in finding pre-existing records
             model_composite_key = getattr(self._db_model, self._primary_keys[0])
+            # keep track of updated records
+            update_cnt = 0
+
             for pk in self._primary_keys[1:]:
                 model_composite_key = model_composite_key.concat(getattr(self._db_model, pk))
 
-            composite_key_list = list(items.keys())
+            for each in self._db_model.query.filter(model_composite_key.in_(composite_key_list)):
+                # use composite key to reference records on the items dict
+                composite_key = ''
+                for pk in self._primary_keys:
+                    composite_key += str(getattr(each, pk))
+                inst_to_update = items.pop(composite_key)
+                inst_to_update.id = each.id
+                self._db_session.merge(inst_to_update)
+                update_cnt += 1
 
-            if len(composite_key_list) > 0:
-                for each in self._db_model.query.filter(model_composite_key.in_(composite_key_list)):
-                    # use composite key to reference records on the items dict
-                    composite_key = ''
-                    for pk in self._primary_keys:
-                        composite_key += str(getattr(each, pk))
-                    inst_to_update = items.pop(composite_key)
-                    inst_to_update.id = each.id
-                    self._db_session.merge(inst_to_update)
-                    update_cnt += 1
+            print('updating existing records: ' + str(update_cnt))
+            print('inserting new records: ' + str(len(items)))
 
-                print('updating existing records: ' + str(update_cnt))
-                print('inserting new records: ' + str(len(items)))
+            self._db_session.add_all(items.values())
+            self._db_session.commit()
 
-                self._db_session.add_all(items.values())
-                self._db_session.commit()
-
-                if last_batch:
-                    print('done loading records')
-                    break
-            else: # no records to update
-                return
+            if last_batch:
+                print('done loading records')
+                break
 
 class MongoDataLoader(object):
     def __init__(self, collection, primary_keys):

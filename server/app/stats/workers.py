@@ -65,17 +65,37 @@ celery.conf.beat_schedule = {
 }
 
 @celery.task(base=BaseTask)
-def load_customers(**kwargs):
+def load_shopify_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_customers)
+        service.exec_safe_session(service.load_shopify_customers)
 
 
 @celery.task(base=BaseTask)
-def load_purchases(**kwargs):
+def load_shopify_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_purchases)
+        service.exec_safe_session(service.load_shopify_purchases)
+
+
+@celery.task(base=BaseTask)
+def load_magento_purchases(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.exec_safe_session(service.load_magento_purchases)
+
+@celery.task(base=BaseTask)
+def load_magento_customers(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.exec_safe_session(service.load_magento_customers)
+
+
+@celery.task(base=BaseTask)
+def load_x2crm_customers(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.exec_safe_session(service.load_x2crm_customers)
 
 
 @celery.task(base=BaseTask)
@@ -83,7 +103,6 @@ def load_mc_email_data(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_mc_email_data)
-
 
 @celery.task
 def load_artists():
