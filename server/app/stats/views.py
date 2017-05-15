@@ -90,7 +90,8 @@ def devpage_joint():
 @templated('data_manager')
 def load(action):
     from .workers import load_shopify_customers, load_artists, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
-        load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers
+        load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
+        load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
 
     load_map = {'x2crm_customers': load_x2crm_customers,
@@ -98,6 +99,9 @@ def load(action):
                 'magento_purchases': load_magento_purchases,
                 'shopify_customers': load_shopify_customers,
                 'shopify_purchases': load_shopify_purchases,
+                'bigcommerce_customers': load_bigcommerce_customers,
+                'bigcommerce_purchases': load_bigcommerce_purchases,
+                'stripe_customers': load_stripe_customers,
                 # 'artists': load_artists,
                 'mc-email-data': load_mc_email_data,
                 'mc-journeys': load_mc_journeys,
@@ -108,6 +112,8 @@ def load(action):
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')
+    # result = task()
+
     result = task.delay(task_type=action)
     return dict(task_id=result.id)
 

@@ -1,6 +1,7 @@
 import os
 import requests
-import sys, traceback
+import sys
+import traceback
 
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile, CsvFile
@@ -11,7 +12,7 @@ from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Customer, Purc
 user_api_config = {
     'magento':  {'domain': "http://127.0.0.1:32768",# domain address before 'index.php'
                  'token': "npk3nc7gyhn8leab9baifl5075q45uhl"
-                },
+                 },
 
     'x2crm':    {'domain': "http://demo.x2crm.com",
                  'token': "YWRtaW46dGVzdA=="
@@ -20,6 +21,16 @@ user_api_config = {
     'shopify':  {'domain': "https://@xspeed.myshopify.com",
                  'id': os.getenv('SHOPIFY_API_APP_ID'),
                  'secret': os.getenv('SHOPIFY_API_APP_SECRET')
+                 },
+
+    'bigcommerce':  {'domain': "https://store-vd63texh7u.mybigcommerce.com",
+                     'id': 'test',
+                     'secret': '07d63370ed9ddb2eee9143acb91b18af38cb5b9d'
+                    },
+
+    'stripe':   {'domain': "https://api.stripe.com/v1",
+                 'id': 'sk_test_C9SgTuKd9DN2PT6hFLPMzlts',
+                 'secret': ''
                  }
 }
 
@@ -32,9 +43,8 @@ api_config = {
                 'Authorization': 'Bearer ' + user_api_config['magento']['token']
         },
         'params': None,
-        'customers': {
+        'customer': {
             'endpoint': user_api_config['magento']['domain'] + "/index.php/rest/V1/customers/search?searchCriteria",
-            'db_model': Customer,
             'primary_keys': ['customer_id'],
             'json_data_keys': 'items',
             'db_field_map': dict(customer_id='id',
@@ -47,9 +57,8 @@ api_config = {
                                  # total_spent_so_far='total_spent'
                                  )
         },
-        'purchases': {
+        'purchase': {
             'endpoint': user_api_config['magento']['domain'] + "/index.php/rest/V1/orders?searchCriteria",
-            'db_model': Purchase,
             'primary_keys': ['purchase_id'],
             'json_data_keys': 'items',
             'db_field_map': dict(purchase_id='quote_id',
@@ -72,9 +81,8 @@ api_config = {
             'Authorization': 'Basic ' + user_api_config['x2crm']['token']
         },
         'params': None,
-        'customers': {
+        'customer': {
             'endpoint': user_api_config['x2crm']['domain'] + "/index.php/api2/Contacts/",
-            'db_model': Customer,
             'primary_keys': ['customer_id'],
             'json_data_keys': None,
 
@@ -96,10 +104,9 @@ api_config = {
         'auth': (user_api_config['shopify']['id'], user_api_config['shopify']['secret']),
         'headers': {'Content-Type': 'application/json'},
         'params': None,
-        'purchases': {
+        'purchase': {
             # os.getenv('SHOPIFY_PURCHASE_API_ENDPOINT'),
             'endpoint': user_api_config['shopify']['domain'] + "/admin/orders.json",
-            'db_model': Purchase,
             'primary_keys': ['purchase_id'],
             'json_data_keys': 'orders',
             'db_field_map': dict(purchase_id='id',
@@ -112,9 +119,8 @@ api_config = {
                                  browser_ip='browser_ip',
                                  user_agent='client_details.user_agent')
         },
-        'customers': {
+        'customer': {
             'endpoint': user_api_config['shopify']['domain'] + "/admin/customers.json",
-            'db_model': Customer,
             'primary_keys': ['customer_id'],
             'json_data_keys': 'customers',
             'db_field_map': dict(customer_id='id',
@@ -127,7 +133,55 @@ api_config = {
                                  total_spent_so_far='total_spent')
         }
     },
+    'bigcommerce': {
+        'auth': (user_api_config['bigcommerce']['id'], user_api_config['bigcommerce']['secret']),
+        'headers': {'Content-Type': 'application/json'},
+        'params': None,
+        'purchase': {
+            'endpoint': user_api_config['bigcommerce']['domain'] + "/api/v2/orders.json",
+            'primary_keys': ['purchase_id'],
+            'json_data_keys': None,
+            'db_field_map': dict(purchase_id='id',
+                                 customer_id='customer_id',
+                                 created_at='date_created',
+                                 price='total_ex_tax',
+                                 is_paid='payment_status',
+                                 browser_ip='ip_address')
+        },
+        'customer': {
+            'endpoint': user_api_config['bigcommerce']['domain'] + "/api/v2/customers.json",
+            'primary_keys': ['customer_id'],
+            'json_data_keys': None,
+            'db_field_map': dict(customer_id='id',
+                                 email_address='email',
+                                 fname='first_name',
+                                 lname='last_name',
+                                 marketing_allowed='accepts_marketing',
+                                 created_at='date_created')
+                                 # purchase_count='orders_count',
+                                 # total_spent_so_far='total_spent')
+        }
+    },
+    'stripe': {
+        'auth': (user_api_config['stripe']['id'], user_api_config['stripe']['secret']),
+        'headers': {'Content-Type': 'application/json'},
+        'params': None,
+        'customer': {
+            'endpoint': user_api_config['stripe']['domain'] + "/customers",
+            'primary_keys': ['customer_id'],
+            'json_data_keys': 'data',
+            'db_field_map': dict(customer_id='id',
+                                 email_address='email',
+                                 # fname='first_name',
+                                 # lname='last_name',
+                                 # marketing_allowed='accepts_marketing',
+                                 created_at='created')
+            # purchase_count='orders_count',
+            # total_spent_so_far='total_spent')
+        }
+    }
 }
+
 
 class DataLoadService(DbService):
 
@@ -135,14 +189,17 @@ class DataLoadService(DbService):
         super(DataLoadService, self).__init__(config, db, logger)
         self.mongo = mongo
         self.data_load_config = api_config
+        self.data_type_map = {'customer': Customer,
+                              'purchase': Purchase
+                              }
 
     def exec_safe_session(self, load_func=None, *args):
         if load_func:
             try:
                 load_func(*args)
-            except Exception as ex:
+            except Exception as exc:
                 self.db.session.rollback()
-                raise type(ex)('DataLoad Error: {0}: {1}'.format(type(ex).__name__, ex.args))
+                raise type(exc)('DataLoad Error: {0}: {1}'.format(type(exc).__name__, exc.args))
             finally:
                 self.db.session.remove()
 
@@ -188,36 +245,13 @@ class DataLoadService(DbService):
         api_args['auth'] = vendor_config.get('auth')
         api_args['params'] = vendor_config.get('params')
         api_args['headers'] = vendor_config.get('headers')
+        api_args['db_model'] = self.data_type_map.get(data_type)
         api_args['db_session'] = self.db.session()
 
         return api_args
 
-    def load_x2crm_customers(self):
-        api_call_config = self.get_api_args('x2crm', 'customers')
-        if api_call_config is not None:
-            ad1 = ApiDataToSql(**api_call_config)
-            ad1.load_data()
-
-    def load_magento_customers(self):
-        api_call_config = self.get_api_args('magento', 'customers')
-        if api_call_config is not None:
-            ad1 = ApiDataToSql(**api_call_config)
-            ad1.load_data()
-
-    def load_magento_purchases(self):
-        api_call_config = self.get_api_args('magento', 'purchases')
-        if api_call_config is not None:
-            ad1 = ApiDataToSql(**api_call_config)
-            ad1.load_data()
-
-    def load_shopify_purchases(self):
-        api_call_config = self.get_api_args('shopify', 'purchases')
-        if api_call_config is not None:
-            ad1 = ApiDataToSql(**api_call_config)
-            ad1.load_data()
-
-    def load_shopify_customers(self):
-        api_call_config = self.get_api_args('shopify', 'customers')
+    def simple_data_load(self, data_source, data_type):
+        api_call_config = self.get_api_args(data_source, data_type)
         if api_call_config is not None:
             ad1 = ApiDataToSql(**api_call_config)
             ad1.load_data()

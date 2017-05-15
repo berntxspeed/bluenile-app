@@ -71,10 +71,18 @@ $(document).ready(function(){
                     <li><a href="{{ url_for('stats.load', action='magento_purchases') }}">Load Magento Purchases</a></li>
                 </ul>
             </div>
+            <div id="bigcommerce" class="well form-well">
+                <strong>BigCommerce :</strong>
+                <ul>
+                    <li><a href="{{ url_for('stats.load', action='bigcommerce_customers') }}">Load BigCommerce Customers</a></li>
+                    <li><a href="{{ url_for('stats.load', action='bigcommerce_purchases') }}">Load BigCommerce Purchases</a></li>
+                </ul>
+            </div>
             <div id="other_tasks" class="well form-well">
                 <strong>Other Sources:</strong>
                 <ul>
                     <li><a href="{{ url_for('stats.load', action='x2crm_customers') }}">Load X2CRM Customers</a></li>
+                    <li><a href="{{ url_for('stats.load', action='stripe_customers') }}">Load Stripe Customers</a></li>
                     <li><a href="{{ url_for('stats.load', action='mc-email-data') }}">Load Marketing Cloud Email Data</a></li>
                     <li><a href="{{ url_for('stats.load', action='mc-journeys') }}">Load Journeys</a></li>
                     <li><a href="{{ url_for('stats.load', action='web-tracking') }}">Load Web Tracking</a></li>

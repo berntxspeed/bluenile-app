@@ -4,7 +4,6 @@ from .injector_keys import DataLoadServ
 from ...app.injector_keys import MongoDB
 
 
-
 class BaseTask(celery.Task):
     abstract = True
 
@@ -68,34 +67,56 @@ celery.conf.beat_schedule = {
 def load_shopify_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_shopify_customers)
+        service.exec_safe_session(service.simple_data_load('shopify', 'customer'))
 
 
 @celery.task(base=BaseTask)
 def load_shopify_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_shopify_purchases)
+        service.exec_safe_session(service.simple_data_load('shopify', 'purchase'))
 
 
 @celery.task(base=BaseTask)
 def load_magento_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_magento_purchases)
+        service.exec_safe_session(service.simple_data_load('magento', 'purchase'))
+
 
 @celery.task(base=BaseTask)
 def load_magento_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_magento_customers)
+        service.exec_safe_session(service.simple_data_load('magento', 'customer'))
+
+
+@celery.task(base=BaseTask)
+def load_bigcommerce_purchases(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.exec_safe_session(service.simple_data_load('bigcommerce', 'purchase'))
+
+
+@celery.task(base=BaseTask)
+def load_bigcommerce_customers(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.exec_safe_session(service.simple_data_load('bigcommerce', 'customer'))
+
+
+@celery.task(base=BaseTask)
+def load_stripe_customers(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.exec_safe_session(service.simple_data_load('stripe', 'customer'))
 
 
 @celery.task(base=BaseTask)
 def load_x2crm_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_x2crm_customers)
+        service.exec_safe_session(service.simple_data_load('x2crm', 'customer'))
 
 
 @celery.task(base=BaseTask)
@@ -103,6 +124,7 @@ def load_mc_email_data(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_mc_email_data)
+
 
 @celery.task
 def load_artists():
