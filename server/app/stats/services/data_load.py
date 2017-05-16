@@ -1,3 +1,4 @@
+import copy
 import os
 import requests
 import sys
@@ -8,7 +9,7 @@ from .classes.ftp_file import ZipFile, CsvFile
 from ...common.services import DbService
 from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
-# user specific: authentication + domain
+# user specific: authentication + domain [to be stored in MongoDB]
 user_api_config = {
     'magento':  {'domain': "http://127.0.0.1:32768",# domain address before 'index.php'
                  'token': "npk3nc7gyhn8leab9baifl5075q45uhl"
@@ -19,14 +20,14 @@ user_api_config = {
                  },
 
     'shopify':  {'domain': "https://@xspeed.myshopify.com",
-                 'id': os.getenv('SHOPIFY_API_APP_ID'),
-                 'secret': os.getenv('SHOPIFY_API_APP_SECRET')
+                 'id': '20627b91731e8d8ee338bf786ae29feb',
+                 'secret': '045febd59c1d2acc3d00ac309360ea46'
                  },
 
     'bigcommerce':  {'domain': "https://store-vd63texh7u.mybigcommerce.com",
                      'id': 'test',
                      'secret': '07d63370ed9ddb2eee9143acb91b18af38cb5b9d'
-                    },
+                     },
 
     'stripe':   {'domain': "https://api.stripe.com/v1",
                  'id': 'sk_test_C9SgTuKd9DN2PT6hFLPMzlts',
@@ -37,14 +38,13 @@ user_api_config = {
 # general config based on data_source
 api_config = {
     'magento': {
-        'auth': None,
         'headers': {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + user_api_config['magento']['token']
+                'Authorization': 'Bearer '
         },
         'params': None,
         'customer': {
-            'endpoint': user_api_config['magento']['domain'] + "/index.php/rest/V1/customers/search?searchCriteria",
+            'endpoint': "/index.php/rest/V1/customers/search?searchCriteria",
             'primary_keys': ['customer_id'],
             'json_data_keys': 'items',
             'db_field_map': dict(customer_id='id',
@@ -58,7 +58,7 @@ api_config = {
                                  )
         },
         'purchase': {
-            'endpoint': user_api_config['magento']['domain'] + "/index.php/rest/V1/orders?searchCriteria",
+            'endpoint': "/index.php/rest/V1/orders?searchCriteria",
             'primary_keys': ['purchase_id'],
             'json_data_keys': 'items',
             'db_field_map': dict(purchase_id='quote_id',
@@ -75,14 +75,13 @@ api_config = {
     },
 
     'x2crm': {
-        'auth': None,
         'headers': {
             'Content-Type': 'application/json',
-            'Authorization': 'Basic ' + user_api_config['x2crm']['token']
+            'Authorization': 'Basic '
         },
         'params': None,
         'customer': {
-            'endpoint': user_api_config['x2crm']['domain'] + "/index.php/api2/Contacts/",
+            'endpoint': "/index.php/api2/Contacts/",
             'primary_keys': ['customer_id'],
             'json_data_keys': None,
 
@@ -101,12 +100,11 @@ api_config = {
     },
 
     'shopify': {
-        'auth': (user_api_config['shopify']['id'], user_api_config['shopify']['secret']),
         'headers': {'Content-Type': 'application/json'},
         'params': None,
         'purchase': {
             # os.getenv('SHOPIFY_PURCHASE_API_ENDPOINT'),
-            'endpoint': user_api_config['shopify']['domain'] + "/admin/orders.json",
+            'endpoint': "/admin/orders.json",
             'primary_keys': ['purchase_id'],
             'json_data_keys': 'orders',
             'db_field_map': dict(purchase_id='id',
@@ -120,7 +118,7 @@ api_config = {
                                  user_agent='client_details.user_agent')
         },
         'customer': {
-            'endpoint': user_api_config['shopify']['domain'] + "/admin/customers.json",
+            'endpoint': "/admin/customers.json",
             'primary_keys': ['customer_id'],
             'json_data_keys': 'customers',
             'db_field_map': dict(customer_id='id',
@@ -134,11 +132,10 @@ api_config = {
         }
     },
     'bigcommerce': {
-        'auth': (user_api_config['bigcommerce']['id'], user_api_config['bigcommerce']['secret']),
         'headers': {'Content-Type': 'application/json'},
         'params': None,
         'purchase': {
-            'endpoint': user_api_config['bigcommerce']['domain'] + "/api/v2/orders.json",
+            'endpoint': "/api/v2/orders.json",
             'primary_keys': ['purchase_id'],
             'json_data_keys': None,
             'db_field_map': dict(purchase_id='id',
@@ -149,7 +146,7 @@ api_config = {
                                  browser_ip='ip_address')
         },
         'customer': {
-            'endpoint': user_api_config['bigcommerce']['domain'] + "/api/v2/customers.json",
+            'endpoint': "/api/v2/customers.json",
             'primary_keys': ['customer_id'],
             'json_data_keys': None,
             'db_field_map': dict(customer_id='id',
@@ -163,11 +160,10 @@ api_config = {
         }
     },
     'stripe': {
-        'auth': (user_api_config['stripe']['id'], user_api_config['stripe']['secret']),
         'headers': {'Content-Type': 'application/json'},
         'params': None,
         'customer': {
-            'endpoint': user_api_config['stripe']['domain'] + "/customers",
+            'endpoint': "/customers",
             'primary_keys': ['customer_id'],
             'json_data_keys': 'data',
             'db_field_map': dict(customer_id='id',
@@ -188,6 +184,7 @@ class DataLoadService(DbService):
     def __init__(self, config, db, logger, mongo):
         super(DataLoadService, self).__init__(config, db, logger)
         self.mongo = mongo
+        self.user_api_config = user_api_config
         self.data_load_config = api_config
         self.data_type_map = {'customer': Customer,
                               'purchase': Purchase
@@ -202,6 +199,30 @@ class DataLoadService(DbService):
                 raise type(exc)('DataLoad Error: {0}: {1}'.format(type(exc).__name__, exc.args))
             finally:
                 self.db.session.remove()
+
+    def get_api_args(self, data_source, data_type):
+        vendor_config = self.data_load_config.get(data_source, {})
+        user_config = self.user_api_config.get(data_source, {})
+        api_args = copy.copy(vendor_config.get(data_type, {}))
+
+        api_args['headers'] = copy.copy(vendor_config.get('headers'))
+        if 'token' in user_config.keys():
+            api_args['headers']['Authorization'] += user_config['token']
+        elif 'id' in user_config.keys():
+            api_args['auth'] = (user_config['id'], user_config['secret'])
+
+        api_args['endpoint'] = user_config['domain'] + api_args['endpoint']
+        api_args['params'] = vendor_config.get('params')
+        api_args['db_model'] = self.data_type_map.get(data_type)
+        api_args['db_session'] = self.db.session()
+
+        return api_args
+
+    def simple_data_load(self, data_source, data_type):
+        api_call_config = self.get_api_args(data_source, data_type)
+        if api_call_config is not None:
+            ad1 = ApiDataToSql(**api_call_config)
+            ad1.load_data()
 
     def load_lead_perfection(self):
         config = self.config
@@ -237,24 +258,6 @@ class DataLoadService(DbService):
 
         # load lead perfection data to db
         csv.load_data()
-
-    def get_api_args(self, data_source, data_type):
-        vendor_config = self.data_load_config.get(data_source, {})
-
-        api_args = vendor_config.get(data_type, {})
-        api_args['auth'] = vendor_config.get('auth')
-        api_args['params'] = vendor_config.get('params')
-        api_args['headers'] = vendor_config.get('headers')
-        api_args['db_model'] = self.data_type_map.get(data_type)
-        api_args['db_session'] = self.db.session()
-
-        return api_args
-
-    def simple_data_load(self, data_source, data_type):
-        api_call_config = self.get_api_args(data_source, data_type)
-        if api_call_config is not None:
-            ad1 = ApiDataToSql(**api_call_config)
-            ad1.load_data()
 
     def load_mc_email_data(self):
         config = self.config
