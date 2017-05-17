@@ -9,7 +9,8 @@ from .classes.ftp_file import ZipFile, CsvFile
 from ...common.services import DbService
 from ...common.models import EmlSend, EmlOpen, EmlClick, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
-# user specific: authentication + domain [to be stored in MongoDB]
+# user specific: authentication + domain
+# TODO: store as dict in MongoDB or templated string
 user_api_config = {
     'magento':  {'domain': "http://127.0.0.1:32768",# domain address before 'index.php'
                  'token': "npk3nc7gyhn8leab9baifl5075q45uhl"
@@ -218,8 +219,8 @@ class DataLoadService(DbService):
 
         return api_args
 
-    def simple_data_load(self, data_source, data_type):
-        api_call_config = self.get_api_args(data_source, data_type)
+    def simple_data_load(self, kwargs):
+        api_call_config = self.get_api_args(kwargs['data_source'], kwargs['data_type'])
         if api_call_config is not None:
             ad1 = ApiDataToSql(**api_call_config)
             ad1.load_data()

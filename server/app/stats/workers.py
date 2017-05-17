@@ -63,60 +63,61 @@ celery.conf.beat_schedule = {
     }
 }
 
+
 @celery.task(base=BaseTask)
 def load_shopify_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load('shopify', 'customer'))
+        service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
 def load_shopify_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load('shopify', 'purchase'))
+        service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
 def load_magento_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load('magento', 'purchase'))
+        service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
 def load_magento_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load('magento', 'customer'))
+        service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
 def load_bigcommerce_purchases(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load('bigcommerce', 'purchase'))
+        service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
 def load_bigcommerce_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load('bigcommerce', 'customer'))
+        service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
 def load_stripe_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load('stripe', 'customer'))
+        service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
 def load_x2crm_customers(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load('x2crm', 'customer'))
+        service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
@@ -184,7 +185,7 @@ def load_lead_perfection(**kwargs):
         service.exec_safe_session(service.load_lead_perfection)
 
 
-NUM_OBJ_TO_CREATE = 30;
+NUM_OBJ_TO_CREATE = 30
 
 
 @celery.task(bind=True)
