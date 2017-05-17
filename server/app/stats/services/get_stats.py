@@ -135,7 +135,23 @@ class GetStatsService(DbService):
                 elif option == 'mult-send-id':
                     sends = SendJob.query.filter(SendJob.SendID.in_(sendid[1: len(sendid)-1].split(', '))).all()
                     send = sends[0]
+
+                    if send.num_sends is None:
+                        send.num_sends = 0
+                    if send.num_opens is None:
+                        send.num_opens = 0
+                    if send.num_clicks is None:
+                        send.num_clicks = 0
+
                     for xsend in sends[1:]:
+
+                        if xsend.num_sends is None:
+                            xsend.num_sends = 0
+                        if xsend.num_opens is None:
+                            xsend.num_opens = 0
+                        if xsend.num_clicks is None:
+                            xsend.num_clicks = 0
+
                         send.num_sends += xsend.num_sends
                         send.num_opens += xsend.num_opens
                         send.num_clicks += xsend.num_clicks
