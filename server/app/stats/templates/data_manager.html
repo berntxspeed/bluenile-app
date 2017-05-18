@@ -53,6 +53,7 @@ $(document).ready(function(){
                     <option value="all" title="All Sources">All Sources</option>
                     <option value="shopify" title="Shopify">Shopify</option>
                     <option value="magento" title="Magento">Magento</option>
+                    <option value="bigcommerce" title="BigCommerce">BigCommerce</option>
                     <option value="other" title="Other">Other Sources</option>
                     <option value="extra" title="Extra">Extra Tools</option>
                 </select>
@@ -71,7 +72,7 @@ $(document).ready(function(){
                     <li><a href="{{ url_for('stats.load', action='magento_purchases') }}">Load Magento Purchases</a></li>
                 </ul>
             </div>
-            <div id="bigcommerce" class="well form-well">
+            <div id="bigcommerce_tasks" class="well form-well">
                 <strong>BigCommerce :</strong>
                 <ul>
                     <li><a href="{{ url_for('stats.load', action='bigcommerce_customers') }}">Load BigCommerce Customers</a></li>

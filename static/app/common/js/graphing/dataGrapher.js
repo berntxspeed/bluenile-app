@@ -732,36 +732,51 @@ class DataGrapher {
 
             var endpoint;
             var successFunc;
+            var requestMethod;
 
             if (action == 'update') {
-                endpoint = '/metrics-grouped-by';
+                requestMethod = 'POST';
+                endpoint = '/metrics-grouped-by'+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
                 successFunc = function(data) {
                     self.renderGraph(self, elDrillDownGraph, graphType, data.results, dataGrouping, aggregateOp, aggregateField);
                 }
             } else if (action == 'save') {
+                requestMethod = 'POST';
                 if (!reportName) {
                     reportName = prompt('name of report: ');
                     reportId = 'null';
                 }
-                endpoint = '/save-report/'+reportId+'/'+reportName+'/'+graphType;
+                endpoint = '/save-report/'+reportId+'/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
                 successFunc = function(data) {
                     reportId = data.reportId;
-                    alert('saved report')
+                    alert('saved report');
                 }
             } else if (action == 'save-as') {
+                requestMethod = 'POST';
                 reportName = prompt('enter new report name: ');
-                endpoint = '/save-report/null/'+reportName+'/'+graphType;
+                endpoint = '/save-report/null/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
                 successFunc = function(data) {
                     reportId = data.reportId;
-                    alert('saved report')
+                    alert('saved report');
+                }
+            } else if (action == 'delete') {
+                requestMethod = 'GET';
+                endpoint = '/delete-report/'+reportId;
+                successFunc = function(data){
+                    if(data.error){
+                        return alert('Error deleting report:'+data.error);
+                    }
+                    alert('deleted report');
                 }
             }
 
             $.ajax({
-                url: endpoint+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField,
-                data: {"q": JSON.stringify({'filters': filters})},
-                dataType: "json",
-                contentType: "application/json",
+                type: requestMethod,
+                url: endpoint,
+                data: {
+                    q: JSON.stringify({'filters': filters}),
+                    csrf: $('#csrf-token').text()
+                },
                 success: successFunc
             });
 

@@ -27,6 +27,13 @@ def csrf_protect():
         if not token or token not in (request.form.get('csrf'), request.headers.get('X-CSRFToken')):
             abort(403)
 
+@auth.before_request
+def before_request():
+    if request.url.startswith('http://'):
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+        return redirect(url, code=code)
+
 """
 @auth.route('/facebook-authorized')
 @logout_required

@@ -71,13 +71,18 @@ $(function(){
                     sendInfoOption = 'trig-send-id';
 
                     $.ajax({
-                        url: '/send-info/' + sendInfoOption + '/' + trigSendKey,
+                        type: 'POST',
+                        url: '/send-info/' + sendInfoOption,
+                        data: {
+                            sendid: trigSendKey,
+                            csrf: $('#csrf-token').text()
+                        },
                         success: function(data) {
                             var sendInfo = data;
                             window.sendInfo = data;
                             var openRate = Math.round(100 * (sendInfo.numOpens / sendInfo.numSends));
                             var clickRate = Math.round(100 * (sendInfo.numClicks / sendInfo.numSends));
-                            var sendInfoHtml = '<h4><a href="https://'+sendInfo.previewUrl.substring(7, sendInfo.previewUrl.length)+'" target="_blank" style="text-decoration:none;">'+sendInfo.emailName+'</a></h4>\n    <p><b>Subject:</b>'+sendInfo.subject+'\n    <br/><b>Scheduled Time:</b> '+sendInfo.schedTime+'\n    <br/><b>Sent Time:</b> '+sendInfo.sentTime+'\n    <br/><b>Sent:</b> '+sendInfo.numSends+' <b>Opens:</b> '+sendInfo.numOpens+' <b>Clicks:</b> '+sendInfo.numClicks+'\n    <br/><b>Open Rate:</b> '+openRate+'% <b>Click Rate:</b> '+clickRate+'%</p>\n    <br/><b>TriggeredSendKey:</b>'+trigSendKey+' ';
+                            var sendInfoHtml = '<h4><a href="https://'+sendInfo.previewUrl.substring(7, sendInfo.previewUrl.length)+'" target="_blank" style="text-decoration:none;">'+sendInfo.emailName+'</a></h4>\n    <p><b>Subject:</b>'+sendInfo.subject+'\n    <br/><b>Scheduled Time:</b> '+sendInfo.schedTime+'\n    <br/><b>Sent Time:</b> '+sendInfo.sentTime+'\n    <br/><b>Sent:</b> '+sendInfo.numSends+' <b>Opens:</b> '+sendInfo.numOpens+' <b>Clicks:</b> '+sendInfo.numClicks+'\n    <br/><b>Open Rate:</b> '+openRate+'% <b>Click Rate:</b> '+clickRate+'%</p>\n    <br/><b>SendID(s):</b>'+trigSendKey+' ';
                             $('#drill-down-areaA #send-info').html(sendInfoHtml);
                         }
                     });
@@ -120,13 +125,18 @@ $(function(){
                     sendInfoOption = 'trig-send-id';
 
                     $.ajax({
-                        url: '/send-info/' + sendInfoOption + '/' + trigSendKey,
+                        type: 'POST',
+                        url: '/send-info/' + sendInfoOption,
+                        data: {
+                            sendid: trigSendKey,
+                            csrf: $('#csrf-token').text()
+                        },
                         success: function(data) {
                             var sendInfo = data;
                             window.sendInfo = data;
                             var openRate = Math.round(100 * (sendInfo.numOpens / sendInfo.numSends));
                             var clickRate = Math.round(100 * (sendInfo.numClicks / sendInfo.numSends));
-                            var sendInfoHtml = '<h4><a href="https://'+sendInfo.previewUrl.substring(7, sendInfo.previewUrl.length)+'" target="_blank" style="text-decoration:none;">'+sendInfo.emailName+'</a></h4>\n    <p><b>Subject:</b>'+sendInfo.subject+'\n    <br/><b>Scheduled Time:</b> '+sendInfo.schedTime+'\n    <br/><b>Sent Time:</b> '+sendInfo.sentTime+'\n    <br/><b>Sent:</b> '+sendInfo.numSends+' <b>Opens:</b> '+sendInfo.numOpens+' <b>Clicks:</b> '+sendInfo.numClicks+'\n    <br/><b>Open Rate:</b> '+openRate+'% <b>Click Rate:</b> '+clickRate+'%</p>\n    <br/><b>TriggeredSendKey:</b>'+trigSendKey+' ';
+                            var sendInfoHtml = '<h4><a href="https://'+sendInfo.previewUrl.substring(7, sendInfo.previewUrl.length)+'" target="_blank" style="text-decoration:none;">'+sendInfo.emailName+'</a></h4>\n    <p><b>Subject:</b>'+sendInfo.subject+'\n    <br/><b>Scheduled Time:</b> '+sendInfo.schedTime+'\n    <br/><b>Sent Time:</b> '+sendInfo.sentTime+'\n    <br/><b>Sent:</b> '+sendInfo.numSends+' <b>Opens:</b> '+sendInfo.numOpens+' <b>Clicks:</b> '+sendInfo.numClicks+'\n    <br/><b>Open Rate:</b> '+openRate+'% <b>Click Rate:</b> '+clickRate+'%</p>\n    <br/><b>SendID(s):</b>'+trigSendKey+' ';
                             $('#drill-down-areaB #send-info').html(sendInfoHtml);
                         }
                     });
