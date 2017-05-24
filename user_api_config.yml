@@ -1,0 +1,30 @@
+[
+    {'domain': "http://127.0.0.1:32768",
+     'token': "npk3nc7gyhn8leab9baifl5075q45uhl",
+     'data_source': "magento"
+    },
+
+    {'domain': "http://demo.x2crm.com",
+     'token': "YWRtaW46dGVzdA==",
+     'data_source': 'x2crm'
+    },
+
+    {'domain': "https://@xspeed.myshopify.com",
+     'id': '20627b91731e8d8ee338bf786ae29feb',
+     'secret': '045febd59c1d2acc3d00ac309360ea46',
+     'data_source': 'shopify'
+    },
+
+    {'domain': "https://store-vd63texh7u.mybigcommerce.com",
+     'id': 'test',
+     'secret': '07d63370ed9ddb2eee9143acb91b18af38cb5b9d',
+     'data_source': 'bigcommerce'
+    },
+
+    {'domain': "https://api.stripe.com/v1",
+     'id': 'sk_test_C9SgTuKd9DN2PT6hFLPMzlts',
+     'secret': '',
+     'data_source': 'stripe'
+    }
+]
+

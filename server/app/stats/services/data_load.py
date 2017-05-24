@@ -3,14 +3,17 @@ import os
 import requests
 import sys
 import traceback
+import yaml
 
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile, CsvFile
+from .mongo_user_config_loader import MongoUserApiConfigLoader
 from ...common.services import DbService
 from ...common.models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
+
 # user specific: authentication + domain
-# TODO: store as dict in MongoDB or templated string
+"""
 user_api_config = {
     'magento':  {'domain': "http://127.0.0.1:32768",# domain address before 'index.php'
                  'token': "npk3nc7gyhn8leab9baifl5075q45uhl"
@@ -35,8 +38,10 @@ user_api_config = {
                  'secret': ''
                  }
 }
+"""
 
 # general config based on data_source
+"""
 api_config = {
     'magento': {
         'headers': {
@@ -178,18 +183,20 @@ api_config = {
         }
     }
 }
-
+"""
 
 class DataLoadService(DbService):
 
     def __init__(self, config, db, logger, mongo):
         super(DataLoadService, self).__init__(config, db, logger)
         self.mongo = mongo
-        self.user_api_config = user_api_config
-        self.data_load_config = api_config
         self.data_type_map = {'customer': Customer,
                               'purchase': Purchase
                               }
+        with open('api_config.yml') as api_config_file:
+            self.data_load_config = yaml.load(api_config_file)
+
+        self.user_api_config = MongoUserApiConfigLoader(self.mongo.db).get_user_api_config()
 
     def exec_safe_session(self, load_func=None, *args):
         if load_func:
@@ -203,8 +210,17 @@ class DataLoadService(DbService):
 
     def get_api_args(self, data_source, data_type):
         vendor_config = self.data_load_config.get(data_source, {})
-        user_config = self.user_api_config.get(data_source, {})
         api_args = copy.copy(vendor_config.get(data_type, {}))
+
+        user_config = None
+
+        # TODO: check for False status, log error
+        status, vendor_configs = self.user_api_config
+        if status is True:
+            for vendor_user_config in vendor_configs:
+                if vendor_user_config.get('data_source') == data_source:
+                    user_config = vendor_user_config
+                    break
 
         api_args['headers'] = copy.copy(vendor_config.get('headers'))
         if 'token' in user_config.keys():
