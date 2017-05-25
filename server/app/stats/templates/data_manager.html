@@ -6,26 +6,31 @@
 {{ super() }}
 
 <script type="text/javascript">
-$(document).ready(function(){
+    var g_vendors = {{ avail_vendors|tojson|safe }}
+    //for (i = 0; i < g_vendors.length; i++){
+    //    console.log(g_vendors[i])
+    //}
 
-    $("#data_source").on('change', function() {
-        source_types = $("[class$='well form-well']")
+    $(document).ready(function(){
 
-        if (this.value === "all") {
-            for (i = 0; i < source_types.length; i++){
-                source_types.eq(i).show()
-            }
-        }
-        else {
-            for (i = 0; i < source_types.length; i++){
-                if (source_types[i].id.includes(this.value)){
+        $("#data_source").on('change', function() {
+            source_types = $("[class$='well form-well']")
+
+            if (this.value === "all") {
+                for (i = 0; i < source_types.length; i++){
                     source_types.eq(i).show()
                 }
-                else { source_types.eq(i).hide() }
             }
-        }
+            else {
+                for (i = 0; i < source_types.length; i++){
+                    if (source_types[i].id.includes(this.value)){
+                        source_types.eq(i).show()
+                    }
+                    else { source_types.eq(i).hide() }
+                }
+            }
+        })
     })
-})
 </script>
 
 {% endblock %}

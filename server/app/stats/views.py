@@ -8,6 +8,8 @@ from injector import inject
 
 from . import stats
 from .injector_keys import JbStatsServ, GetStatsServ
+from .services.mongo_user_config_loader import MongoUserApiConfigLoader
+from server.app.injector_keys import MongoDB
 from ..common.views.decorators import templated
 
 
@@ -17,12 +19,14 @@ from ..common.views.decorators import templated
 def before_request():
     pass
 
+
 @stats.before_request
 def before_request():
     if request.url.startswith('http://'):
         url = request.url.replace('http://', 'https://', 1)
         code = 301
         return redirect(url, code=code)
+
 
 @stats.route('/special-logged-in-page')
 @inject(jb_stats_service=JbStatsServ)
@@ -32,9 +36,12 @@ def special_logged_in_page(jb_stats_service):
 
 
 @stats.route('/data-manager')
+@inject(mongo=MongoDB)
 @templated('data_manager')
-def data_manager():
-    return {}
+def data_manager(mongo):
+    status, avail_vendors = MongoUserApiConfigLoader(mongo.db).get_user_api_config()
+    return {'status': status, 'avail_vendors': avail_vendors}
+
 
 @stats.route('/journey-view')
 @inject(jb_stats_service=JbStatsServ)
@@ -51,12 +58,14 @@ def journey_detail(jb_stats_service, id):
     result = jb_stats_service.journey_detail(id)
     return Response(dumps(result), mimetype='application/json')
 
+
 @stats.route('/report-view')
 @inject(get_stats_service=GetStatsServ)
 @templated('report_view')
 def report_view(get_stats_service):
     # passes all send ids to view
     return get_stats_service.report_view()
+
 
 @stats.route('/send-info/<option>', methods=['POST'])
 @inject(request=Request, get_stats_service=GetStatsServ)
@@ -191,6 +200,7 @@ def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
 def map_graph():
     return {}
 
+
 @stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
 def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field):
@@ -209,10 +219,12 @@ def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, ag
         agg_field = None
     return get_stats_service.save_report(rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field, filters)
 
+
 @stats.route('/report/<rpt_id>')
 @inject(get_stats_service=GetStatsServ)
 def report(get_stats_service, rpt_id):
     return get_stats_service.get_report(rpt_id)
+
 
 @stats.route('/delete-report/<rpt_id>')
 @inject(get_stats_service=GetStatsServ)
