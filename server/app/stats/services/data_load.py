@@ -228,7 +228,13 @@ class DataLoadService(DbService):
         elif 'id' in user_config.keys():
             api_args['auth'] = (user_config['id'], user_config['secret'])
 
-        api_args['endpoint'] = user_config['domain'] + api_args['endpoint']
+        if 'endpoint' in api_args:
+            api_args['endpoint'] = user_config['domain'] + api_args['endpoint']
+        elif 'pagination' in api_args:
+            for a_key in api_args['pagination'].keys():
+                if a_key.endswith('endpoint') and not api_args['pagination'][a_key].startswith('http'):
+                    api_args['pagination'][a_key] = user_config['domain'] + api_args['pagination'][a_key]
+
         api_args['params'] = vendor_config.get('params')
         api_args['db_model'] = self.data_type_map.get(data_type)
         api_args['db_session'] = self.db.session()

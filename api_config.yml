@@ -6,7 +6,7 @@
         },
         'params': null,
         'customer': {
-            'endpoint': "/index.php/rest/V1/customers/search?searchCriteria",
+            'endpoint': '/index.php/rest/V1/customers/search?searchCriteria',
             'primary_keys': ['customer_id'],
             'json_data_keys': 'items',
             'db_field_map': {'customer_id': id',
@@ -17,7 +17,7 @@
                             }
         },
         'purchase': {
-            'endpoint': "/index.php/rest/V1/orders?searchCriteria",
+            'endpoint': '/index.php/rest/V1/orders?searchCriteria',
             'primary_keys': ['purchase_id'],
             'json_data_keys': 'items',
             'db_field_map': {'purchase_id':'quote_id',
@@ -35,7 +35,7 @@
         },
         'params': null,
         'customer': {
-            'endpoint': "/index.php/api2/Contacts/",
+            'endpoint': '/index.php/api2/Contacts/',
             'primary_keys': ['customer_id'],
             'json_data_keys': null,
 
@@ -55,7 +55,12 @@
         'params': null,
         'purchase': {
             # os.getenv('SHOPIFY_PURCHASE_API_ENDPOINT'),
-            'endpoint': "/admin/orders.json",
+            'pagination': {
+              'endpoint': '/admin/orders.json?limit=250=&page=',
+              'count_endpoint': '/admin/orders/count.json',
+              'count_data_key': 'count',
+              'records_limit': 250,
+            },
             'primary_keys': ['purchase_id'],
             'json_data_keys': 'orders',
             'db_field_map': {'purchase_id':'id',
@@ -70,7 +75,12 @@
                             }
         },
         'customer': {
-            'endpoint': "/admin/customers.json",
+            'pagination': {
+              'endpoint': '/admin/customers.json?limit=250=&page=',
+              'count_endpoint': '/admin/customers/count.json',
+              'count_data_key': 'count',
+              'records_limit': 250,
+            },
             'primary_keys': ['customer_id'],
             'json_data_keys': 'customers',
             'db_field_map': {'customer_id':'id',
@@ -88,7 +98,7 @@
         'headers': {'Content-Type': 'application/json'},
         'params': null,
         'purchase': {
-            'endpoint': "/api/v2/orders.json",
+            'endpoint': '/api/v2/orders.json',
             'primary_keys': ['purchase_id'],
             'json_data_keys': null,
             'db_field_map': {'purchase_id':'id',
@@ -100,7 +110,7 @@
                             }
         },
         'customer': {
-            'endpoint': "/api/v2/customers.json",
+            'endpoint': '/api/v2/customers.json',
             'primary_keys': ['customer_id'],
             'json_data_keys': null,
             'db_field_map': {'customer_id':'id',
@@ -116,7 +126,7 @@
         'headers': {'Content-Type': 'application/json'},
         'params': null,
         'customer': {
-            'endpoint': "/customers",
+            'endpoint': '/customers',
             'primary_keys': ['customer_id'],
             'json_data_keys': 'data',
             'db_field_map': {'customer_id':'id',
