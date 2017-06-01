@@ -121,6 +121,13 @@ def load_x2crm_customers(**kwargs):
 
 
 @celery.task(base=BaseTask)
+def load_zoho_customers(**kwargs):
+    with app.app_context():
+        service = injector.get(DataLoadServ)
+        service.exec_safe_session(service.simple_data_load(kwargs))
+
+
+@celery.task(base=BaseTask)
 def load_mc_email_data(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)

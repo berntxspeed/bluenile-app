@@ -83,3 +83,37 @@ Get all payments(charges):
 
 3. Documentation:
 https://stripe.com/docs/api/curl
+
+
+Zoho:
+1. Admin Side:
+    Generate authtoken:
+    Tools -> Setup -> EXTENSIONS & APIs -> APIs -> Settings -> Authentication Token Generation
+    -> Browser Mode (INTERNAL USE) -> Generate
+
+2. API:
+Get all accounts:
+    curl -X GET "https://crm.zoho.eu/crm/private/json/Accounts/getRecords"
+    -H "Authorization: Zoho-authtoken {authtoken}"
+
+Get all contacts:
+    curl -X GET "https://crm.zoho.eu/crm/private/json/Contacts/getRecords"
+    -H "Authorization: Zoho-authtoken {authtoken}"
+
+3. Documentation:
+    https://www.zoho.eu/crm/help/api/welcome.html
+
+4. Notes:
+    params = {'scope':'crmapi', 'fromIndex': 1, 'toIndex': 200, 'newFormat': 2, 'version': 2}
+
+    -fromIndex -> toIndex defaults to 1-20 (max=200)
+    -newFormat=1:To exclude fields with "null" values while inserting data from your CRM account.
+    -newFormat=2:To include fields with "null" values while inserting data from your CRM account.
+
+    Max 200 records per request
+    Blind pagination: no api call for records count
+    No more data to show:
+        {'response': {'nodata': {'code': '4422', 'message': 'There is no data to show'}, 'uri': '/crm/private/json/Accounts/getRecords'}}
+
+    Daily API requests limit based on subscription type:
+        https://www.zoho.eu/crm/help/api/api-limits.html

@@ -236,6 +236,7 @@ class DataLoadService(DbService):
                     api_args['pagination'][a_key] = user_config['domain'] + api_args['pagination'][a_key]
 
         api_args['params'] = vendor_config.get('params')
+        api_args['transform_response_data'] = vendor_config.get('transform_response_data')
         api_args['db_model'] = self.data_type_map.get(data_type)
         api_args['db_session'] = self.db.session()
 

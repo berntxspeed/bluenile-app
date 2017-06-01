@@ -106,10 +106,15 @@ def devpage_joint():
 def load(action):
     from .workers import load_shopify_customers, load_artists, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
         load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
-        load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
+        load_zoho_customers, load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
 
-    load_map = {'x2crm_customers': {'load_func': load_x2crm_customers, 'data_source': 'x2crm', 'data_type': 'customer'},
+    load_map = {'x2crm_customers': {'load_func': load_x2crm_customers,
+                                    'data_source': 'x2crm',
+                                    'data_type': 'customer'},
+                'zoho_customers': {'load_func': load_zoho_customers,
+                                   'data_source': 'zoho',
+                                   'data_type': 'customer'},
                 'magento_customers': {'load_func': load_magento_customers,
                                       'data_source': 'magento',
                                       'data_type': 'customer'},

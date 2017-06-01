@@ -28,6 +28,28 @@
         }
     },
 
+    'zoho': {
+        'headers': {
+            'Content-Type': 'application/json',
+            'Authorization': 'Zoho-authtoken '
+        },
+        'params': {'scope':'crmapi', 'fromIndex': 1, 'toIndex': 200, 'newFormat': 2, 'version': 2},
+        'transform_response_data': True,
+        'customer': {
+            'endpoint': '/Contacts/getRecords',
+            'primary_keys': ['customer_id'],
+            'json_data_keys': 'response.result.Contacts.row',
+
+            'db_field_map': {'customer_id':'CONTACTID',
+                             'email_address':'Email',
+                             'fname':'First Name',
+                             'city':'Mailing City',
+                             'lname':'Last Name',
+                             'created_at':'Created Time',
+                            }
+        }
+    },
+
     'x2crm': {
         'headers': {
             'Content-Type': 'application/json',

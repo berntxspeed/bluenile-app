@@ -106,7 +106,7 @@ class ApiDataToSql(ApiData, SqlDataLoader):
 
     def __init__(self, db_session, db_model, primary_keys, db_field_map,
                  endpoint=None, auth=None, headers=None, params=None,
-                 json_data_keys=None, pagination=None):
+                 json_data_keys=None, pagination=None, transform_response_data=None):
 
         SqlDataLoader.__init__(self,
                                db_session=db_session,
@@ -122,6 +122,7 @@ class ApiDataToSql(ApiData, SqlDataLoader):
 
         self._json_data_keys = json_data_keys
         self._db_field_map = db_field_map
+        self._transform_response_data = transform_response_data
 
     def load_data(self, preload_data=None):
 
@@ -155,6 +156,9 @@ class ApiDataToSql(ApiData, SqlDataLoader):
                     response = json_select(response, jdk)
                     # response = response[jdk]
 
+        if self._transform_response_data:
+            response = self._transpose_data(response)
+
         # create a dict of items for loading to db,
         # - key = composite(primarykeys)
         # - value = db_model instance
@@ -185,6 +189,23 @@ class ApiDataToSql(ApiData, SqlDataLoader):
             item = json_select(item, field)
             # item = item[field]
         return item
+
+    @staticmethod
+    def _transpose_data(data):
+        """ Transforms a request into standard data format for SqlDataLoader
+                -final format should be a list of dictionaries: records
+                -temporary fix for zoho data load
+        """
+        record_data_key = 'FL'
+        result = []
+        for data_item in data:
+            result_subitem = {}
+            content_val_pairs = data_item[record_data_key]
+            for a_content_val_pair in content_val_pairs:
+                result_subitem[a_content_val_pair['val']] = a_content_val_pair['content']
+            result.append(result_subitem)
+
+        return result
 
 
 class ApiDataToMongo(ApiData, MongoDataLoader):
