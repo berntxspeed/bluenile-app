@@ -48,7 +48,7 @@ class Config(object):
 
     EXT_DATA_CREDS = {
         'shopify-customers': {
-            'endpoint': os.getenv('SHOPIFY_CUSTOMER_API_ENDPOINT'),
+            'endpoint': os.getenv('SHOPIFY_API_ENDPOINT'),
             'id': os.getenv('SHOPIFY_API_APP_ID'),
             'secret': os.getenv('SHOPIFY_API_APP_SECRET')
         },

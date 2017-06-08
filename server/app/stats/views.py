@@ -95,13 +95,34 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import load_customers, load_artists, load_mc_email_data, load_mc_journeys, load_purchases, \
-        load_web_tracking, load_lead_perfection
+    from .workers import load_shopify_customers, load_artists, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
+        load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
+        load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
 
-    load_map = {'customers': load_customers,
-                'purchases': load_purchases,
-                'artists': load_artists,
+    load_map = {'x2crm_customers': {'load_func': load_x2crm_customers, 'data_source': 'x2crm', 'data_type': 'customer'},
+                'magento_customers': {'load_func': load_magento_customers,
+                                      'data_source': 'magento',
+                                      'data_type': 'customer'},
+                'magento_purchases': {'load_func': load_magento_purchases,
+                                      'data_source': 'magento',
+                                      'data_type': 'purchase'},
+                'shopify_customers': {'load_func': load_shopify_customers,
+                                      'data_source': 'shopify',
+                                      'data_type': 'customer'},
+                'shopify_purchases': {'load_func': load_shopify_purchases,
+                                      'data_source': 'shopify',
+                                      'data_type': 'purchase'},
+                'bigcommerce_customers': {'load_func': load_bigcommerce_customers,
+                                          'data_source': 'bigcommerce',
+                                          'data_type': 'customer'},
+                'bigcommerce_purchases': {'load_func': load_bigcommerce_purchases,
+                                          'data_source': 'bigcommerce',
+                                          'data_type': 'purchase'},
+                'stripe_customers': {'load_func': load_stripe_customers,
+                                      'data_source': 'stripe',
+                                      'data_type': 'customer'},
+                # 'artists': load_artists,
                 'mc-email-data': load_mc_email_data,
                 'mc-journeys': load_mc_journeys,
                 'web-tracking': load_web_tracking,
@@ -111,7 +132,12 @@ def load(action):
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')
-    result = task.delay(task_type=action)
+
+    if isinstance(task, dict):
+        result = task['load_func'].delay(task_type=action, data_source=task['data_source'], data_type=task['data_type'])
+    else:
+        result = task.delay(task_type=action)
+
     return dict(task_id=result.id)
 
 

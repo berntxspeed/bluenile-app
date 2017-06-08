@@ -88,8 +88,8 @@ $(document).ready(function() {
         tasks_table.bootstrapTable({data: g_data, columns: g_columns});
     });
 
-    var filterPurchase = function(task) { return task.task_type == 'purchases' }
-    var filterCustomer = function(task) { return task.task_type == 'customers' }
+    var filterPurchase = function(task) { return task.task_type.includes('purchases') }
+    var filterCustomer = function(task) { return task.task_type.includes('customers') }
     var filterWebTracking = function(task) { return task.task_type == 'web-tracking' }
     var filterJourneys = function(task) { return task.task_type == 'mc-journeys' }
     var filterMCEmailData = function(task) { return task.task_type == 'mc-email-data' }

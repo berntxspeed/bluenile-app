@@ -1,0 +1,85 @@
+Magento:
+
+1. Admin side:
+    A. Create Integration:
+     System -> Integrations -> Add New Integration
+     API -> Available APIs: Resource Access: All
+     Save & Activate
+     Get Access Token from Integration Details
+
+    B. Create New User Role & User:
+     System -> User Roles -> Add New Role
+     Role Resources: Resource Access -> All
+
+     System -> All Users -> Add New User (username + password)
+     Assign New User Role to User
+
+2. API:
+Request the access token:
+    curl -X POST "http://127.0.0.1:32769/index.php/rest/V1/integration/admin/token" -H "Content-Type:application/json"  -d '{"username":"test", "password":"test123"}'
+Get all customers:
+    curl -X GET "http://127.0.0.1:32769/index.php/rest/V1/customers/search?searchCriteria" -H "Authorization: Bearer a1fwdk8qi06cyo9v855e21wj8q0etr0o"
+Get all orders:
+    curl -X GET "http://127.0.0.1:32769/index.php/rest/V1/orders?searchCriteria" -H "Authorization: Bearer a1fwdk8qi06cyo9v855e21wj8q0etr0o"
+
+3. Documentation:
+http://devdocs.magento.com/guides/v2.0/get-started/bk-get-started-api.html
+http://devdocs.magento.com/guides/v2.0/get-started/authentication/gs-authentication-token.html
+http://devdocs.magento.com/guides/m1x/api/rest/introduction.html#RESTAPIIntroduction-PHPExamples
+http://devdocs.magento.com/guides/v2.0//get-started/gs-web-api-request.html
+
+
+
+X2CRM:
+1. Admin side:
+-Create User:
+    Users -> Create User: fill API Key field
+    Update User: correct API Key
+-Create User Role:
+    Admin -> User Management -> Manage Roles -> Add Role:
+        -add new user to role
+        -Add all on View Permissions
+-Edit Role Access(again):
+    Admin -> User Management -> Edit User Permissions & Access Rules
+        -select new role, check mark on View
+
+2. API:
+-Check user permissions setup with curl:
+    curl -X GET "{domain_name}/index.php/api2/Accounts/" -H "Authorization: Basic {access_key}"
+    curl -X GET "{domain_name}/index.php/api2/Contacts/" -H "Authorization: Basic {access_key}"
+    access_key is "username:api_key" in Base-64 encoding
+
+3. Documentation:
+http://wiki.x2crm.com/wiki/REST_API_Reference
+
+
+BigCommerce:
+1. Admin Side:
+-Add Legacy API Account:
+    Advanced Settings -> Legacy API Settings
+
+2. API:
+Get all customers:
+    curl -X GET "https://store-vd63texh7u.mybigcommerce.com/api/v2/customers.json" -u {api_account_username}:{api_token}
+Get all orders:
+    curl -X GET "https://store-vd63texh7u.mybigcommerce.com/api/v2/orders.json" -u {api_account_username}:{api_token}
+    see API Account Details for api_account_username, api_token
+
+3. Documentation:
+https://developer.bigcommerce.com/api/v2/#api-v2-documentation
+
+
+Stripe:
+1. Admin Side:
+-Get Secret API Key:
+    Dashboard -> API -> Reveal test key secret
+
+2. API:
+Get all customers:
+    curl https://api.stripe.com/v1/customers -u {secret_api_key}:
+    see Admin Side for secret_api_key
+Get all payments(charges):
+    curl https://api.stripe.com/v1/customers -u {secret_api_key}:
+
+3. Documentation:
+https://stripe.com/docs/api/curl
