@@ -11,6 +11,7 @@ from .injector_keys import JbStatsServ, GetStatsServ
 from .services.mongo_user_config_loader import MongoUserApiConfigLoader
 from server.app.injector_keys import MongoDB
 from ..common.views.decorators import templated
+from ..data_builder.services.query_service import SqlQueryService
 
 
 # Pass this function to require login for every request
@@ -41,6 +42,28 @@ def special_logged_in_page(jb_stats_service):
 def data_manager(mongo):
     status, avail_vendors = MongoUserApiConfigLoader(mongo.db).get_user_api_config()
     return {'status': status, 'avail_vendors': avail_vendors}
+
+
+@stats.route('/data-manager/get-sources')
+@inject(mongo=MongoDB)
+@templated('data_manager')
+def get_data_sources(mongo):
+    status, result = MongoUserApiConfigLoader(mongo.db).get_user_api_config()
+    import pprint; pprint.pprint(result)
+    columns = [{
+                    'field': 'data_source',
+                    'title': 'Data Source'
+                },
+                {
+                    'field': 'frequency',
+                    'title': 'Frequency'
+                },
+                {
+                    'field': 'last_load',
+                    'title': 'Last Load'
+                }]
+    return Response(dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
 
 
 @stats.route('/journey-view')
@@ -148,7 +171,7 @@ def load(action):
         return Exception('No such action is available')
 
     if isinstance(task, dict):
-        result = task['load_func'].delay(task_type=action, data_source=task['data_source'], data_type=task['data_type'])
+        result = task['load_func'].delay(task_type='load_' + action, data_source=task['data_source'], data_type=task['data_type'])
     else:
         result = task.delay(task_type=action)
 

@@ -26,10 +26,26 @@ class BaseTask(celery.Task):
             mongo = injector.get(MongoDB)
             from server.app.task_admin.services.mongo_task_loader import MongoTaskLoader
             success, error = MongoTaskLoader(mongo.db).save_task(task)
+
             if kwargs.get('task_type') == 'data-push':
                 if kwargs.get('query_name') is not None:
                     from server.app.data_builder.services.data_builder_query import DataBuilderQuery
                     status, result = DataBuilderQuery(mongo.db).update_last_run_info(kwargs['query_name'])
+
+            elif kwargs.get('task_type', '').startswith('load'):
+                if kwargs.get('data_source') is not None:
+                    from server.app.stats.services.mongo_user_config_loader import MongoUserApiConfigLoader
+                    _, result = MongoUserApiConfigLoader(mongo.db).update_last_run_info(kwargs['data_source'])
+
+                # schedule sync_query_to_mc for all queries after successful data load
+                if status == 'SUCCESS':
+                    from ..data_builder.services.data_builder_query import DataBuilderQuery
+                    get_queries_status, all_queries = DataBuilderQuery(mongo.db).get_all_queries()
+                    if get_queries_status is True:
+                        from ..data.workers import sync_query_to_mc
+                        for a_query in all_queries:
+                            print('Scheduling Data Push for ' + a_query.get('name'))
+                            sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
 
 
         super(BaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
