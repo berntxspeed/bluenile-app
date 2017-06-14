@@ -15,19 +15,6 @@ from ..data_builder.services.query_service import SqlQueryService
 
 
 # Pass this function to require login for every request
-@stats.before_request
-@login_required
-def before_request():
-    pass
-
-
-@stats.before_request
-def before_request():
-    if request.url.startswith('http://'):
-        url = request.url.replace('http://', 'https://', 1)
-        code = 301
-        return redirect(url, code=code)
-
 
 @stats.route('/special-logged-in-page')
 @inject(jb_stats_service=JbStatsServ)

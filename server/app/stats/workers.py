@@ -22,7 +22,6 @@ class BaseTask(celery.Task):
                 'task_type': kwargs.get('task_type'),
                 'einfo': str(einfo)
                 }
-        from pprint import pprint; pprint(task)
         with app.app_context():
             mongo = injector.get(MongoDB)
             from server.app.task_admin.services.mongo_task_loader import MongoTaskLoader

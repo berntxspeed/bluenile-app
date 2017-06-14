@@ -25,13 +25,6 @@ def csrf_protect():
         if not token or token != request.form.get('csrf'):
             abort(403)
 
-@emails.before_request
-def before_request():
-    if request.url.startswith('http://'):
-        url = request.url.replace('http://', 'https://', 1)
-        code = 301
-        return redirect(url, code=code)
-
 @emails.route('/mosaico-index')
 @templated('mosaico_index')
 def mosaico_index():
