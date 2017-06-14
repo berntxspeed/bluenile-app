@@ -1,3 +1,4 @@
+from time import sleep
 from manage import celery, injector, app
 from celery.schedules import crontab
 from .injector_keys import DataLoadServ
@@ -21,7 +22,7 @@ class BaseTask(celery.Task):
                 'task_type': kwargs.get('task_type'),
                 'einfo': str(einfo)
                 }
-
+        from pprint import pprint; pprint(task)
         with app.app_context():
             mongo = injector.get(MongoDB)
             from server.app.task_admin.services.mongo_task_loader import MongoTaskLoader
@@ -31,6 +32,19 @@ class BaseTask(celery.Task):
                 if kwargs.get('query_name') is not None:
                     from server.app.data_builder.services.data_builder_query import DataBuilderQuery
                     status, result = DataBuilderQuery(mongo.db).update_last_run_info(kwargs['query_name'])
+                if kwargs.get('remaining_queries') is not None:
+                    rem_queries = kwargs['remaining_queries']
+                    if len(rem_queries) > 0:
+                        from ..data.workers import sync_query_to_mc
+                        a_query = rem_queries.pop()
+                        print('queries left: ', len(rem_queries))
+                        print('syncing next: ' + a_query.get('name'))
+                        sync_query_to_mc.delay(a_query,
+                                               task_type='data-push',
+                                               query_name=a_query.get('name'),
+                                               remaining_queries=rem_queries)
+                    else:
+                        print('done syncing')
 
             elif kwargs.get('task_type', '').startswith('load'):
                 if kwargs.get('data_source') is not None:
@@ -39,14 +53,7 @@ class BaseTask(celery.Task):
 
                 # schedule sync_query_to_mc for all queries after successful data load
                 if status == 'SUCCESS':
-                    from ..data_builder.services.data_builder_query import DataBuilderQuery
-                    get_queries_status, all_queries = DataBuilderQuery(mongo.db).get_all_queries()
-                    if get_queries_status is True:
-                        from ..data.workers import sync_query_to_mc
-                        for a_query in all_queries:
-                            print('Scheduling Data Push for ' + a_query.get('name'))
-                            sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
-
+                    sync_all_queries_to_mc.delay(task_type='sync-all-queries')
 
         super(BaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
@@ -184,6 +191,24 @@ def add_fips_location_emlclick(**kwargs):
         service = injector.get(DataLoadServ)
         service.add_fips_location_data('EmlClick')
         service.exec_safe_session(service.add_fips_location_data, 'EmlClick')
+
+
+@celery.task(base=BaseTask)
+def sync_all_queries_to_mc(**kwargs):
+    with app.app_context():
+        mongo = injector.get(MongoDB)
+        from ..data_builder.services.data_builder_query import DataBuilderQuery
+
+        get_queries_status, all_queries = DataBuilderQuery(mongo.db).get_all_queries()
+        if get_queries_status is True:
+            from ..data.workers import sync_query_to_mc
+            if len(all_queries):
+                a_query = all_queries.pop()
+                print('syncing first ' + a_query.get('name'))
+                sync_query_to_mc.delay(a_query,
+                                       task_type='data-push',
+                                       query_name=a_query.get('name'),
+                                       remaining_queries=all_queries)
 
 
 @celery.task(base=BaseTask)

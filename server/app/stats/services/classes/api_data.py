@@ -23,7 +23,7 @@ def json_select(json, selector):
 
 
 class ApiData(object):
-    def __init__(self, endpoint, auth, headers, params, pagination, body_json=None):
+    def __init__(self, endpoint, auth, headers, params, pagination=None, body_json=None):
         self._endpoint = endpoint
         self._auth = auth
         self._headers = headers
