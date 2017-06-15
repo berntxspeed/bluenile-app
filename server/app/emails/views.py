@@ -13,11 +13,6 @@ from ..common.models import Template
 
 
 # Pass this function to require login for every request
-"""@emails.before_request
-@login_required
-def before_request():
-    pass
-"""
 
 """
 @emails.before_app_request

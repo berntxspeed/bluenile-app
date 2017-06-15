@@ -22,7 +22,6 @@ class BaseTask(celery.Task):
                 'task_type': kwargs.get('task_type'),
                 'einfo': str(einfo)
                 }
-        from pprint import pprint; pprint(task)
         with app.app_context():
             mongo = injector.get(MongoDB)
             from server.app.task_admin.services.mongo_task_loader import MongoTaskLoader
@@ -37,19 +36,14 @@ class BaseTask(celery.Task):
                     if len(rem_queries) > 0:
                         from ..data.workers import sync_query_to_mc
                         a_query = rem_queries.pop()
-                        print('queries left: ', len(rem_queries))
-                        print('syncing next: ' + a_query.get('name'))
                         sync_query_to_mc.delay(a_query,
                                                task_type='data-push',
                                                query_name=a_query.get('name'),
                                                remaining_queries=rem_queries)
-                    else:
-                        print('done syncing')
 
             elif kwargs.get('task_type', '').startswith('load'):
-                if kwargs.get('data_source') is not None:
-                    from server.app.stats.services.mongo_user_config_loader import MongoUserApiConfigLoader
-                    _, result = MongoUserApiConfigLoader(mongo.db).update_last_run_info(kwargs['data_source'])
+                from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
+                _, result = MongoDataJobConfigLoader(mongo.db).update_last_load_info(kwargs['task_type'])
 
                 # schedule sync_query_to_mc for all queries after successful data load
                 if status == 'SUCCESS':
@@ -199,12 +193,13 @@ def sync_all_queries_to_mc(**kwargs):
         mongo = injector.get(MongoDB)
         from ..data_builder.services.data_builder_query import DataBuilderQuery
 
-        get_queries_status, all_queries = DataBuilderQuery(mongo.db).get_all_queries()
+        get_queries_status, all_queries = DataBuilderQuery(mongo.db).get_all_queries(type='auto_sync')
         if get_queries_status is True:
             from ..data.workers import sync_query_to_mc
             if len(all_queries):
+                print('Found {0} Queries for Auto Sync:\n{1}'.
+                      format(len(all_queries), ', '.join(q.get('name') for q in all_queries)))
                 a_query = all_queries.pop()
-                print('syncing first ' + a_query.get('name'))
                 sync_query_to_mc.delay(a_query,
                                        task_type='data-push',
                                        query_name=a_query.get('name'),

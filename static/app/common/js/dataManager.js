@@ -1,5 +1,6 @@
 $(document).ready(function(){
 
+    var g_current_load_job = null
     var data_load_frequency_table = $("#data-load-frequency-table")
 
     $("#data_source").on('change', function() {
@@ -22,7 +23,6 @@ $(document).ready(function(){
 
     var destroyTable = function(table){
         table.bootstrapTable('destroy')
-        table.attr('id') === 'preview-table' && hideElement($("#gotopage"))
     }
 
     var changeModalHeader = function(header, title) {
@@ -79,6 +79,7 @@ $(document).ready(function(){
         hideElement($("#saved-freqs-buttons"))
         showElement($("#frequency-buttons"))
         showElement($("#frequency-selector"))
+        g_current_load_job = row
 
         if (row.periodic_load != null) {
             $("#frequency").val(row.periodic_load)
@@ -107,7 +108,7 @@ $(document).ready(function(){
     })
 
     $("#btn-return-to-available-load-jobs").click(function () {
-        $("#btn-load-frequency").click()
+        $("#btn-sched-frequency").click()
     })
 
   	function getSelectedRow() {
@@ -115,8 +116,58 @@ $(document).ready(function(){
         return data_load_frequency_table.bootstrapTable('getData')[index]
     }
 
+    $("#btn-save-periodic-load").click(function (e) {
+        changed = false
+        save_load_job = g_current_load_job
 
-    $("#btn-load-frequency").on('click', function() {
+        current_frequency = g_current_load_job.periodic_sync
+        new_periodic_load= $("#frequency").val()
+
+        if (new_periodic_load == '1') {
+            //check for valid entry values
+            if ( ($("#every-x-hours").val() === "") || (!(0 < parseInt($("#every-x-hours").val()) < 24)) ){
+                document.getElementById('freq-footer').innerHTML = "Enter Value between 1 and 23"
+            }
+            //check if frequency changed
+            else if ( (current_frequency === new_periodic_load) && (g_current_query.current_row.hourly_frequency === $("#every-x-hours").val()) ) {
+                document.getElementById('freq-footer').innerHTML = "Change Hourly Frequency Before Save"
+            }
+            else {
+                save_load_job.hourly_frequency = $("#every-x-hours").val()
+                changed = true
+            }
+        }
+        else if ( (new_periodic_load === current_frequency) || ((new_periodic_load === "0") && (current_frequency == null)) ){
+            $("#btn-return-to-available-load-jobs").click()
+        }
+        else {changed = true}
+
+        if (changed) {
+            save_load_job.periodic_sync = new_periodic_load
+            $.ajax({
+                 url: "/data-manager/save-load-job-config/" + save_load_job.job_type,
+                 method: "POST",
+                 data: JSON.stringify(save_load_job),
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
+                 },
+                 success: function(data) {
+                    document.getElementById('freq-footer').innerHTML = "Saved!"
+                 },
+                 error: function(err) {
+                         //TODO: handle the error here
+                 }
+            })
+
+            clearTimeout($(this).data('hideInterval'));
+            $(this).data('hideInterval', setTimeout(function(){
+                $("#btn-return-to-available-load-jobs").click()
+            }, 1000));
+        }
+    })
+
+    $("#btn-sched-frequency").on('click', function() {
         destroyTable(data_load_frequency_table)
 //        destroyTable(explore_values_table)
         changeModalHeader('data-sources-modal', 'Data Sources')
@@ -125,7 +176,7 @@ $(document).ready(function(){
         showElement($("#saved-freqs-buttons"))
         $("#modalTable").on('show.bs.modal', function () {
             $.ajax({
-                url: "/data-manager/get-sources",
+                url: "/data-manager/get-dl-jobs",
                 dataType: "json",
                 success: function(data) {
                     data.formatShowingRows = function(pageFrom, pageTo, totalRows){

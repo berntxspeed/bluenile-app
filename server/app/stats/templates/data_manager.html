@@ -15,6 +15,7 @@
 
 
 <script type="text/javascript">
+    var g_csrf_token = '{{ csrf_token() }}';
     //for (i = 0; i < g_vendors.length; i++){
     //    console.log(g_vendors[i])
     //}
@@ -51,7 +52,7 @@
                     <option value="extra" title="Extra">Extra Tools</option>
                 </select>
             </div>
-                <button id="btn-load-frequency" style="width: 100%" class="btn btn-primary btn-default navbar-btn"><span class="glyphicon glyphicon-time"></span> Schedule Data Load</button>
+                <button id="btn-sched-frequency" style="width: 100%" class="btn btn-primary btn-default navbar-btn"><span class="glyphicon glyphicon-time"></span> Schedule Data Load</button>
             <div id="shopify_tasks" class="well form-well">
                 <strong>Shopify :</strong>
                 <ul>

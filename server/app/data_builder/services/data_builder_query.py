@@ -45,6 +45,8 @@ class DataBuilderQuery(object):
             filter_func = lambda q: 'preset' in q
         elif type == 'all':
             filter_func = None
+        elif type == 'auto_sync':
+            filter_func = lambda q: q.get('auto_sync') is True
         else:
             filter_func = lambda q: 'preset' not in q
 

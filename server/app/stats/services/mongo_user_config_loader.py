@@ -10,6 +10,74 @@ DEFAULT_ENCODING = sys.getdefaultencoding()
 # KEY = bytes(os.getenv('VENDOR_APIS_CIPHER_KEY'), DEFAULT_ENCODING)
 CIPHER_KEY = bytes('superrandombluenilecipherkeysforvendorsapis=', DEFAULT_ENCODING)
 
+SYNC_MAP = {
+    "0": "Never",
+    "1": "Every X Hour(s)",
+    "2": "Daily",
+    "3": "Every Weekday",
+    "4": "Every M, W, Fri",
+    "5": "Every Tue, Thu",
+    "6": "Weekly",
+    "7": "Monthly",
+    "8": "Annually"
+}
+
+class MongoDataJobConfigLoader(object):
+    def __init__(self, client_instance):
+        self._db = client_instance
+        self._collection_name = 'data_load_jobs'
+        self._collection = self._db[self._collection_name]
+        self._primary_key = 'job_type'
+
+    def get_data_load_config(self):
+        all_data_load_jobs = []
+        try:
+            for a_config in self._collection.find({}, {'_id': 0}).sort('timestamp', -1):
+                all_data_load_jobs.append(a_config)
+
+            self.convert_frequency(all_data_load_jobs)
+            return True, all_data_load_jobs
+        except Exception as e:
+            return False, 'Getting Data Load Job Config Failed: {0}'.format(str(e))
+
+    @staticmethod
+    def convert_frequency(dl_jobs):
+        for a_dl_job in dl_jobs:
+            if a_dl_job.get('job_type'):
+                a_dl_job['job_type_full'] = a_dl_job['job_type'].replace('_', ' ').title()
+            if a_dl_job.get('periodic_sync'):
+                if a_dl_job['periodic_sync'] == '1':
+                    a_dl_job['frequency'] = str(SYNC_MAP[a_dl_job['periodic_sync']]
+                                               .replace('X', a_dl_job.get('hourly_frequency', 'X')))
+                else:
+                    a_dl_job['frequency'] = str(SYNC_MAP[a_dl_job['periodic_sync']])
+
+    def save_data_load_config(self, dl_job_config, update=False):
+        """Use this method to setup data load job config """
+        if not update:
+            dl_job_config['timestamp'] = str(datetime.datetime.now())
+
+        item_loader = MongoDataLoader(self._collection, [self._primary_key])
+        try:
+            item_loader.load_to_db(dl_job_config)
+            return True, True
+        except Exception as e:
+            return False, 'Saving Data Load Job Config Failed: {0}'.format(str(e))
+
+    def get_data_load_config_by_type(self, job_type):
+        try:
+            data_load_config = self._collection.find( { self._primary_key: job_type } , { '_id': 0 } )[0]
+            return True, data_load_config
+        except Exception as e:
+            return False, 'Getting Data Load Config Failed: {0}'.format(str(e))
+
+    def update_last_load_info(self, job_type):
+        import datetime
+        status, load_job_config = self.get_data_load_config_by_type(job_type.replace('load_', ''))
+        last_load = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
+        load_job_config['last_load'] = last_load
+        return self.save_data_load_config(load_job_config, update=True)
+
 
 class MongoUserApiConfigLoader(object):
     def __init__(self, client_instance):

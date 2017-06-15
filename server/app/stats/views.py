@@ -8,21 +8,13 @@ from injector import inject
 
 from . import stats
 from .injector_keys import JbStatsServ, GetStatsServ
-from .services.mongo_user_config_loader import MongoUserApiConfigLoader
+from .services.mongo_user_config_loader import MongoUserApiConfigLoader, MongoDataJobConfigLoader
 from server.app.injector_keys import MongoDB
 from ..common.views.decorators import templated
 from ..data_builder.services.query_service import SqlQueryService
 
 
 # Pass this function to require login for every request
-
-# @stats.before_request
-# def before_request():
-#     if request.url.startswith('http://'):
-#         url = request.url.replace('http://', 'https://', 1)
-#         code = 301
-#         return redirect(url, code=code)
-
 
 @stats.route('/special-logged-in-page')
 @inject(jb_stats_service=JbStatsServ)
@@ -39,15 +31,25 @@ def data_manager(mongo):
     return {'status': status, 'avail_vendors': avail_vendors}
 
 
-@stats.route('/data-manager/get-sources')
+@stats.route('/data-manager/save-load-job-config/<job_type>', methods=['POST'])
+@inject(mongo=MongoDB)
+def save_load_job_config(mongo, job_type):
+    load_job_config = request.json
+    success, error = MongoDataJobConfigLoader(mongo.db).save_data_load_config(load_job_config)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
+
+
+@stats.route('/data-manager/get-dl-jobs')
 @inject(mongo=MongoDB)
 @templated('data_manager')
 def get_data_sources(mongo):
-    status, result = MongoUserApiConfigLoader(mongo.db).get_user_api_config()
-    import pprint; pprint.pprint(result)
+    status, result = MongoDataJobConfigLoader(mongo.db).get_data_load_config()
     columns = [{
-                    'field': 'data_source',
-                    'title': 'Data Source'
+                    'field': 'job_type_full',
+                    'title': 'Data Load Type'
                 },
                 {
                     'field': 'frequency',
