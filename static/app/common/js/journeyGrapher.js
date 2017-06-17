@@ -2,7 +2,7 @@
 
 // Depends on pieChartEmlStats.js, jointRichElement
 
-class JourneyGrapher{
+class JourneyGrapher {
     constructor(){}
     buildGraphFromAdjacencyList(adjacencyList, activityDetails) {
 
@@ -79,6 +79,8 @@ class JourneyGrapher{
         var cells = this.buildGraphFromAdjacencyList(jmap, activityDetails);
         graph.resetCells(cells);
         joint.layout.DirectedGraph.layout(graph, {
+            rankSep: 40,
+            nodeSep: 10,
             setLinkVertices: false,
             rankDir: 'lr',
             align: 'ul'
