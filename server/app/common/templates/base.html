@@ -33,51 +33,54 @@
         {% block head %}{% endblock %}
     </head>
     <body class="{% block body_class %}{% endblock %}">
-        {% include 'header.html' %}
-        <div id="content">
-            {% block banner %}{% endblock %}
-            {% block flash_messages %}
-                <div id="flash-messages" class="container">
-                    {% include 'flash_messages.html' %}
-                </div>
-            {% endblock %}
-            {% block task_updater %}
-                {% if task_id %}
-                    <div id="container" class="container">
-                        <div class="progress_container">
-                            <div class="current-task">
-                                <h4>{% if task_id %} Task ID: {{ task_id }} {% endif %}</h4>
+        {% block body %}
+            {% include 'header.html' %}
+            <div id="content">
+                {% block banner %}{% endblock %}
+                {% block flash_messages %}
+                    <div id="flash-messages" class="container">
+                        {% include 'flash_messages.html' %}
+                    </div>
+                {% endblock %}
+                {% block task_updater %}
+                    {% if task_id %}
+                        <div id="container" class="container">
+                            <div class="progress_container">
+                                <div class="current-task">
+                                    <h4>{% if task_id %} Task ID: {{ task_id }} {% endif %}</h4>
+                                </div>
+
+                                <div class="status"></div>
+                                {% if task_id %}
+                                <div class="progress">
+                                    <div class="bar"></div>
+                                </div>
+                                {% endif %}
                             </div>
 
-                            <div class="status"></div>
-                            {% if task_id %}
-                            <div class="progress">
-                                <div class="bar"></div>
-                            </div>
-                            {% endif %}
                         </div>
-
+                        <script type="text/javascript">
+                          jQuery(document).ready(function() {
+                           PollState('{{ task_id }}');
+                          });
+                        </script>
+                    {% endif %}
+                {% endblock %}
+                {% block body_container %}
+                    <div class="wrapper">
+                        <div id="body-container" class="container">
+                            {% block body_content %}{% endblock %}
+                        </div>
+                        {% block footer %}{% endblock %}
                     </div>
-                    <script type="text/javascript">
-                      jQuery(document).ready(function() {
-                       PollState('{{ task_id }}');
-                      });
-                    </script>
-                {% endif %}
-            {% endblock %}
-            {% block body_container %}
-                <div class="wrapper">
-                    <div id="body-container" class="container">
-                        {% block body %}{% endblock %}
-                    </div>
-                    {% block footer %}{% endblock %}
-                </div>
-            {% endblock %}
-            {% block json_config %}
-                {{ macros.json_config_tag() }}
-            {% endblock %}
-            <div id="scotch-panel"></div>
-        </div>
-        {% include 'drawer_menu.html' %}
+                {% endblock %}
+                {% block json_config %}
+                    {{ macros.json_config_tag() }}
+                {% endblock %}
+                <div id="scotch-panel"></div>
+            </div>
+            {% include 'drawer_menu.html' %}
+        {% endblock %}
+    <div id="csrf-token" style="display:none;">{{ csrf_token() }}</div>
     </body>
 </html>

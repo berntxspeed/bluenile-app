@@ -18,6 +18,7 @@ class Config(object):
     SECRET_KEY = os.getenv('SECRET_KEY')
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     SEND_FILE_MAX_AGE_DEFAULT = 31536000
+    UPLOAD_FOLDER = os.path.join(PROJECT_ROOT, '..', 'static/uploads')
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
@@ -47,7 +48,7 @@ class Config(object):
 
     EXT_DATA_CREDS = {
         'shopify-customers': {
-            'endpoint': os.getenv('SHOPIFY_CUSTOMER_API_ENDPOINT'),
+            'endpoint': os.getenv('SHOPIFY_API_ENDPOINT'),
             'id': os.getenv('SHOPIFY_API_APP_ID'),
             'secret': os.getenv('SHOPIFY_API_APP_SECRET')
         },
@@ -71,7 +72,15 @@ class Config(object):
             'secret': os.getenv('FUELSDK_CLIENT_SECRET'),
             'app_sig': os.getenv('FUELSDK_APP_SIGNATURE'),
             'wsdl': os.getenv('FUELSDK_DEFAULT_WSDL'),
-            'auth_url': os.getenv('FUELSDK_AUTH_URL')
+            'auth_url': os.getenv('FUELSDK_AUTH_URL'),
+            # for later 'endpoint': os.getenv('FUELSDK_RAW_ENDPOINT')
+        },
+        'lead-perfection': {
+            'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
+            'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
+            'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
+            'filename': os.getenv('LEAD_PERFECTION_FILENAME'),
+            'filepath': os.getenv('LEAD_PERFECTION_FILEPATH')
         }
     }
 

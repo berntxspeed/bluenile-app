@@ -62,7 +62,7 @@ $(document).ready(function () {
             '<div class="html-element">',
             '<label class="title"></label>',
             '<label class="sendCnt"></label>',
-            '<img src="#" />',
+            '<img src="#"/>',
             '<div class="chart"></div>',
             '<input style="display: none;" class="drill-down-checkboxA" type="checkbox" value="">',
             '<input style="display: none;" class="drill-down-checkboxB" type="checkbox" value="">',
@@ -88,7 +88,7 @@ $(document).ready(function () {
             this.updateBox();
             var blockImgSrc = journeyBlockImages(this.model.get('activityType'));
             this.$box.find('img').attr('src', blockImgSrc);
-            this.$box.find('label.title').text(this.model.get('label'));
+            this.$box.find('label.title').text(this.model.get('label').substring(0,13));
             this.renderEmlStats();
             return this;
         },
@@ -123,12 +123,12 @@ $(document).ready(function () {
                     counts: {},
                     self: this
                 };
-                pieChartEmlStats.getSendCount(obj, function(err){
+                pieChartEmlStats.statsApiRequest(obj, function(err, obj){
                     if(err){
                         console.error('problem accessing send count for sendid: ' + obj.sendId + ' err: ' + JSON.stringify(err));
                         return obj.self.$box.find('label.sendCnt').text('**error**');
                     }
-                    obj.self.$box.find('label.sendCnt').text(obj.counts['send'] + ' SENT');
+                    obj.self.$box.find('label.sendCnt').text(obj.counts['send']);
                 });
             }
         },

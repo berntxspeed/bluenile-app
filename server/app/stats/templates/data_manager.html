@@ -2,6 +2,34 @@
 
 {% block title %}Data Manager{% endblock %}
 
+{% block head %}
+{{ super() }}
+
+<script type="text/javascript">
+$(document).ready(function(){
+
+    $("#data_source").on('change', function() {
+        source_types = $("[class$='well form-well']")
+
+        if (this.value === "all") {
+            for (i = 0; i < source_types.length; i++){
+                source_types.eq(i).show()
+            }
+        }
+        else {
+            for (i = 0; i < source_types.length; i++){
+                if (source_types[i].id.includes(this.value)){
+                    source_types.eq(i).show()
+                }
+                else { source_types.eq(i).hide() }
+            }
+        }
+    })
+})
+</script>
+
+{% endblock %}
+
 {% block banner %}
     <div class="banner banner-jumbotron banner-gray">
         <div class="container">
@@ -15,26 +43,54 @@
     </div>
 {% endblock %}
 
-{% block body %}
+{% block body_content %}
+
     <div class="row">
         <div class="col-md-6 center-block">
             <div class="well form-well signup-info">
-                <strong>You can take the following actions:</strong>
+                <strong>Select Data Source :</strong>
+                <select id="data_source" title="Data Source" style="width: 100%">
+                    <option value="all" title="All Sources">All Sources</option>
+                    <option value="shopify" title="Shopify">Shopify</option>
+                    <option value="magento" title="Magento">Magento</option>
+                    <option value="bigcommerce" title="BigCommerce">BigCommerce</option>
+                    <option value="other" title="Other">Other Sources</option>
+                    <option value="extra" title="Extra">Extra Tools</option>
+                </select>
             </div>
-            <div class="well form-well">
+            <div id="shopify_tasks" class="well form-well">
+                <strong>Shopify :</strong>
                 <ul>
-                    <li><a href="{{ url_for('stats.load', action='customers') }}">Load Customers</a></li>
-                    <li><a href="{{ url_for('stats.load', action='purchases') }}">Load Purchases</a></li>
-                    <li><a href="{{ url_for('stats.load', action='artists') }}">Load Artists</a></li>
+                    <li><a href="{{ url_for('stats.load', action='shopify_customers') }}">Load Shopify Customers</a></li>
+                    <li><a href="{{ url_for('stats.load', action='shopify_purchases') }}">Load Shopify Purchases</a></li>
+                </ul>
+            </div>
+            <div id="magento_tasks" class="well form-well">
+                <strong>Magento :</strong>
+                <ul>
+                    <li><a href="{{ url_for('stats.load', action='magento_customers') }}">Load Magento Customers</a></li>
+                    <li><a href="{{ url_for('stats.load', action='magento_purchases') }}">Load Magento Purchases</a></li>
+                </ul>
+            </div>
+            <div id="bigcommerce_tasks" class="well form-well">
+                <strong>BigCommerce :</strong>
+                <ul>
+                    <li><a href="{{ url_for('stats.load', action='bigcommerce_customers') }}">Load BigCommerce Customers</a></li>
+                    <li><a href="{{ url_for('stats.load', action='bigcommerce_purchases') }}">Load BigCommerce Purchases</a></li>
+                </ul>
+            </div>
+            <div id="other_tasks" class="well form-well">
+                <strong>Other Sources:</strong>
+                <ul>
+                    <li><a href="{{ url_for('stats.load', action='x2crm_customers') }}">Load X2CRM Customers</a></li>
+                    <li><a href="{{ url_for('stats.load', action='stripe_customers') }}">Load Stripe Customers</a></li>
                     <li><a href="{{ url_for('stats.load', action='mc-email-data') }}">Load Marketing Cloud Email Data</a></li>
                     <li><a href="{{ url_for('stats.load', action='mc-journeys') }}">Load Journeys</a></li>
                     <li><a href="{{ url_for('stats.load', action='web-tracking') }}">Load Web Tracking</a></li>
                 </ul>
             </div>
-            <div class="well form-well signup-info">
+            <div id="extra_tasks" class="well form-well">
                 <strong>Extra Data Processing Tools:</strong>
-            </div>
-            <div class="well form-well">
                 <ul>
                     <li><a href="{{ url_for('stats.load', action='add-fips-location-emlopen') }}">Append FIPS location codes to Email Open Data</a></li>
                     <li><a href="{{ url_for('stats.load', action='add-fips-location-emlclick') }}">Append FIPS location codes to Email Click Data</a></li>

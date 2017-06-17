@@ -15,24 +15,22 @@
     </div>
 {% endblock %}
 
-{% block body %}
+{% block body_content %}
     <div class="row">
         <div class="col-md-6 center-block">
             <div class="well form-well signup-info">
-                <strong>You can take the following actions:</strong>
+                <strong>You can sync the following saved queries:</strong>
             </div>
             <div class="well form-well">
                 <ul>
-                    <li><a href="{{ url_for('data.sync_data_to_mc', table='artist') }}">Load Artists</a></li>
-                    <li><a href="{{ url_for('data.sync_data_to_mc', table='customer') }}">Load Customers</a></li>
-                    <li><a href="{{ url_for('data.sync_query_to_mc', query='query1') }}">Load Customers who have purchased twice or more</a></li>
-                    <li><a href="{{ url_for('data.sync_query_to_mc', query='query2') }}">Load Customers who have viewed Widget 2 page</a></li>
-                    <li><a href="{{ url_for('data.sync_query_to_mc', query='query3') }}">Load Customers who have clicked an email</a></li>
+                    {% for query_name in query_names %}
+                        <li><a href="{{ url_for('data.sync_query_to_mc', query_name=query_name) }}">{{ query_name }}</a></li>
+                    {% endfor %}
                 </ul>
             </div>
             <div class="well form-well">
                 <ul>
-                    <li><a href="{{ url_for('data.clr_ext_sync_flags', table='artist') }}">Clear Sync Flags on Artists</a></li>
+                    <!--<li><a href="{{ url_for('data.clr_ext_sync_flags', table='artist') }}">Clear Sync Flags on Artists</a></li>-->
                     <li><a href="{{ url_for('data.clr_ext_sync_flags', table='customer') }}">Clear Sync Flags on Customers</a></li>
                 </ul>
             </div>

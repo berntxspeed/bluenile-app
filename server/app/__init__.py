@@ -28,7 +28,7 @@ def create_app():
                 template_folder=config_obj.TEMPLATE_FOLDER,
                 static_url_path=config_obj.STATIC_URL_PATH)
 
-    app.debug = True
+    app.debug = False
     app.config.from_object(config_obj)
     config_obj.init_app(app)
 
@@ -58,19 +58,8 @@ def create_injector(app=None):
 
 
 def init_db(app):
-    from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer, Artist
+    from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer
     db.init_app(app)
-
-    # create the Flask-Restless API manager
-    manager = Restless.APIManager(app, flask_sqlalchemy_db=db)
-
-    # create the api endpoints, which will be available by /api/<tblname>
-    manager.create_api(SendJob, methods=['GET'])
-    manager.create_api(EmlSend, methods=['GET'])
-    manager.create_api(EmlOpen, methods=['GET'])
-    manager.create_api(EmlClick, methods=['GET'])
-    manager.create_api(Artist, methods=['GET'])
-    manager.create_api(Customer, methods=['GET'])
 
 
 def init_mongo(app, mongo):
@@ -97,3 +86,35 @@ def init_assets(app):
 
     assets = Environment(app)
     assets.from_yaml(get_config().ASSET_CONFIG_FILE)
+
+
+def create_event_mgr(app):
+    from .common.utils.event_mgr import EventMgr
+    from .common.models import db, Event, EventDefinition
+    from flask_sqlalchemy import SignallingSession
+
+    event_mgr = EventMgr(db, Event, EventDefinition)
+
+    # process record updates
+    @db.event.listens_for(SignallingSession, 'before_flush')
+    def on_flush(session, flush_context, instances):
+        event_mgr.log_update_events(session)
+
+    # process record inserts
+    @db.event.listens_for(SignallingSession, 'after_flush')
+    def after_flush(session, flush_context):
+        event_mgr.log_insert_events(session)
+
+    # update event defs loaded in event_mgr
+    @db.event.listens_for(EventDefinition, 'after_insert', retval=True)
+    def on_update(mapper, connection, target):
+        event_mgr.refresh_event_defs()
+        return target
+
+    # update event defs loaded in event_mgr
+    @db.event.listens_for(EventDefinition, 'after_update', retval=True)
+    def on_update(mapper, connection, target):
+        event_mgr.refresh_event_defs()
+        return target
+
+    return event_mgr

@@ -38,6 +38,7 @@ graphing-js:
         - contents:
           - app/common/js/graphing/pieChartEmlStats.js
           - app/common/js/graphing/emlSendGrapher.js
+          - app/common/js/graphing/dataGrapher.js
           - app/common/js/graphing/day_hour.js
           - app/common/js/graphing/map_graph.js
           filters: babeljs
@@ -51,10 +52,27 @@ query-builder-js:
     contents:
         - bower_components/moment/moment.js
         - bower_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js
+        - app/common/js/dataBuilderUtils.js
+        - app/common/js/dataBuilder.js
+        - bower_components/bootstrap-table/dist/bootstrap-table.js
+        - bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js
 
 query-builder-css:
     contents:
         - bower_components/jQuery-QueryBuilder/dist/css/query-builder.default.min.css
+        - bower_components/bootstrap-table/dist/bootstrap-table.css
+        - bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css
+        - app/common/css/query_builder.css
+
+task-admin-css:
+    contents:
+        - bower_components/bootstrap-table/dist/bootstrap-table.css
+
+task-admin-js:
+    contents:
+        - bower_components/moment/moment.js
+        - app/common/js/taskBuilder.js
+        - bower_components/bootstrap-table/dist/bootstrap-table.js
 
 base-css:
     contents:
@@ -91,12 +109,22 @@ journey-view-js:
     filters: rjsmin
     output: gen/journey_view.%(version)s.js
 
-journey-view-css:
+report-view-css:
     contents:
-        - joint-css
-        - app/stats/css/journey_view.css
+        - graphing-css
+        - app/stats/css/report_view.css
     filters: cssmin
-    output: gen/journey_view.%(version)s.css
+    output: gen/report_view.%(version)s.css
+
+report-view-js:
+    contents:
+        - graphing-js
+        - contents:
+            - app/stats/js/report_view.js
+          filters: babeljs
+          output: gen/report_view.babel.js
+    filters: rjsmin
+    output: gen/report_view.%(version)s.js
 
 devpage-joint-js:
     contents:
@@ -132,3 +160,39 @@ map-graph-css:
         - app/stats/css/map_graph.css
     filters: cssmin
     output: gen/map_graph.%(version)s.css
+
+mosaico-editor-js:
+    contents:
+        - mosaico/dist/vendor/jquery-ui.min.js
+        - mosaico/dist/vendor/jquery.ui.touch-punch.min.js
+        - mosaico/dist/vendor/load-image.all.min.js
+        - mosaico/dist/vendor/canvas-to-blob.min.js
+        - mosaico/dist/vendor/knockout-jqueryui.min.js
+        - mosaico/dist/vendor/evol.colorpicker.min.js
+        - mosaico/dist/vendor/tinymce.min.js
+        - mosaico/dist/mosaico.min.js
+        - contents:
+            - mosaico/dist/vendor/jquery.iframe-transport.js
+            - mosaico/dist/vendor/jquery.fileupload.js
+            - mosaico/dist/vendor/jquery.fileupload-process.js
+            - mosaico/dist/vendor/jquery.fileupload-image.js
+            - mosaico/dist/vendor/jquery.fileupload-validate.js
+          filters: rjsmin
+          output: gen/mosaico-deps.min.js
+    filters: rjsmin
+    output: gen/editor.%(version)s.js
+
+mosaico-editor-css:
+    contents:
+        - mosaico/dist/vendor/evol.colorpicker.min.css
+        - mosaico/dist/mosaico-material.min.css
+        - mosaico/dist/vendor/notoregular/stylesheet.css
+    output: gen/editor.%(version)s.css
+
+mosaico-index-css:
+    contents:
+        - mosaico/dist/mosaico-material.min.css
+        - mosaico/dist/vendor/notoregular/stylesheet.css
+    filters: cssmin
+    output: gen/index.%(version)s.css
+

@@ -1,6 +1,7 @@
 import requests
 
 from .db_data_loader import SqlDataLoader, MongoDataLoader
+from ....common.utils.db_datatype_handler import set_db_instance_attr
 
 
 def json_select(json, selector):
@@ -11,9 +12,11 @@ def json_select(json, selector):
     if len(selector.split('[')) > 1:
         index = selector.split('[')[1][:-1]
 
-    retval = json[field]
+    retval = json.get(field, None)
 
     if index is not None:
+        if retval is None:
+            raise ValueError('unable to access json at key: ' + str(field))
         retval = retval[int(index)]
 
     return retval
@@ -22,24 +25,39 @@ def json_select(json, selector):
 
 
 class ApiData(object):
-    def __init__(self, endpoint, auth, headers, params):
+    def __init__(self, endpoint, auth, headers, params, body_json=None):
         self._endpoint = endpoint
         self._auth = auth
         self._headers = headers
         self._params = params
+        self._body_json = body_json
 
-    def get_data(self):
-        # retrieves the data from the api endpoint
-        response = requests.get(url=self._endpoint,
-                                params=self._params,
-                                headers=self._headers,
-                                auth=self._auth)
+    def get_data(self, http_method=None):
+
+        if http_method is None:
+            http_method = 'GET'
+
+        if http_method is 'GET':
+            # retrieves the data from the api endpoint
+            response = requests.get(url=self._endpoint,
+                                    params=self._params,
+                                    headers=self._headers,
+                                    auth=self._auth)
+        elif http_method is 'POST':
+            response = requests.post(url=self._endpoint,
+                                     data=self._body_json,
+                                     params=self._params,
+                                     headers=self._headers,
+                                     auth=self._auth)
+        else:
+            raise ValueError('illegal http_method: ' + http_method)
+
         self._response = response
-        if response.status_code != 200:
+        """if response.status_code != 200:
             raise ConnectionError(
                 'Failed to retrieve data with {0} from api endpoint: {1}\n{2}'.format(str(response.status_code),
                                                                                       self._endpoint,
-                                                                                      response.request.headers))
+                                                                                      response.request.headers))"""
         return response
 
 
@@ -82,10 +100,10 @@ class ApiDataToSql(ApiData, SqlDataLoader):
 
     def load_data(self, preload_data=None):
 
-        data = self._get_data(preload_data=preload_data)
-        SqlDataLoader.load_to_db(self, data)
+        SqlDataLoader.load_to_db(self, self._get_data, preload_data=preload_data)
 
-    def _get_data(self, preload_data=None):
+    def _get_data(self, chunk_size=500, preload_data=None):
+        num_recs = 0
 
         if preload_data is None:
             response = ApiData.get_data(self)
@@ -94,9 +112,10 @@ class ApiDataToSql(ApiData, SqlDataLoader):
             response = preload_data
 
         # access the desired data from the full response
-        for jdk in self._json_data_keys.split('.'):
-            response = json_select(response, jdk)
-            # response = response[jdk]
+        if self._json_data_keys is not None:
+            for jdk in self._json_data_keys.split('.'):
+                response = json_select(response, jdk)
+                # response = response[jdk]
 
         # create a dict of items for loading to db,
         # - key = composite(primarykeys)
@@ -105,13 +124,22 @@ class ApiDataToSql(ApiData, SqlDataLoader):
         for item in response:
             data_row = self._db_model()
             for db_field, api_field in self._db_field_map.items():
-                data_row.__setattr__(db_field, str(self._get_json_field(item, api_field))) #str(item[api_field]))
+                data_row.__setattr__(db_field,
+                                     set_db_instance_attr(data_row,
+                                                          db_field,
+                                                          str(self._get_json_field(item, api_field)))) #str(item[api_field]))
             comp_key = ''
             for pk in self._primary_keys:
                 comp_key += str(getattr(data_row, pk))
             data[comp_key] = data_row
 
-        return data
+            num_recs += 1
+            if num_recs >= chunk_size:
+                num_recs = 0
+                yield (False, data)
+                data = {}
+
+        yield (True, data)
 
     @staticmethod
     def _get_json_field(item, api_field):
