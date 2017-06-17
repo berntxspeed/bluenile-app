@@ -64,7 +64,7 @@ def get_queries(mongo):
             'title': 'Sync Frequency'
         },
         {
-            'field': 'last_sync',
+            'field': 'last_run',
             'title': 'Last Sync'
     }]
     return Response(json.dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),

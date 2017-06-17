@@ -221,6 +221,8 @@ class DataLoadService(DbService):
                 if vendor_user_config.get('data_source') == data_source:
                     user_config = vendor_user_config
                     break
+        else:
+            raise Exception(vendor_configs)
 
         api_args['headers'] = copy.copy(vendor_config.get('headers'))
         if 'token' in user_config.keys():

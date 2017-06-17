@@ -46,7 +46,7 @@ class BaseTask(celery.Task):
                 _, result = MongoDataJobConfigLoader(mongo.db).update_last_load_info(kwargs['task_type'])
 
                 # schedule sync_query_to_mc for all queries after successful data load
-                if status == 'SUCCESS':
+                if status == 'SUCCESS' and kwargs.get('sync_queries') is True:
                     sync_all_queries_to_mc.delay(task_type='sync-all-queries')
 
         super(BaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
@@ -73,10 +73,15 @@ celery.conf.beat_schedule = {
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'mc-email-data'}
     },
-    'every-hour_periodic_sync_to_mc': {
-        'task': 'server.app.stats.workers.periodic_sync_to_mc',
+    'every-hour_schedule_sync_jobs': {
+        'task': 'server.app.stats.workers.schedule_sync_jobs',
         'schedule': crontab(minute=0, hour='*'),
-        'kwargs': {'task_type': 'periodic-sync'}
+        'kwargs': {'task_type': 'schedule-sync-jobs'}
+    },
+    'every-hour_schedule_load_jobs': {
+        'task': 'server.app.stats.workers.schedule_load_jobs',
+        'schedule': crontab(minute=30, hour='*'),
+        'kwargs': {'task_type': 'schedule-load-jobs'}
     }
 }
 
@@ -207,7 +212,7 @@ def sync_all_queries_to_mc(**kwargs):
 
 
 @celery.task(base=BaseTask)
-def periodic_sync_to_mc(**kwargs):
+def schedule_sync_jobs(**kwargs):
     from server.app.data_builder.services.data_builder_query import DataBuilderQuery
     from .services.classes.stats_utils import find_relevant_periodic_tasks
 
@@ -220,6 +225,68 @@ def periodic_sync_to_mc(**kwargs):
             from ..data.workers import sync_query_to_mc
             for a_query in relevant_queries:
                 sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
+
+
+@celery.task(base=BaseTask)
+def schedule_load_jobs(**kwargs):
+    from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
+    from .services.classes.stats_utils import find_relevant_periodic_tasks
+
+    with app.app_context():
+        mongo = injector.get(MongoDB)
+        status, dl_jobs = MongoDataJobConfigLoader(mongo.db).get_data_load_jobs()
+        relevant_load_jobs = find_relevant_periodic_tasks(dl_jobs)
+
+        if len(relevant_load_jobs):
+                from .workers import load_shopify_customers, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
+                    load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
+                    load_zoho_customers, load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
+                from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+
+                load_map = {'x2crm_customers': {'load_func': load_x2crm_customers,
+                                                'data_source': 'x2crm',
+                                                'data_type': 'customer'},
+                            'zoho_customers': {'load_func': load_zoho_customers,
+                                               'data_source': 'zoho',
+                                               'data_type': 'customer'},
+                            'magento_customers': {'load_func': load_magento_customers,
+                                                  'data_source': 'magento',
+                                                  'data_type': 'customer'},
+                            'magento_purchases': {'load_func': load_magento_purchases,
+                                                  'data_source': 'magento',
+                                                  'data_type': 'purchase'},
+                            'shopify_customers': {'load_func': load_shopify_customers,
+                                                  'data_source': 'shopify',
+                                                  'data_type': 'customer'},
+                            'shopify_purchases': {'load_func': load_shopify_purchases,
+                                                  'data_source': 'shopify',
+                                                  'data_type': 'purchase'},
+                            'bigcommerce_customers': {'load_func': load_bigcommerce_customers,
+                                                      'data_source': 'bigcommerce',
+                                                      'data_type': 'customer'},
+                            'bigcommerce_purchases': {'load_func': load_bigcommerce_purchases,
+                                                      'data_source': 'bigcommerce',
+                                                      'data_type': 'purchase'},
+                            'stripe_customers': {'load_func': load_stripe_customers,
+                                                 'data_source': 'stripe',
+                                                 'data_type': 'customer'},
+                            # 'artists': load_artists,
+                            'mc-email-data': load_mc_email_data,
+                            'mc-journeys': load_mc_journeys,
+                            'web-tracking': load_web_tracking,
+                            'add-fips-location-emlopen': add_fips_location_emlopen,
+                            'add-fips-location-emlclick': add_fips_location_emlclick,
+                            'lead-perfection': load_lead_perfection}
+
+                while len(relevant_load_jobs):
+                    a_job = relevant_load_jobs.pop()
+                    task = load_map.get(a_job.get('job_type'), None)
+                    sync_queries = (len(relevant_load_jobs) == 0)
+                    task['load_func'].delay(task_type='load_' + a_job['job_type'],
+                                            data_source=task['data_source'],
+                                            data_type=task['data_type'],
+                                            sync_queries=sync_queries)
+                    sleep(60)
 
 
 def load_lead_perfection(**kwargs):

@@ -88,5 +88,5 @@ class DataBuilderQuery(object):
         import datetime
         status, query = self.get_query_by_name(query_name)
         last_sync = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
-        query['last_sync'] = last_sync
+        query['last_run'] = last_sync
         return self.save_query(query_name, query)

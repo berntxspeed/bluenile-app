@@ -22,6 +22,7 @@ SYNC_MAP = {
     "8": "Annually"
 }
 
+
 class MongoDataJobConfigLoader(object):
     def __init__(self, client_instance):
         self._db = client_instance
@@ -29,10 +30,10 @@ class MongoDataJobConfigLoader(object):
         self._collection = self._db[self._collection_name]
         self._primary_key = 'job_type'
 
-    def get_data_load_config(self):
+    def get_data_load_jobs(self):
         all_data_load_jobs = []
         try:
-            for a_config in self._collection.find({}, {'_id': 0}).sort('timestamp', -1):
+            for a_config in self._collection.find({}, {'_id': 0}):
                 all_data_load_jobs.append(a_config)
 
             self.convert_frequency(all_data_load_jobs)
@@ -75,7 +76,7 @@ class MongoDataJobConfigLoader(object):
         import datetime
         status, load_job_config = self.get_data_load_config_by_type(job_type.replace('load_', ''))
         last_load = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
-        load_job_config['last_load'] = last_load
+        load_job_config['last_run'] = last_load
         return self.save_data_load_config(load_job_config, update=True)
 
 
@@ -107,7 +108,7 @@ class MongoUserApiConfigLoader(object):
         try:
             for vendor_config in self._collection.find({}, {'_id': 0}).sort('timestamp', -1):
                 for k, v in vendor_config.items():
-                    if k not in ['data_source', 'timestamp', 'last_load']:
+                    if k in ['domain', 'token', 'secret', 'id']:
                         vendor_config[k] = MongoUserApiConfigLoader.decrypt(v)
                 all_vendors.append(vendor_config)
 
@@ -141,5 +142,5 @@ class MongoUserApiConfigLoader(object):
         import datetime
         status, data_config = self.get_data_config_by_source(data_source)
         last_load = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
-        data_config['last_load'] = last_load
+        data_config['last_run'] = last_load
         return self.save_api_config(data_config, update=True)

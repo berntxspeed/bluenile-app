@@ -81,10 +81,11 @@ $(document).ready(function(){
         showElement($("#frequency-selector"))
         g_current_load_job = row
 
-        if (row.periodic_load != null) {
-            $("#frequency").val(row.periodic_load)
+        if (row.periodic_sync != null) {
+            console.log(row)
+            $("#frequency").val(row.periodic_sync)
             //TODO: fill in every_x_hours value
-            if (row.periodic_load === '1')  {
+            if (row.periodic_sync === '1')  {
                 showElement($("#every-x-hours-block"))
                 $("#every-x-hours").val(row.hourly_frequency)
             }

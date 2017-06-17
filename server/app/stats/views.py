@@ -46,7 +46,8 @@ def save_load_job_config(mongo, job_type):
 @inject(mongo=MongoDB)
 @templated('data_manager')
 def get_data_sources(mongo):
-    status, result = MongoDataJobConfigLoader(mongo.db).get_data_load_config()
+
+    status, data_load_jobs = MongoDataJobConfigLoader(mongo.db).get_data_load_jobs()
     columns = [{
                     'field': 'job_type_full',
                     'title': 'Data Load Type'
@@ -56,10 +57,10 @@ def get_data_sources(mongo):
                     'title': 'Frequency'
                 },
                 {
-                    'field': 'last_load',
+                    'field': 'last_run',
                     'title': 'Last Load'
                 }]
-    return Response(dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),
+    return Response(dumps({'columns': columns, 'data': data_load_jobs}, default=SqlQueryService.alchemy_encoder),
                     mimetype='application/json')
 
 
@@ -124,7 +125,7 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import load_shopify_customers, load_artists, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
+    from .workers import load_shopify_customers, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
         load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
         load_zoho_customers, load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
@@ -163,12 +164,16 @@ def load(action):
                 'add-fips-location-emlopen': add_fips_location_emlopen,
                 'add-fips-location-emlclick': add_fips_location_emlclick,
                 'lead-perfection': load_lead_perfection}
+
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')
 
     if isinstance(task, dict):
-        result = task['load_func'].delay(task_type='load_' + action, data_source=task['data_source'], data_type=task['data_type'])
+        result = task['load_func'].delay(task_type='load_' + action,
+                                         data_source=task['data_source'],
+                                         data_type=task['data_type'],
+                                         sync_queries=True)
     else:
         result = task.delay(task_type=action)
 
