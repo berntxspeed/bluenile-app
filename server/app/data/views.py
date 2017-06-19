@@ -1,4 +1,5 @@
 from flask import Response
+from flask import redirect, request
 from flask_login import login_required
 from injector import inject
 from json import dumps
@@ -15,6 +16,12 @@ from ..data_builder.services.data_builder_query import DataBuilderQuery
 def before_request():
     pass
 
+@data.before_request
+def before_request():
+    if request.url.startswith('http://'):
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+        return redirect(url, code=code)
 
 @data.route('/data-pusher')
 @data.route('/data-pusher/<query_id>')
