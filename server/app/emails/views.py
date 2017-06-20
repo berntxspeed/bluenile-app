@@ -14,11 +14,18 @@ from ..common.models import Template
 
 # Pass this function to require login for every request
 @emails.before_request
+@login_required
+def before_request():
+    pass
+
+
+@emails.before_request
 def before_request():
     if request.url.startswith('http://'):
         url = request.url.replace('http://', 'https://', 1)
         code = 301
         return redirect(url, code=code)
+
 
 @emails.route('/mosaico-index')
 @templated('mosaico_index')
