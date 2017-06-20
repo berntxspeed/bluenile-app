@@ -1,7 +1,7 @@
 from flask import Request
 from flask import session
 from flask import abort
-from flask import request
+from flask import request, redirect
 from flask_login import login_required
 from injector import inject
 #from premailer import transform
@@ -13,14 +13,12 @@ from ..common.models import Template
 
 
 # Pass this function to require login for every request
-
-"""
-@emails.before_app_request
-def csrf_protect():
-    if request.method == 'POST':
-        token = session.get('_csrf_token')
-        if not token or token != request.form.get('csrf'):
-            abort(403)"""
+@emails.before_request
+def before_request():
+    if request.url.startswith('http://'):
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+        return redirect(url, code=code)
 
 @emails.route('/mosaico-index')
 @templated('mosaico_index')

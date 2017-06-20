@@ -15,6 +15,17 @@ from ..data_builder.services.query_service import SqlQueryService
 
 
 # Pass this function to require login for every request
+@stats.before_request
+@login_required
+def before_request():
+    pass
+
+@stats.before_request
+def before_request():
+    if request.url.startswith('http://'):
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+        return redirect(url, code=code)
 
 @stats.route('/special-logged-in-page')
 @inject(jb_stats_service=JbStatsServ)
@@ -157,7 +168,6 @@ def load(action):
                 'stripe_customers': {'load_func': load_stripe_customers,
                                      'data_source': 'stripe',
                                      'data_type': 'customer'},
-                # 'artists': load_artists,
                 'mc-email-data': load_mc_email_data,
                 'mc-journeys': load_mc_journeys,
                 'web-tracking': load_web_tracking,

@@ -11,7 +11,6 @@ from .mongo_user_config_loader import MongoUserApiConfigLoader
 from ...common.services import DbService
 from ...common.models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
-
 # user specific: authentication + domain
 """
 user_api_config = {
