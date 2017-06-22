@@ -50,6 +50,7 @@
                     <option value="bigcommerce" title="BigCommerce">BigCommerce</option>
                     <option value="other" title="Other">Other Sources</option>
                     <option value="extra" title="Extra">Extra Tools</option>
+                    <option value="raw_data" title="Raw Data">Load Tables To MC</option>
                 </select>
             </div>
                 <button id="btn-sched-frequency" style="width: 100%" class="btn btn-primary btn-default navbar-btn"><span class="glyphicon glyphicon-time"></span> Schedule Data Load</button>
@@ -90,6 +91,13 @@
                 <ul>
                     <li><a href="{{ url_for('stats.load', action='add-fips-location-emlopen') }}">Append FIPS location codes to Email Open Data</a></li>
                     <li><a href="{{ url_for('stats.load', action='add-fips-location-emlclick') }}">Append FIPS location codes to Email Click Data</a></li>
+                </ul>
+            </div>
+            <div id="raw_data" class="well form-well">
+                <strong>Load Raw Tables to MC:</strong>
+                <ul>
+                    <li><a href="{{ url_for('stats.load', action='customer_table') }}">Sync Customer Table to MC</a></li>
+                    <li><a href="{{ url_for('stats.load', action='purchase_table') }}">Sync Purchase Data to MC</a></li>
                 </ul>
             </div>
         </div>

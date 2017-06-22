@@ -65,6 +65,13 @@ class MongoDataJobConfigLoader(object):
         except Exception as e:
             return False, 'Saving Data Load Job Config Failed: {0}'.format(str(e))
 
+    def remove_data_load_config_by_type(self, job_type):
+        try:
+            self._collection.remove({self._primary_key: job_type})
+            return True, True
+        except Exception as e:
+            return False, 'Removing Data Load Config Failed: {0}'.format(str(e))
+
     def get_data_load_config_by_type(self, job_type):
         try:
             data_load_config = self._collection.find( { self._primary_key: job_type } , { '_id': 0 } )[0]

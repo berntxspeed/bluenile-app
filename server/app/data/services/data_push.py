@@ -11,8 +11,8 @@ class DataPushService(DbService):
     def __init__(self, config, db, logger):
         super(DataPushService, self).__init__(config, db, logger)
         self._models = {
-            # 'artist': Artist,
-            'customer': Customer
+            'customer': Customer,
+            'purchase': Purchase
         }
 
     def exec_safe_session(self, service_func=None, *args):

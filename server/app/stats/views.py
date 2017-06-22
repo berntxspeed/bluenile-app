@@ -20,12 +20,14 @@ from ..data_builder.services.query_service import SqlQueryService
 def before_request():
     pass
 
+
 @stats.before_request
 def before_request():
     if request.url.startswith('http://'):
         url = request.url.replace('http://', 'https://', 1)
         code = 301
         return redirect(url, code=code)
+
 
 @stats.route('/special-logged-in-page')
 @inject(jb_stats_service=JbStatsServ)
@@ -140,6 +142,7 @@ def load(action):
         load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
         load_zoho_customers, load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+    from ..data.workers import sync_data_to_mc
 
     load_map = {'x2crm_customers': {'load_func': load_x2crm_customers,
                                     'data_source': 'x2crm',
@@ -173,17 +176,29 @@ def load(action):
                 'web-tracking': load_web_tracking,
                 'add-fips-location-emlopen': add_fips_location_emlopen,
                 'add-fips-location-emlclick': add_fips_location_emlclick,
-                'lead-perfection': load_lead_perfection}
+                'lead-perfection': load_lead_perfection,
+                'customer_table': {'load_func': sync_data_to_mc,
+                                        'table_name': 'customer',
+                                       },
+                'purchase_table': {'load_func': sync_data_to_mc,
+                                        'table_name': 'purchase',
+                                        },
+                }
 
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')
 
     if isinstance(task, dict):
-        result = task['load_func'].delay(task_type='load_' + action,
-                                         data_source=task['data_source'],
-                                         data_type=task['data_type'],
-                                         sync_queries=True)
+        if 'table_name' in task:
+            result = task['load_func'].delay(task['table_name'],
+                                             task_type='load_'+action,
+                                             table_name=task['table_name'])
+        else:
+            result = task['load_func'].delay(task_type='load_'+action,
+                                             data_source=task['data_source'],
+                                             data_type=task['data_type'],
+                                             sync_queries=True)
     else:
         result = task.delay(task_type=action)
 

@@ -242,6 +242,7 @@ def schedule_load_jobs(**kwargs):
                     load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
                     load_zoho_customers, load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
                 from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+                from ..data.workers import sync_data_to_mc
 
                 load_map = {'x2crm_customers': {'load_func': load_x2crm_customers,
                                                 'data_source': 'x2crm',
@@ -276,16 +277,31 @@ def schedule_load_jobs(**kwargs):
                             'web-tracking': load_web_tracking,
                             'add-fips-location-emlopen': add_fips_location_emlopen,
                             'add-fips-location-emlclick': add_fips_location_emlclick,
-                            'lead-perfection': load_lead_perfection}
+                            'lead-perfection': load_lead_perfection,
+                            'customer_table': {'load_func': sync_data_to_mc,
+                                               'table_name': 'customer',
+                                               },
+                            'purchase_table': {'load_func': sync_data_to_mc,
+                                               'table_name': 'purchase',
+                                               }
+                            }
 
                 while len(relevant_load_jobs):
                     a_job = relevant_load_jobs.pop()
-                    task = load_map.get(a_job.get('job_type'), None)
+                    task = load_map.get(a_job.get('job_type'))
+                    if not task:
+                        continue
                     sync_queries = (len(relevant_load_jobs) == 0)
-                    task['load_func'].delay(task_type='load_' + a_job['job_type'],
-                                            data_source=task['data_source'],
-                                            data_type=task['data_type'],
-                                            sync_queries=sync_queries)
+                    if 'table_name' in task:
+                        task['load_func'].delay(task['table_name'],
+                                                task_type='load_' + a_job['job_type'],
+                                                table_name=task['table_name'])
+                    else:
+                        task['load_func'].delay(task_type='load_' + a_job['job_type'],
+                                                data_source=task['data_source'],
+                                                data_type=task['data_type'],
+                                                sync_queries=sync_queries)
+
                     sleep(60)
 
 

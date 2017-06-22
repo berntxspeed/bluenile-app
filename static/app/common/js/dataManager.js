@@ -56,7 +56,7 @@ $(document).ready(function(){
       	search: true,
       	striped: true,
       	clickToSelect: true,
-      	pageSize: 10,
+      	pageSize: 20,
       	pageList: [10, 25, 50, 100],
       	paginationVAlign: 'bottom',
       	paginationHAlign: 'right',
