@@ -19,6 +19,10 @@ class Config(object):
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     SEND_FILE_MAX_AGE_DEFAULT = 31536000
     UPLOAD_FOLDER = os.path.join(PROJECT_ROOT, '..', 'static/uploads')
+    REDIS_URI = os.getenv('REDIS_URL')
+
+    # used by Flask-Session
+    SESSION_TYPE = 'redis'
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
@@ -27,7 +31,6 @@ class Config(object):
     MONGO_URI = os.getenv('MONGODB_URI')
     ASSET_CONFIG_FILE = os.path.join(PROJECT_ROOT, 'asset-config.yaml')
 
-    REDIS_URI = os.getenv('REDIS_URL')
     CELERY_BROKER_URL = REDIS_URI
 
     # Cache

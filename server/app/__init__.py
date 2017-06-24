@@ -2,6 +2,7 @@ import os
 
 import sys
 from flask import Flask
+from flask_session import Session
 from flask_injector import FlaskInjector
 from flask_login import LoginManager
 import flask_restless as Restless
@@ -32,7 +33,6 @@ def create_app():
     app.config.from_object(config_obj)
     config_obj.init_app(app)
 
-
     return app
 
 def configure(app):
@@ -43,6 +43,10 @@ def configure(app):
 
     for blueprint in get_blueprints():
         app.register_blueprint(blueprint)
+
+    sess = Session()
+    sess.init_app(app)
+
 
 def create_injector(app=None):
     from .module import get_modules
