@@ -18,13 +18,6 @@ from ..common.models import Template
 def before_request():
     pass
 
-@emails.before_app_request
-def csrf_protect():
-    if request.method == 'POST':
-        token = session.get('_csrf_token')
-        if not token or token != request.form.get('csrf'):
-            abort(403)
-
 @emails.before_request
 def before_request():
     if request.url.startswith('http://'):
