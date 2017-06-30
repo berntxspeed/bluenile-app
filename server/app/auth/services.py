@@ -58,7 +58,7 @@ class AuthService(DbService):
                 auth_result = None
 
             if auth_result and auth_result.status == 'SUCCESS':
-                user = AppUser(okta_user)
+                user = OktaUser(okta_user)
                 login_user(user, form.remember_me.data)
                 return redirect(self.__next_url(request))
 
