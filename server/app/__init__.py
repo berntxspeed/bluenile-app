@@ -9,6 +9,7 @@ from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
 from webassets.filter import register_filter
 
+from okta import UsersClient
 from server.app.injector_keys import MongoDB
 from ..config import config
 
@@ -28,8 +29,7 @@ def create_app():
                 template_folder=config_obj.TEMPLATE_FOLDER,
                 static_url_path=config_obj.STATIC_URL_PATH)
 
-    app.debug = False
-    # app.debug = True
+    app.debug = True
     app.config.from_object(config_obj)
     config_obj.init_app(app)
 
@@ -68,14 +68,16 @@ def init_mongo(app, mongo):
 
 
 def init_login_manager(app):
-    from .common.models import User
+    from server.app.auth.services import OktaUser
     login_manager = LoginManager()
     login_manager.session_protection = 'strong'
     login_manager.login_view = 'auth.login'
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        users_client = UsersClient('https://dev-198609.oktapreview.com', '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
+        okta_user = users_client.get_user(user_id)
+        return OktaUser(okta_user)
 
     login_manager.init_app(app)
 

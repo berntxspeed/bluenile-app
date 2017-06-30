@@ -1,15 +1,35 @@
 from flask import url_for
 from flask import flash
 from flask import redirect
-from flask_login import login_user
-from flask_login import logout_user
+from flask_login import login_user, logout_user, UserMixin
+from okta import AuthClient, UsersClient
 from sqlalchemy import func
-from werkzeug.security import check_password_hash
 
+from werkzeug.security import check_password_hash
 from .forms import LoginForm
 from .forms import SignupForm
 from ..common.models import User
 from ..common.services import DbService
+
+
+class OktaUser(UserMixin):
+    def __init__(self, okta_user):
+        self.id = okta_user.id
+        self.status = okta_user.status
+        self.login = okta_user.profile.login
+        self.email = okta_user.profile.email
+        self.firstname = okta_user.profile.firstName
+        self.lastname = okta_user.profile.lastName
+        self.login = okta_user.profile.login
+        self.account = okta_user.profile.secondEmail
+
+    def get_id(self):
+        return self.id
+
+    def get_account(self):
+        if self.account is not None:
+            return self.account.split('@')[0]
+
 
 class AuthService(DbService):
 
@@ -22,16 +42,26 @@ class AuthService(DbService):
 
 
     def login(self, request):
+        print('AuthServ Login')
+
         form = LoginForm(request.form)
         if request.method == 'GET' and request.args.get('msg'):
             flash('Please log in first')
+
         if self.validate_on_submit(request, form):
-            user = User.query.filter(func.lower(User.username) == func.lower(form.username.data))\
-                .first()
-            if user is not None and user.password_hash is not None\
-                and check_password_hash(user.password_hash, form.password.data):
+            auth_client = AuthClient('https://dev-198609.oktapreview.com', '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
+            users_client = UsersClient('https://dev-198609.oktapreview.com', '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
+            try:
+                auth_result = auth_client.authenticate(form.username.data, form.password.data)
+                okta_user = users_client.get_user(form.username.data)
+            except Exception:
+                auth_result = None
+
+            if auth_result and auth_result.status == 'SUCCESS':
+                user = AppUser(okta_user)
                 login_user(user, form.remember_me.data)
                 return redirect(self.__next_url(request))
+
             else:
                 flash('Incorrect username or password.', 'error')
         return {
