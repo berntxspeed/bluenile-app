@@ -20,9 +20,11 @@ Flask-Injector==0.7.1
 Flask-Login==0.3.2
 Flask-Migrate==2.0.0
 Flask-OAuthlib==0.9.3
+Flask-Principal==0.4.0
 Flask-PyMongo==0.4.1
 Flask-Restless==0.17.0
 Flask-Script==2.0.5
+Flask-Session==0.3.1
 -e git://github.com/mitsuhiko/flask-sqlalchemy.git@3fec7535922e687e0518bdbfcd24b6389ab5c3af#egg=Flask_SQLAlchemy
 Flask-WTF==0.13.1
 -e git+https://github.com/berntxspeed/FuelSDK-Python.git@0edb18fc2ee62434030c11d2790d020e1cdb100f#egg=FuelSDK

@@ -2,6 +2,7 @@ import os
 
 import sys
 from flask import Flask
+from flask_session import Session
 from flask_injector import FlaskInjector
 from flask_login import LoginManager
 import flask_restless as Restless
@@ -9,9 +10,9 @@ from flask_assets import Environment
 from werkzeug import SharedDataMiddleware
 from webassets.filter import register_filter
 
-from okta import UsersClient
 from server.app.injector_keys import MongoDB
 from ..config import config
+
 
 def get_config():
     env = os.getenv('APP_SETTINGS')
@@ -32,9 +33,10 @@ def create_app():
     app.debug = True
     app.config.from_object(config_obj)
     config_obj.init_app(app)
-
+    Session(app)
 
     return app
+
 
 def configure(app):
     from .module import get_blueprints
@@ -44,6 +46,9 @@ def configure(app):
 
     for blueprint in get_blueprints():
         app.register_blueprint(blueprint)
+
+    create_app()
+
 
 def create_injector(app=None):
     from .module import get_modules
@@ -68,14 +73,14 @@ def init_mongo(app, mongo):
 
 
 def init_login_manager(app):
-    from server.app.auth.services import OktaUser
+    from server.app.auth.services import OktaUser, OktaUsersClient
     login_manager = LoginManager()
     login_manager.session_protection = 'strong'
     login_manager.login_view = 'auth.login'
 
     @login_manager.user_loader
     def load_user(user_id):
-        users_client = UsersClient('https://dev-198609.oktapreview.com', '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
+        users_client = OktaUsersClient('https://dev-198609.oktapreview.com', '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
         okta_user = users_client.get_user(user_id)
         return OktaUser(okta_user)
 

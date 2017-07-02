@@ -1,8 +1,9 @@
-from flask import url_for
 from flask import flash
-from flask import redirect
+from flask import redirect, session
+from flask import url_for
 from flask_login import login_user, logout_user, UserMixin
 from okta import AuthClient, UsersClient
+from okta.framework.ApiClient import ApiClient
 from sqlalchemy import func
 
 from werkzeug.security import check_password_hash
@@ -12,23 +13,29 @@ from ..common.models import User
 from ..common.services import DbService
 
 
+class OktaUsersClient(UsersClient):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_user(self, uid):
+        response = ApiClient.get_path(self, '/{0}'.format(uid))
+        return response.json()
+
 class OktaUser(UserMixin):
     def __init__(self, okta_user):
-        self.id = okta_user.id
-        self.status = okta_user.status
-        self.login = okta_user.profile.login
-        self.email = okta_user.profile.email
-        self.firstname = okta_user.profile.firstName
-        self.lastname = okta_user.profile.lastName
-        self.login = okta_user.profile.login
-        self.account = okta_user.profile.secondEmail
+        self.id = okta_user.get('id')
+        self.status = okta_user.get('status')
+        self.login = okta_user.get('profile', {}).get('login')
+        self.email = okta_user.get('profile', {}).get('email')
+        self.firstname = okta_user.get('profile', {}).get('firstName')
+        self.lastname = okta_user.get('profile', {}).get('lastName')
+        self.account = okta_user.get('profile', {}).get('account_name')
 
     def get_id(self):
         return self.id
 
     def get_account(self):
-        if self.account is not None:
-            return self.account.split('@')[0]
+        return self.account
 
 
 class AuthService(DbService):
@@ -40,17 +47,16 @@ class AuthService(DbService):
                 session):
         super(AuthService, self).__init__(config=config, db=db, logger=logger)
 
-
     def login(self, request):
-        print('AuthServ Login')
 
         form = LoginForm(request.form)
         if request.method == 'GET' and request.args.get('msg'):
             flash('Please log in first')
 
         if self.validate_on_submit(request, form):
-            auth_client = AuthClient('https://dev-198609.oktapreview.com', '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
-            users_client = UsersClient('https://dev-198609.oktapreview.com', '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
+            okta_url, okta_api_key = self.config.get('OKTA_URL'), self.config.get('OKTA_API_KEY')
+            auth_client = AuthClient(okta_url, okta_api_key)
+            users_client = OktaUsersClient(okta_url, okta_api_key)
             try:
                 auth_result = auth_client.authenticate(form.username.data, form.password.data)
                 okta_user = users_client.get_user(form.username.data)
@@ -60,6 +66,10 @@ class AuthService(DbService):
             if auth_result and auth_result.status == 'SUCCESS':
                 user = OktaUser(okta_user)
                 login_user(user, form.remember_me.data)
+
+                # Save user in the current session
+                session['account_name'] = user.get_account()
+
                 return redirect(self.__next_url(request))
 
             else:

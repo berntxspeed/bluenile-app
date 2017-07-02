@@ -19,9 +19,18 @@ class Config(object):
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     SEND_FILE_MAX_AGE_DEFAULT = 31536000
     UPLOAD_FOLDER = os.path.join(PROJECT_ROOT, '..', 'static/uploads')
+    REDIS_URI = os.getenv('REDIS_URL')
+
+    # Used by Flask-Session
+    SESSION_TYPE = 'redis'
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    # SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SQLALCHEMY_BINDS = {
+        'user_data':    'postgresql://localhost/simple_di_flask_dev',
+        'appmeta':      'postgresql://localhost/bluenile',
+    }
+
     SQLALCHEMY_MIGRATE_REPO = os.path.join(PROJECT_ROOT, '..', 'db_repository')
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     MONGO_URI = os.getenv('MONGODB_URI')
@@ -45,6 +54,10 @@ class Config(object):
     ARTIST_DATA_SOURCE = os.getenv('ARTIST_DATA_SOURCE')
     EMAIL_DATA_SOURCE = os.getenv('EMAIL_DATA_SOURCE')
     EMAIL_DATA_DEST = os.getenv('EMAIL_DATA_DEST')
+
+    # Okta Authentication
+    OKTA_URL = 'https://dev-198609.oktapreview.com'
+    OKTA_API_KEY = '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z'
 
     EXT_DATA_CREDS = {
         'shopify-customers': {

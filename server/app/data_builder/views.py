@@ -4,7 +4,7 @@ import traceback
 from io import StringIO
 
 from flask import Response
-from flask import make_response, redirect, request, url_for
+from flask import make_response, redirect, request, session, url_for
 from flask_login import login_required
 from injector import inject
 from sqlalchemy import func
@@ -36,6 +36,7 @@ def before_request():
 @inject(mongo=MongoDB)
 @templated('data_builder')
 def data_builder(mongo, query_id=None):
+    print('Account Name: ', session.get('account_name', 'undefined'))
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
               WebTrackingEcomm, WebTrackingPageView]
 
