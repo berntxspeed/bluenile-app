@@ -21,15 +21,9 @@ db = SQLAlchemy(session_options={
                                 'autoflush': False
                                 })
 
-class ClientAccount(db.Model):
-    __bind_key__ = 'appmeta'
-    __tablename__ = 'client_account'
-    id = db.Column(db.Integer, primary_key=True)
-    account_id = db.Column(db.String(255), unique=True)
 
 
 class User(UserMixin, db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     password_hash = db.Column(db.String(128))
@@ -81,6 +75,7 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+
 @db.event.listens_for(User, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
     u = User.query.filter_by(id=target.id).first()
@@ -90,8 +85,26 @@ def on_update(mapper, connection, target):
     target.id = u.id + 1
     return target
 
+
+class UserPermissions(db.Model):
+    __tablename__ = 'user_permissions'
+    id = db.Column(db.String(255), primary_key=True)
+    account_id = db.Column(db.String(255))
+
+
+class ClientAccount(db.Model):
+    __tablename__ = 'client_account'
+    id = db.Column(db.String(255), primary_key=True)
+    # account_id = db.Column(db.String(255), unique=True)
+    database_uri = db.Column(db.String(255), unique=True) #can be just the client id
+
+    users = relationship(UserPermissions, backref='client_account',
+                         primaryjoin='ClientAccount.id==UserPermissions.account_id',
+                         foreign_keys=[UserPermissions.account_id],
+                         passive_deletes='all')
+
+
 class KeyValue(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'key_value'
     key = db.Column(db.String(64), primary_key=True)
     value = db.Column(db.String(255))
@@ -138,7 +151,6 @@ def on_update(mapper, connection, target):
 
 
 class Event(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'event'
     id = db.Column(db.BigInteger, primary_key=True)
     def_id = db.Column(db.Integer, nullable=False)
@@ -157,7 +169,6 @@ def on_update(mapper, connection, target):
 
 
 class EventDefinition(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'event_def'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True)
@@ -184,7 +195,6 @@ def on_update(mapper, connection, target):
 
 
 class Purchase(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'purchase'
     id = db.Column(db.Integer, primary_key=True)
     purchase_id = db.Column(db.String(255), unique=True)
@@ -218,7 +228,6 @@ def on_update(mapper, connection, target):
     return target
 
 class StgEmlSend(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'stg_eml_send'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
@@ -230,7 +239,6 @@ class StgEmlSend(db.Model):
     _hour = db.Column(db.Integer)
 
 class EmlSend(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'eml_send'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
@@ -267,7 +275,6 @@ def on_update(mapper, connection, target):
     return target
 
 class StgEmlOpen(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'stg_eml_open'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
@@ -292,7 +299,6 @@ class StgEmlOpen(db.Model):
     _hour = db.Column(db.Integer)
 
 class EmlOpen(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'eml_open'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
@@ -342,7 +348,6 @@ def on_update(mapper, connection, target):
     return target
 
 class StgEmlClick(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'stg_eml_click'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
@@ -371,7 +376,6 @@ class StgEmlClick(db.Model):
     _hour = db.Column(db.Integer)
 
 class EmlClick(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'eml_click'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer)
@@ -426,7 +430,6 @@ def on_update(mapper, connection, target):
     return target
 
 class StgSendJob(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'stg_send_job'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer, unique=True) # SendID Field
@@ -439,7 +442,6 @@ class StgSendJob(db.Model):
     PreviewURL = db.Column(db.String(1024))
 
 class SendJob(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'send_job'
     id = db.Column(db.Integer, primary_key=True)
     SendID = db.Column(db.Integer, unique=True) # SendID Field
@@ -507,7 +509,6 @@ def on_update(mapper, connection, target):
     return target
 
 class WebTrackingEvent(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'web_tracking_event'
     id = db.Column(db.Integer, primary_key=True)
     browser_id = db.Column(db.String(255)) #primary key
@@ -539,7 +540,6 @@ class WebTrackingEvent(db.Model):
                           passive_deletes='all')
 
 class WebTrackingPageView(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'web_tracking_page_view'
     id = db.Column(db.Integer, primary_key=True)
     browser_id = db.Column(db.String(255)) #primary key
@@ -570,7 +570,6 @@ class WebTrackingPageView(db.Model):
                           passive_deletes='all')
 
 class WebTrackingEcomm(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'web_tracking_ecomm'
     id = db.Column(db.Integer, primary_key=True)
     browser_id = db.Column(db.String(255)) #primary key
@@ -601,7 +600,6 @@ class WebTrackingEcomm(db.Model):
 
 
 class Customer(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.String(255), unique=True)
@@ -681,7 +679,6 @@ def on_update(mapper, connection, target):
 
 
 class Upload(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'upload'
     name = db.Column(db.String(200), primary_key=True)
     image = db.Column(db.LargeBinary)
@@ -705,7 +702,6 @@ def on_update(mapper, connection, target):
     return target
 
 class Template(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'template'
     key = db.Column(db.String(10), primary_key=True)
     name = db.Column(db.String(200), nullable=False)
@@ -735,7 +731,6 @@ def on_update(mapper, connection, target):
     return target
 
 class Report(db.Model):
-    __bind_key__ = 'user_data'
     __tablename__ = 'report'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))

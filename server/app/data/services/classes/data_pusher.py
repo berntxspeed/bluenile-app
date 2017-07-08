@@ -7,8 +7,8 @@ import datetime
 
 class DataPusher(object):
 
-    def __init__(self, db, model):
-        self._db = db
+    def __init__(self, db_session, model):
+        self._db_session = db_session
         self._model = model
         self._tablename = model.__tablename__
 
@@ -209,9 +209,9 @@ class DataPusher(object):
 
             if 'no_timestamp' not in options:
                 rec._update_last_ext_sync()
-                self._db.session.add(rec)
+                self._db_session.add(rec)
 
-        self._db.session.commit()
+        self._db_session.commit()
         return resp
 
     def __check_primary_key(self, column):

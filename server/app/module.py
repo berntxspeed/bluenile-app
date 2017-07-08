@@ -5,7 +5,7 @@ from injector import singleton
 from injector import inject
 from injector import provides
 
-from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB
+from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB, UserSessionConfig, DBSession
 
 import logging
 import sys
@@ -23,6 +23,26 @@ class AppModule(Module):
     def provides_sqlalchemy(self, app):
         from .common.models import db
         return db
+
+    @inject(app=Flask)
+    @provides(UserSessionConfig)
+    def provides_user_session_config(self, app):
+        from flask import session
+        return session['account_name']
+
+    @inject(app=Flask)
+    @provides(DBSession)
+    def provides_sqlalchemy_session(self, app):
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import scoped_session
+        from sqlalchemy.orm import sessionmaker
+        from flask import session as sess
+
+        db_name = sess['account_name']
+        engine = create_engine(db_name)
+        session = scoped_session(sessionmaker(bind=engine))
+
+        return session
 
     @singleton
     @inject(app=Flask)
@@ -55,6 +75,7 @@ def get_modules():
     from .auth.module import AuthModule
     from .stats.module import StatsModule
     from .data.module import DataModule
+    from .data.module import UserDataModule
     from .data_builder.module import SqlQueryModule
     from .emails.module import EmailModule
 
@@ -63,6 +84,7 @@ def get_modules():
         AuthModule(),
         StatsModule(),
         DataModule(),
+        UserDataModule(),
         SqlQueryModule(),
         EmailModule()
     ]

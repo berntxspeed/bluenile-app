@@ -25,11 +25,11 @@ class Config(object):
     SESSION_TYPE = 'redis'
 
     # Database
-    # SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
-    SQLALCHEMY_BINDS = {
-        'user_data':    'postgresql://localhost/simple_di_flask_dev',
-        'appmeta':      'postgresql://localhost/bluenile',
-    }
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    # SQLALCHEMY_BINDS = {
+    #     'user_data':    'postgresql://localhost/simple_di_flask_dev',
+    #     'appmeta':      'postgresql://localhost/bluenile',
+    # }
 
     SQLALCHEMY_MIGRATE_REPO = os.path.join(PROJECT_ROOT, '..', 'db_repository')
     SQLALCHEMY_TRACK_MODIFICATIONS = True

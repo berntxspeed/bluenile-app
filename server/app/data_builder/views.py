@@ -11,7 +11,7 @@ from sqlalchemy import func
 
 from server.app.common.models import *
 from server.app.common.views.decorators import templated
-from server.app.injector_keys import MongoDB
+from server.app.injector_keys import MongoDB, DBSession
 from .injector_keys import SqlQueryServ
 from . import databuilder
 from .services.data_builder_query import DataBuilderQuery
@@ -24,6 +24,7 @@ from .services.query_service import SqlQueryService
 def before_request():
     pass
 
+
 @databuilder.before_request
 def before_request():
     if request.url.startswith('http://'):
@@ -31,12 +32,12 @@ def before_request():
         code = 301
         return redirect(url, code=code)
 
+
 @databuilder.route('/data-builder/')
 @databuilder.route('/data-builder/<query_id>')
 @inject(mongo=MongoDB)
 @templated('data_builder')
 def data_builder(mongo, query_id=None):
-    print('Account Name: ', session.get('account_name', 'undefined'))
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
               WebTrackingEcomm, WebTrackingPageView]
 
@@ -46,7 +47,10 @@ def data_builder(mongo, query_id=None):
 
     if request.args.get('sync') == 'True':
         from ..data.workers import sync_query_to_mc
-        result = sync_query_to_mc.delay(data, task_type='data-push', query_name=query_id)
+        from flask import session
+        db_uri = session['account_name']
+
+        result = sync_query_to_mc.delay(data, user_db=db_uri, task_type='data-push', query_name=query_id)
         response_dict.update({'task_id': result.id})
 
     return response_dict
@@ -121,11 +125,11 @@ def save_query(mongo, query_id):
 
 
 @databuilder.route('/custom-query-preview/<query_sttmt>', methods=['POST'])
-@inject(alchemy=SQLAlchemy)
-def custom_query_preview(alchemy, query_sttmt):
+@inject(db_session=DBSession)
+def custom_query_preview(query_sttmt, db_session):
     try:
-        results = eval('alchemy.session.' + query_sttmt + '.distinct(Customer.id).limit(100).all()')
-        rows_count = eval('alchemy.session.' + query_sttmt + '.distinct(Customer.id).count()')
+        results = eval('db_session.' + query_sttmt + '.distinct(Customer.id).limit(100).all()')
+        rows_count = eval('db_session.' + query_sttmt + '.distinct(Customer.id).count()')
         columns, data = SqlQueryService.extract_data(results, {})
         return Response(json.dumps({'columns': columns,
                                     'data': data,
@@ -140,15 +144,16 @@ def custom_query_preview(alchemy, query_sttmt):
 
 
 @databuilder.route('/export/<query_name>', methods=['GET'])
-@inject(alchemy=SQLAlchemy, mongo=MongoDB, sql_query_service=SqlQueryServ)
-def export_query_result(alchemy, mongo, sql_query_service, query_name):
+@inject(mongo=MongoDB, sql_query_service=SqlQueryServ, db_session=DBSession)
+def export_query_result(mongo, sql_query_service, query_name, db_session):
     status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
+
     if status is not True:
         # TODO: handle error
         pass
     if 'custom_sql' in result.keys():
         from sqlalchemy import func
-        results = eval('alchemy.session.' + result['custom_sql'] + '.distinct(Customer.id).all()')
+        results = eval('db_session.' + result['custom_sql'] + '.distinct(Customer.id).all()')
         columns, data = SqlQueryService.extract_data(results, {})
     else:
         final_query = sql_query_service.get_customer_query_based_on_rules(result)
@@ -187,16 +192,16 @@ def query_preview(sql_query_service):
 
 
 @databuilder.route('/request-explore-values', methods=['POST'])
-@inject(db=SQLAlchemy)
-def request_explore_values(db):
+@inject(db_session=DBSession)
+def request_explore_values(db_session):
     rules_query = request.json
     expression = rules_query.get('expression')
-    get_results_query = 'db.session.query({0}, func.count({0}).label("total")).' \
+    get_results_query = 'db_session.query({0}, func.count({0}).label("total")).' \
                         'group_by({0}).order_by("total DESC").all()'.format(expression)
     results = eval(get_results_query)
     if (None, 0) in results:
         results.remove((None, 0))
-    db.session.close()
+    db_session.close()
 
     return Response(json.dumps([dict(value=result[0], count=result[1]) for result in results]),
                     mimetype='application/json')

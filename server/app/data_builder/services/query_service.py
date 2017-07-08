@@ -10,13 +10,15 @@ from ...common.models import *
 from ...common.services import DbService
 
 
-class SqlQueryService(DbService):
+class SqlQueryService(object):
 
-    def __init__(self, config, db, logger):
-        super(SqlQueryService, self).__init__(config, db, logger)
+    def __init__(self, config, db_session, logger):
+        self.config = config
+        self.db_session = db_session
+        self.logger = logger
 
     def get_customer_query_based_on_rules(self, rules_query):
-        composed_query = SqlQueryConstructor(self.db, rules_query).construct_sql_query()
+        composed_query = SqlQueryConstructor(self.db_session, rules_query).construct_sql_query()
         return composed_query
 
     @staticmethod
