@@ -151,6 +151,7 @@ $(document).ready(function() {
                          }
                      preview_table.bootstrapTable(data);
                      (preview_table.bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
+                     alertUser('Found ' + data.no_of_rows + ' Records', 1200)
                  },
                  error: function(err) {
 //                   TODO: handle the error or retry

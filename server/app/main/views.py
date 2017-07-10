@@ -1,15 +1,10 @@
-from flask import request, redirect
+from flask import redirect, request, session
 from flask_login import login_required
 
 from ..common.views import context_processors
 from . import main
 from ..common.views.decorators import templated
 
-
-@main.before_request
-@login_required
-def before_request():
-    pass
 
 @main.before_request
 def before_request():
@@ -20,8 +15,10 @@ def before_request():
 
 @main.route('/')
 @main.route('/index')
+@login_required
 @templated('index')
 def index():
-    user = {'nickname': 'Bernt'} # fake user
+    user_name = session.get('user_name', 'Bernt')
+    user = {'nickname': user_name}  # Okta User
     return dict(user=user)
 
