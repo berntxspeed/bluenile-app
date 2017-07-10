@@ -397,6 +397,22 @@ $(document).ready(function() {
         g_explore.table = null
     })
 
+    $("#btn-create-db").on('click', function() {
+        $.ajax({
+                    url: "/builder/create-new-db",
+                    method: "GET",
+                    contentType: 'application/json;charset=UTF-8',
+                    success: function(data) {
+                        alertUser('Successfully created postgresql://localhost/new_default_db')
+                    },
+                    error: function(err) {
+                    //                    TODO: handle the error or retry
+                        alertUser('Failed to create new default db')
+                    }
+                })
+
+    })
+
     $("#btn-explore-values").on('click', function() {
         columns =  [{
                         field: 'table_id',

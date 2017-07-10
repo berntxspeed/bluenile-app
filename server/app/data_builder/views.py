@@ -185,6 +185,27 @@ def query_preview(sql_query_service):
                     mimetype='application/json')
 
 
+@databuilder.route('/create-new-db', methods=['GET'])
+def create_new_db():
+    import sqlalchemy_utils
+    from sqlalchemy import create_engine
+    from server.app.common.models import db
+
+    # try:
+    db_name = 'postgresql://localhost/new_default_db'
+
+    # create default db
+    if sqlalchemy_utils.database_exists(db_name):
+        sqlalchemy_utils.drop_database(db_name)
+    sqlalchemy_utils.create_database(db_name)
+
+    # create tables
+    engine = create_engine(db_name+'friend')
+    db.metadata.create_all(engine)
+
+    return Response(json.dumps(dict(status=True)))
+
+
 @databuilder.route('/request-explore-values', methods=['POST'])
 @inject(db=SQLAlchemy)
 def request_explore_values(db):
