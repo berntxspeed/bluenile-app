@@ -200,7 +200,7 @@ def create_new_db():
     sqlalchemy_utils.create_database(db_name)
 
     # create tables
-    engine = create_engine(db_name+'friend')
+    engine = create_engine(db_name)
     db.metadata.create_all(engine)
 
     return Response(json.dumps(dict(status=True)))
