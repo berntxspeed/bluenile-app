@@ -22,8 +22,7 @@ def sync_query_to_mc(query_rules, **kwargs):
     if 'user_db' in kwargs:
         with app.app_context():
             service = injector.get(UserDataPushServ)
-            service.init_db(kwargs['user_db'])
-            print('Init User DB')
+            service.init_user_db(kwargs['user_db'])
             service.exec_safe_session(service.sync_query_to_mc, query_rules)
     else:
         with app.app_context():

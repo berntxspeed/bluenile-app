@@ -184,28 +184,36 @@ api_config = {
 }
 """
 
+
 class DataLoadService(DbService):
 
-    def __init__(self, config, db, logger, mongo):
+    def __init__(self, config, logger, db, db_session, mongo):
         super(DataLoadService, self).__init__(config, db, logger)
+        self.db_session = db_session
         self.mongo = mongo
         self.data_type_map = {'customer': Customer,
                               'purchase': Purchase
                               }
-        with open('api_config.yml') as api_config_file:
-            self.data_load_config = yaml.load(api_config_file)
-
+        self.api_config_file = 'api_config.yml'
+        self.data_load_config = self.load_config()
         self.user_api_config = MongoUserApiConfigLoader(self.mongo.db).get_user_api_config()
+
+    def load_config(self):
+        try:
+            with open(self.api_config_file) as config_file:
+                return yaml.load(config_file)
+        except Exception:
+            return {}
 
     def exec_safe_session(self, load_func=None, *args):
         if load_func:
             try:
                 load_func(*args)
             except Exception as exc:
-                self.db.session.rollback()
+                self.db_session.rollback()
                 raise type(exc)('DataLoad Error: {0}: {1}'.format(type(exc).__name__, exc.args))
             finally:
-                self.db.session.remove()
+                self.db_session.remove()
 
     def get_api_args(self, data_source, data_type):
         vendor_config = self.data_load_config.get(data_source, {})
@@ -239,7 +247,7 @@ class DataLoadService(DbService):
         api_args['params'] = vendor_config.get('params')
         api_args['transform_response_data'] = vendor_config.get('transform_response_data')
         api_args['db_model'] = self.data_type_map.get(data_type)
-        api_args['db_session'] = self.db.session()
+        api_args['db_session'] = self.db_session
 
         return api_args
 
@@ -952,3 +960,25 @@ class DataLoadService(DbService):
                         db.session.add(rec)
                     db.session.commit()
 
+
+class UserDataLoadService(DataLoadService):
+
+    def __init__(self, config, logger, mongo):
+        self.config = config
+        self.logger = logger
+        self.mongo = mongo
+        self.db_session = None
+        self.data_type_map = {'customer': Customer,
+                              'purchase': Purchase
+                              }
+        self.api_config_file = 'api_config.yml'
+        self.data_load_config = self.load_config()
+        self.user_api_config = MongoUserApiConfigLoader(self.mongo.db).get_user_api_config()
+
+    def init_user_db(self, db_uri):
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import scoped_session
+        from sqlalchemy.orm import sessionmaker
+
+        engine = create_engine(db_uri)
+        self.db_session = scoped_session(sessionmaker(bind=engine))

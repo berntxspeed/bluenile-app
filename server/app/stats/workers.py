@@ -1,7 +1,7 @@
 from time import sleep
 from manage import celery, injector, app
 from celery.schedules import crontab
-from .injector_keys import DataLoadServ
+from .injector_keys import DataLoadServ, UserDataLoadServ
 from ...app.injector_keys import MongoDB
 
 
@@ -87,66 +87,17 @@ celery.conf.beat_schedule = {
 
 
 @celery.task(base=BaseTask)
-def load_shopify_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_shopify_purchases(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_magento_purchases(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_magento_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_bigcommerce_purchases(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_bigcommerce_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_stripe_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_x2crm_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_zoho_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
+def basic_load_task(**kwargs):
+    # TODO: remove if/else to default to user_db
+    if 'user_db' in kwargs:
+        with app.app_context():
+            service = injector.get(UserDataLoadServ)
+            service.init_user_db(kwargs['user_db'])
+            service.exec_safe_session(service.simple_data_load(kwargs))
+    else:
+        with app.app_context():
+            service = injector.get(DataLoadServ)
+            service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
@@ -154,13 +105,6 @@ def load_mc_email_data(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_mc_email_data)
-
-
-@celery.task
-def load_artists():
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_artists)
 
 
 @celery.task(base=BaseTask)
@@ -238,37 +182,36 @@ def schedule_load_jobs(**kwargs):
         relevant_load_jobs = find_relevant_periodic_tasks(dl_jobs)
 
         if len(relevant_load_jobs):
-                from .workers import load_shopify_customers, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
-                    load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
-                    load_zoho_customers, load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
+                from .workers import basic_load_task, load_mc_journeys, \
+                    load_web_tracking, load_lead_perfection
                 from .workers import add_fips_location_emlopen, add_fips_location_emlclick
                 from ..data.workers import sync_data_to_mc
 
-                load_map = {'x2crm_customers': {'load_func': load_x2crm_customers,
+                load_map = {'x2crm_customers': {'load_func': basic_load_task,
                                                 'data_source': 'x2crm',
                                                 'data_type': 'customer'},
-                            'zoho_customers': {'load_func': load_zoho_customers,
+                            'zoho_customers': {'load_func': basic_load_task,
                                                'data_source': 'zoho',
                                                'data_type': 'customer'},
-                            'magento_customers': {'load_func': load_magento_customers,
+                            'magento_customers': {'load_func': basic_load_task,
                                                   'data_source': 'magento',
                                                   'data_type': 'customer'},
-                            'magento_purchases': {'load_func': load_magento_purchases,
+                            'magento_purchases': {'load_func': basic_load_task,
                                                   'data_source': 'magento',
                                                   'data_type': 'purchase'},
-                            'shopify_customers': {'load_func': load_shopify_customers,
+                            'shopify_customers': {'load_func': basic_load_task,
                                                   'data_source': 'shopify',
                                                   'data_type': 'customer'},
-                            'shopify_purchases': {'load_func': load_shopify_purchases,
+                            'shopify_purchases': {'load_func': basic_load_task,
                                                   'data_source': 'shopify',
                                                   'data_type': 'purchase'},
-                            'bigcommerce_customers': {'load_func': load_bigcommerce_customers,
+                            'bigcommerce_customers': {'load_func': basic_load_task,
                                                       'data_source': 'bigcommerce',
                                                       'data_type': 'customer'},
-                            'bigcommerce_purchases': {'load_func': load_bigcommerce_purchases,
+                            'bigcommerce_purchases': {'load_func': basic_load_task,
                                                       'data_source': 'bigcommerce',
                                                       'data_type': 'purchase'},
-                            'stripe_customers': {'load_func': load_stripe_customers,
+                            'stripe_customers': {'load_func': basic_load_task,
                                                  'data_source': 'stripe',
                                                  'data_type': 'customer'},
                             # 'artists': load_artists,

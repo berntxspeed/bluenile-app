@@ -10,7 +10,6 @@ from .services.query_service import SqlQueryService
 
 class SqlQueryModule(Module):
 
-    @singleton
     @inject(config=Config,
             logger=Logging,
             db_session=DBSession)

@@ -48,7 +48,7 @@ def data_builder(mongo, query_id=None):
     if request.args.get('sync') == 'True':
         from ..data.workers import sync_query_to_mc
         from flask import session
-        db_uri = session['account_name']
+        db_uri = session.get('postgres_uri')
 
         result = sync_query_to_mc.delay(data, user_db=db_uri, task_type='data-push', query_name=query_id)
         response_dict.update({'task_id': result.id})
@@ -187,7 +187,7 @@ def query_preview(sql_query_service):
     return Response(json.dumps({'columns': columns,
                                 'data': data,
                                 'no_of_rows': final_query.distinct(Customer.id).count()
-                                }, default=SqlQueryService.alchemy_encoder),
+                                }, default=sql_query_service.alchemy_encoder),
                     mimetype='application/json')
 
 

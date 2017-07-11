@@ -143,17 +143,18 @@ $(document).ready(function() {
                      request.setRequestHeader("X-CSRFToken", g_csrf_token)
                  },
                  success: function(data) {
-                     visible_header = (data.data.length > 0)
-                     destroyTable(preview_table)
-                     data.showHeader = visible_header
-                     data.formatShowingRows = function(pageFrom, pageTo, totalRows){
-                             return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
-                         }
-                     preview_table.bootstrapTable(data);
-                     (preview_table.bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
+                    visible_header = (data.data.length > 0)
+                    destroyTable(preview_table)
+                    data.showHeader = visible_header
+                    data.formatShowingRows = function(pageFrom, pageTo, totalRows){
+                            return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                        }
+                    preview_table.bootstrapTable(data);
+                    (preview_table.bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
+                    alertUser('Found ' + data.no_of_rows + ' Records', 1200)
                  },
                  error: function(err) {
-//                   TODO: handle the error or retry
+//                  TODO: handle the error or retry
                  }
              });
         $("#btn-save-query-as").prop('disabled', false);

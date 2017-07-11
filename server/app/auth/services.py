@@ -34,8 +34,8 @@ class OktaUser(UserMixin):
     def get_id(self):
         return self.id
 
-    def get_account(self):
-        return self.account
+    def get_postgres_uri_from_account_name(self):
+        return "postgresql://localhost/" + self.account
 
 
 class AuthService(DbService):
@@ -67,8 +67,10 @@ class AuthService(DbService):
                 user = OktaUser(okta_user)
                 login_user(user, form.remember_me.data)
 
-                # Save user in the current session
-                session['account_name'] = user.get_account()
+                # Save user/account info in the current session
+                session['account_name'] = user.account
+                session['user_name'] = user.firstname
+                session['postgres_uri'] = user.get_postgres_uri_from_account_name()
 
                 return redirect(self.__next_url(request))
 
@@ -126,8 +128,4 @@ class AuthService(DbService):
 
     def __next_url(self, request):
         next_url = request.args.get('next')
-        if next_url:
-            next_url = url_for('main.index')
-        else:
-            next_url = url_for('main.index')
-        return next_url
+        return next_url or url_for('main.index')

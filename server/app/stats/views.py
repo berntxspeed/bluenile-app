@@ -138,37 +138,36 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import load_shopify_customers, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
-        load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
-        load_zoho_customers, load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
+    from .workers import basic_load_task, load_mc_email_data, load_mc_journeys, \
+                         load_web_tracking, load_lead_perfection
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
     from ..data.workers import sync_data_to_mc
 
-    load_map = {'x2crm_customers': {'load_func': load_x2crm_customers,
+    load_map = {'x2crm_customers': {'load_func': basic_load_task,
                                     'data_source': 'x2crm',
                                     'data_type': 'customer'},
-                'zoho_customers': {'load_func': load_zoho_customers,
+                'zoho_customers': {'load_func': basic_load_task,
                                    'data_source': 'zoho',
                                    'data_type': 'customer'},
-                'magento_customers': {'load_func': load_magento_customers,
+                'magento_customers': {'load_func': basic_load_task,
                                       'data_source': 'magento',
                                       'data_type': 'customer'},
-                'magento_purchases': {'load_func': load_magento_purchases,
+                'magento_purchases': {'load_func': basic_load_task,
                                       'data_source': 'magento',
                                       'data_type': 'purchase'},
-                'shopify_customers': {'load_func': load_shopify_customers,
+                'shopify_customers': {'load_func': basic_load_task,
                                       'data_source': 'shopify',
                                       'data_type': 'customer'},
-                'shopify_purchases': {'load_func': load_shopify_purchases,
+                'shopify_purchases': {'load_func': basic_load_task,
                                       'data_source': 'shopify',
                                       'data_type': 'purchase'},
-                'bigcommerce_customers': {'load_func': load_bigcommerce_customers,
+                'bigcommerce_customers': {'load_func': basic_load_task,
                                           'data_source': 'bigcommerce',
                                           'data_type': 'customer'},
-                'bigcommerce_purchases': {'load_func': load_bigcommerce_purchases,
+                'bigcommerce_purchases': {'load_func': basic_load_task,
                                           'data_source': 'bigcommerce',
                                           'data_type': 'purchase'},
-                'stripe_customers': {'load_func': load_stripe_customers,
+                'stripe_customers': {'load_func': basic_load_task,
                                      'data_source': 'stripe',
                                      'data_type': 'customer'},
                 'mc-email-data': load_mc_email_data,
@@ -189,6 +188,9 @@ def load(action):
     if task is None:
         return Exception('No such action is available')
 
+    from flask import session
+    db_uri = session.get('postgres_uri')
+
     if isinstance(task, dict):
         if 'table_name' in task:
             result = task['load_func'].delay(task['table_name'],
@@ -198,7 +200,8 @@ def load(action):
             result = task['load_func'].delay(task_type='load_'+action,
                                              data_source=task['data_source'],
                                              data_type=task['data_type'],
-                                             sync_queries=True)
+                                             sync_queries=True,
+                                             user_db=db_uri)
     else:
         result = task.delay(task_type=action)
 
