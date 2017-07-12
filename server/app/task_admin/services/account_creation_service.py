@@ -49,8 +49,6 @@ class AccountCreationService:
 
             # create tables
             engine = create_engine(db_uri)
-            print("----User db session")
-            print(db_model.session)
             db_model.metadata.create_all(engine)
 
             return db_uri
