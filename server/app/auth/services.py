@@ -9,7 +9,7 @@ from sqlalchemy import func
 from werkzeug.security import check_password_hash
 from .forms import LoginForm
 from .forms import SignupForm
-from ..common.models import User
+from ..common.models.system_models import User
 from ..common.services import DbService
 
 
@@ -20,6 +20,7 @@ class OktaUsersClient(UsersClient):
     def get_user(self, uid):
         response = ApiClient.get_path(self, '/{0}'.format(uid))
         return response.json()
+
 
 class OktaUser(UserMixin):
     def __init__(self, okta_user):
@@ -39,12 +40,11 @@ class OktaUser(UserMixin):
 
 
 class AuthService(DbService):
-
     def __init__(self,
-                config,
-                db,
-                logger,
-                session):
+                 config,
+                 db,
+                 logger,
+                 session):
         super(AuthService, self).__init__(config=config, db=db, logger=logger)
 
     def login(self, request):

@@ -1,12 +1,13 @@
 import decimal
 import re
 
+import datetime
 from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import inspect
 
 from .classes.sql_query_construct import SqlQueryConstructor
-from ...common.models import *
+from ...common.models.user_models import Customer
 from ...common.services import DbService
 
 

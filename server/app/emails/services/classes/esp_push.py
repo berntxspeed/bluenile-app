@@ -4,7 +4,7 @@ import requests
 import base64
 import json
 
-from ....common.models import Upload, Template
+from ....common.models.user_models import Upload, Template
 from ....stats.services.classes.api_data import ApiData
 
 

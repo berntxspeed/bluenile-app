@@ -13,7 +13,7 @@ from os import remove
 
 from .classes.esp_push import EmlPush, ImgPush
 from ...common.services import DbService
-from ...common.models import Upload, Template
+from ...common.models.user_models import Upload, Template
 
 class EmailService(DbService):
 

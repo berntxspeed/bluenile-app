@@ -21,8 +21,8 @@ class AppModule(Module):
     @inject(app=Flask)
     @provides(SQLAlchemy)
     def provides_sqlalchemy(self, app):
-        from .common.models import db
-        return db
+        from .common.models.user_models import user_db
+        return user_db
 
     @inject(app=Flask)
     @provides(UserSessionConfig)

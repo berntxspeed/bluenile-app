@@ -3,7 +3,8 @@ from sqlalchemy import func
 
 from .classes.data_pusher import DataPusher
 from ...common.services import DbService
-from ...common.models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, WebTrackingEcomm, WebTrackingPageView, WebTrackingEvent
+from ...common.models.user_models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, WebTrackingEcomm, \
+    WebTrackingPageView, WebTrackingEvent
 from server.app.data_builder.services.classes.sql_query_construct import SqlQueryConstructor
 
 
@@ -52,8 +53,7 @@ class DataPushService(DbService):
         except:
             self.logger.warn('failure in resetting ext_sync_flags')
 
-
-    #  TODO: Add another func to take query object
+    # TODO: Add another func to take query object
 
     def sync_query_to_mc(self, query_rules):
 
@@ -79,7 +79,8 @@ class DataPushService(DbService):
 
         dp = DataPusher(self.db_session, self._models['customer'])
         resp = dp.sync_query(name=query_rules['name'],
-                             query=SqlQueryConstructor(self.db_session, query_rules, customer_only=True).construct_sql_query())
+                             query=SqlQueryConstructor(self.db_session, query_rules,
+                                                       customer_only=True).construct_sql_query())
 
         if resp and hasattr(resp, 'code'):
             self.logger.info('sync result:' + str(resp.code))
