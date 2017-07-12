@@ -1,5 +1,6 @@
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Integer, String
 from sqlalchemy.orm import synonym, relationship, backref, sessionmaker
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
@@ -76,19 +77,27 @@ def on_update(mapper, connection, target):
     return target
 
 
-class UserPermissions(system_db.Model):
-    __tablename__ = 'user_permissions'
-    id = system_db.Column(system_db.String(255), primary_key=True)
-    account_id = system_db.Column(system_db.String(255))
-
-
 class ClientAccount(system_db.Model):
     __tablename__ = 'client_account'
-    id = system_db.Column(system_db.String(255), primary_key=True)
-    # account_id = system_db.Column(system_db.String(255), unique=True)
-    database_uri = system_db.Column(system_db.String(255), unique=True)  # can be just the client id
+    id = system_db.Column(Integer, primary_key=True, autoincrement=True)
+    account_name = system_db.Column(String(255))
+    # other account info goes here (billing, contact, address, etc etc)
 
-    users = relationship(UserPermissions, backref='client_account',
-                         primaryjoin='ClientAccount.id==UserPermissions.account_id',
-                         foreign_keys=[UserPermissions.account_id],
-                         passive_deletes='all')
+
+# 1 bluenile
+# 2 yeti .... "YETI"
+
+class UserPermissions(system_db.Model):
+    __tablename__ = 'user_permissions'
+    id = system_db.Column(Integer, primary_key=True, autoincrement=True)
+    database_uri = system_db.Column(String(255))  # can be just the client id
+    username = system_db.Column(String(255))
+    role = system_db.Column(String(255))
+    AccountID = system_db.Column(Integer)
+    # account = relationship(ClientAccount, backref='user_permissions',
+    #                        primaryjoin='UserPermissions.AccountID==ClientAccount.id',
+    #                        foreign_keys=[ClientAccount.id],
+    #                        passive_deletes='all')
+
+    # 1 ..../bluenile user:'val' role:'admin'
+    # 2 ..../bluenile user:'vitali' role:'celery_bitch'
