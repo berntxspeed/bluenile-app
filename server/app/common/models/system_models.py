@@ -77,27 +77,28 @@ def on_update(mapper, connection, target):
     return target
 
 
-class ClientAccount(system_db.Model):
-    __tablename__ = 'client_account'
-    id = system_db.Column(Integer, primary_key=True, autoincrement=True)
-    account_name = system_db.Column(String(255))
-    # other account info goes here (billing, contact, address, etc etc)
-
-
-# 1 bluenile
-# 2 yeti .... "YETI"
-
 class UserPermissions(system_db.Model):
     __tablename__ = 'user_permissions'
     id = system_db.Column(Integer, primary_key=True, autoincrement=True)
     database_uri = system_db.Column(String(255))  # can be just the client id
     username = system_db.Column(String(255))
     role = system_db.Column(String(255))
-    AccountID = system_db.Column(Integer)
-    # account = relationship(ClientAccount, backref='user_permissions',
-    #                        primaryjoin='UserPermissions.AccountID==ClientAccount.id',
-    #                        foreign_keys=[ClientAccount.id],
-    #                        passive_deletes='all')
+    account_id = system_db.Column(Integer)
+
 
     # 1 ..../bluenile user:'val' role:'admin'
     # 2 ..../bluenile user:'vitali' role:'celery_bitch'
+
+
+class ClientAccount(system_db.Model):
+    __tablename__ = 'client_account'
+    id = system_db.Column(Integer, primary_key=True, autoincrement=True)
+    account_name = system_db.Column(String(255), unique=True)
+    # other account info goes here (billing, contact, address, etc etc)
+    permissions = relationship(UserPermissions, backref='client_account',
+                               primaryjoin='UserPermissions.account_id==ClientAccount.id',
+                               foreign_keys=[UserPermissions.account_id],
+                               passive_deletes='all')
+
+# 1 bluenile
+# 2 yeti .... "YETI"

@@ -12,24 +12,25 @@ class AccountCreationService:
         self.init_system_entries(self.account_name, uri)
 
     @staticmethod
-    def init_system_entries(name, uri):
-        username = 'vitalik301@gmail.com'
-
+    def init_system_entries(name, uri, username='vitalik301@gmail.com'):
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
 
         # an Engine, which the Session will use for connection
         # resources
+
+        # TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
         engine = create_engine('postgresql://localhost/bluenile')
 
         # create a configured "Session" class
         local_session = sessionmaker(bind=engine)()
 
         account = ClientAccount(account_name=name)
-        local_session.add(account)
-        local_session.commit()
-        user = UserPermissions(database_uri=uri, username=username, role='admin', AccountID=account.id)
+        user = UserPermissions(database_uri=uri, username=username, role='admin')
+        account.permissions.append(user)
+
         local_session.add(user)
+        local_session.add(account)
         local_session.commit()
 
     @staticmethod
