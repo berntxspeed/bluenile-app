@@ -1,32 +1,23 @@
-from server.app.common.models.system_models import system_db, ClientAccount, UserPermissions
+from server.app.common.models.system_models import system_session, ClientAccount, UserPermissions
 from server.app.common.models.user_models import user_db
 
 
 class AccountCreationService:
-    def __init__(self, account_name):
+    def __init__(self, account_name, admin_user):
+        self.admin_user = admin_user
         self.account_name = account_name
 
     def execute(self):
-        uri = self.create_postgres(self.account_name, user_db)
+        userdb_uri = self.create_postgres(self.account_name, user_db)
         self.create_mongo(self.account_name)
-        self.init_system_entries(self.account_name, uri)
+        self.init_system_entries(self.account_name, userdb_uri, self.admin_user)
 
     @staticmethod
     def init_system_entries(name, uri, username='vitalik301@gmail.com'):
-        from sqlalchemy import create_engine
-        from sqlalchemy.orm import sessionmaker
+        local_session = system_session()
 
-        # an Engine, which the Session will use for connection
-        # resources
-
-        # TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
-        engine = create_engine('postgresql://localhost/bluenile')
-
-        # create a configured "Session" class
-        local_session = sessionmaker(bind=engine)()
-
-        account = ClientAccount(account_name=name)
-        user = UserPermissions(database_uri=uri, username=username, role='admin')
+        account = ClientAccount(account_name=name, database_uri=uri)
+        user = UserPermissions(username=username, role='admin')
         account.permissions.append(user)
 
         local_session.add(user)

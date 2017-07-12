@@ -4,6 +4,8 @@ from sqlalchemy import Integer, String
 from sqlalchemy.orm import synonym, relationship, backref, sessionmaker
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 HASH_SECRET = b'33jjfSFTW43FE2992222FD'
 
@@ -11,6 +13,16 @@ system_db = SQLAlchemy(session_options={
     'autocommit': False,
     'autoflush': False
 })
+
+
+# an Engine, which the Session will use for connection
+# resources
+
+# TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
+engine = create_engine('postgresql://localhost/bluenile')
+
+# create a configured "Session" class
+system_session = sessionmaker(bind=engine)
 
 
 class User(UserMixin, system_db.Model):
@@ -80,7 +92,6 @@ def on_update(mapper, connection, target):
 class UserPermissions(system_db.Model):
     __tablename__ = 'user_permissions'
     id = system_db.Column(Integer, primary_key=True, autoincrement=True)
-    database_uri = system_db.Column(String(255))  # can be just the client id
     username = system_db.Column(String(255))
     role = system_db.Column(String(255))
     account_id = system_db.Column(Integer)
@@ -94,6 +105,7 @@ class ClientAccount(system_db.Model):
     __tablename__ = 'client_account'
     id = system_db.Column(Integer, primary_key=True, autoincrement=True)
     account_name = system_db.Column(String(255), unique=True)
+    database_uri = system_db.Column(String(255))
     # other account info goes here (billing, contact, address, etc etc)
     permissions = relationship(UserPermissions, backref='client_account',
                                primaryjoin='UserPermissions.account_id==ClientAccount.id',

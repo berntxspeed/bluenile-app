@@ -9,7 +9,7 @@ from sqlalchemy import func
 from werkzeug.security import check_password_hash
 from .forms import LoginForm
 from .forms import SignupForm
-from ..common.models.system_models import User
+from ..common.models.system_models import User, system_session, ClientAccount, UserPermissions
 from ..common.services import DbService
 
 
@@ -67,10 +67,16 @@ class AuthService(DbService):
                 user = OktaUser(okta_user)
                 login_user(user, form.remember_me.data)
 
+                # Fetch the user's authorizations
+                db_session = system_session()
+                accounts = db_session.query(ClientAccount).join(ClientAccount.permissions) \
+                    .filter(UserPermissions.username == user.email)
+                    #(ClientAccount.permissions.username == user.email)
+
                 # Save user/account info in the current session
                 session['account_name'] = user.account
                 session['user_name'] = user.firstname
-                session['postgres_uri'] = user.get_postgres_uri_from_account_name()
+                session['postgres_uri'] = accounts.first().database_uri
 
                 return redirect(self.__next_url(request))
 
