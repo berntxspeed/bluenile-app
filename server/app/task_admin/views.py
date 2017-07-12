@@ -41,7 +41,8 @@ def task_admin(mongo):
 @taskadmin.route('/create_account/<account_name>')
 #@templated('')
 def create_account(account_name):
-    service = AccountCreationService(account_name)
+    admin = request.args.get('admin')
+    service = AccountCreationService(account_name, admin)
     service.execute()
 
     return 'ok'
