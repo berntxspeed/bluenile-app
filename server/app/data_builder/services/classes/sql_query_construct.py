@@ -3,7 +3,8 @@ from sqlalchemy import or_, and_
 from sqlalchemy.sql.operators import ColumnOperators, \
     like_op, notcontains_op, notbetween_op, notendswith_op, notstartswith_op
 
-from ....common.models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, WebTrackingEcomm, WebTrackingPageView, WebTrackingEvent
+from ....common.models.user_models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, \
+    WebTrackingEcomm, WebTrackingPageView, WebTrackingEvent
 
 
 class SqlQueryConstructor(object):

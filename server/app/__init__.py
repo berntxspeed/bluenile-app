@@ -64,8 +64,12 @@ def create_injector(app=None):
 
 
 def init_db(app):
-    from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer
-    db.init_app(app)
+    from .common.models.system_models import system_db
+    from .common.models.user_models import user_db
+    system_db.init_app(app)
+
+    # TODO:remove this
+    user_db.init_app(app)
 
 
 def init_mongo(app, mongo):
@@ -80,7 +84,8 @@ def init_login_manager(app):
 
     @login_manager.user_loader
     def load_user(user_id):
-        users_client = OktaUsersClient('https://dev-198609.oktapreview.com', '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
+        users_client = OktaUsersClient('https://dev-198609.oktapreview.com',
+                                       '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
         okta_user = users_client.get_user(user_id)
         return OktaUser(okta_user)
 
@@ -98,7 +103,7 @@ def init_assets(app):
 
 def create_event_mgr(app):
     from .common.utils.event_mgr import EventMgr
-    from .common.models import db, Event, EventDefinition
+    from .common.models.user_models import user_db as db, Event, EventDefinition
     from flask_sqlalchemy import SignallingSession
 
     event_mgr = EventMgr(db, Event, EventDefinition)

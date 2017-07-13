@@ -3,7 +3,7 @@ from flask import flash
 from flask import redirect
 
 from ...common.services import DbService
-from ...common.models import User
+from ...common.models.system_models import User
 
 from bson.objectid import ObjectId
 

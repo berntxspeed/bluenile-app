@@ -9,7 +9,7 @@ from flask_login import login_required
 from injector import inject
 from sqlalchemy import func
 
-from server.app.common.models import *
+from server.app.common.models.user_models import *
 from server.app.common.views.decorators import templated
 from server.app.injector_keys import MongoDB, DBSession, UserSessionConfig
 from .injector_keys import SqlQueryServ
@@ -180,7 +180,6 @@ def export_query_result(mongo, sql_query_service, query_name, db_session, user_c
 def query_preview(sql_query_service):
     rules_query = request.json
     final_query = sql_query_service.get_customer_query_based_on_rules(rules_query)
-
     results = final_query.distinct(Customer.id).limit(100).all()
     columns, data = sql_query_service.extract_data(results, rules_query)
     return Response(json.dumps({'columns': columns,

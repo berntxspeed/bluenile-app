@@ -9,7 +9,7 @@ from sqlalchemy import func
 from werkzeug.security import check_password_hash
 from .forms import LoginForm
 from .forms import SignupForm
-from ..common.models import User
+from ..common.models.system_models import User, system_session, ClientAccount, UserPermissions
 from ..common.services import DbService
 
 
@@ -40,12 +40,11 @@ class OktaUser(UserMixin):
 
 
 class AuthService(DbService):
-
     def __init__(self,
-                config,
-                db,
-                logger,
-                session):
+                 config,
+                 db,
+                 logger,
+                 session):
         super(AuthService, self).__init__(config=config, db=db, logger=logger)
 
     def login(self, request):
@@ -67,6 +66,12 @@ class AuthService(DbService):
             if auth_result and auth_result.status == 'SUCCESS':
                 user = OktaUser(okta_user)
                 login_user(user, form.remember_me.data)
+
+                # Fetch the user's authorizations
+                db_session = system_session()
+                accounts = db_session.query(ClientAccount).join(ClientAccount.permissions) \
+                    .filter(UserPermissions.username == user.email)
+                    #(ClientAccount.permissions.username == user.email)
 
                 # Save user/account info in the current session
                 session['user_params'] = dict(account_name=user.account,
