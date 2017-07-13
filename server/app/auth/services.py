@@ -84,10 +84,13 @@ class AuthService(DbService):
                 accounts = self.get_user_accounts(user.email)
 
                 # Save user/account info in the current session
-                self.set_user_account(accounts.first())
-
-                return redirect(self.__next_url(request))
-
+                first_account = accounts.first()
+                if first_account is not None:
+                    self.set_user_account(accounts.first())
+                    return redirect(self.__next_url(request))
+                else:
+                    flash('User is not associated with any current account', 'error')
+                    logout_user()
             else:
                 flash('Incorrect username or password.', 'error')
         return {
