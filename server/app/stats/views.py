@@ -9,7 +9,7 @@ from injector import inject
 from . import stats
 from .injector_keys import JbStatsServ, GetStatsServ
 from .services.mongo_user_config_loader import MongoUserApiConfigLoader, MongoDataJobConfigLoader
-from server.app.injector_keys import MongoDB
+from server.app.injector_keys import MongoDB, UserSessionConfig
 from ..common.views.decorators import templated
 from ..data_builder.services.query_service import SqlQueryService
 
@@ -37,18 +37,57 @@ def special_logged_in_page(jb_stats_service):
 
 
 @stats.route('/data-manager')
-@inject(mongo=MongoDB)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('data_manager')
-def data_manager(mongo):
-    status, avail_vendors = MongoUserApiConfigLoader(mongo.db).get_user_api_config()
+def data_manager(mongo, user_config):
+    status, avail_vendors = MongoUserApiConfigLoader(mongo.db, user_config).get_user_api_config()
     return {'status': status, 'avail_vendors': avail_vendors}
 
 
 @stats.route('/data-manager/save-load-job-config/<job_type>', methods=['POST'])
-@inject(mongo=MongoDB)
-def save_load_job_config(mongo, job_type):
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def save_load_job_config(mongo, user_config, job_type):
     load_job_config = request.json
-    success, error = MongoDataJobConfigLoader(mongo.db).save_data_load_config(load_job_config)
+    success, error = MongoDataJobConfigLoader(mongo.db, user_config).save_data_load_config(load_job_config)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
+
+
+@stats.route('/data-manager/get-data-sources')
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+@templated('data_manager')
+def get_data_sources(mongo, user_config):
+
+    status, data_load_jobs = MongoUserApiConfigLoader(mongo.db, user_config).get_user_api_config()
+    columns = [{
+            'field': 'data_source',
+            'title': 'Data Source'
+        },
+        {
+            'field': 'domain',
+            'title': 'Domain'
+        }]
+    return Response(dumps({'columns': columns, 'data': data_load_jobs}, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
+
+
+@stats.route('/data-manager/delete-api-config/<data_source>', methods=['POST'])
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def delete_vendor_api_config(mongo, user_config, data_source):
+    success, error = MongoUserApiConfigLoader(mongo.db, user_config).remove_api_config_by_source(data_source)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
+
+
+@stats.route('/data-manager/save-api-config', methods=['POST'])
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def save_vendor_api_config(mongo, user_config):
+    vendor_config = request.json
+    success, error = MongoUserApiConfigLoader(mongo.db, user_config).save_api_config(vendor_config)
     if success:
         return 'OK', 200
     else:
@@ -56,9 +95,9 @@ def save_load_job_config(mongo, job_type):
 
 
 @stats.route('/data-manager/get-dl-jobs')
-@inject(mongo=MongoDB)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('data_manager')
-def get_data_sources(mongo):
+def get_data_load_jobs(mongo, user_config):
 
     status, data_load_jobs = MongoDataJobConfigLoader(mongo.db).get_data_load_jobs()
     columns = [{
@@ -177,19 +216,18 @@ def load(action):
                 'add-fips-location-emlclick': add_fips_location_emlclick,
                 'lead-perfection': load_lead_perfection,
                 'customer_table': {'load_func': sync_data_to_mc,
-                                        'table_name': 'customer',
-                                       },
+                                   'table_name': 'customer',
+                                   },
                 'purchase_table': {'load_func': sync_data_to_mc,
-                                        'table_name': 'purchase',
-                                        },
+                                   'table_name': 'purchase',
+                                    },
                 }
 
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')
 
-    from flask import session
-    db_uri = session.get('postgres_uri')
+    user_params = session.get('user_params')
 
     if isinstance(task, dict):
         if 'table_name' in task:
@@ -201,7 +239,7 @@ def load(action):
                                              data_source=task['data_source'],
                                              data_type=task['data_type'],
                                              sync_queries=True,
-                                             user_db=db_uri)
+                                             user_params=user_params)
     else:
         result = task.delay(task_type=action)
 

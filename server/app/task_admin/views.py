@@ -11,14 +11,16 @@ from injector import inject
 
 from server.app.common.models import *
 from server.app.common.views.decorators import templated
-from server.app.injector_keys import MongoDB
+from server.app.injector_keys import MongoDB, UserSessionConfig
 from . import taskadmin
 from .services.mongo_task_loader import MongoTaskLoader
+
 
 @taskadmin.before_request
 @login_required
 def before_request():
     pass
+
 
 @taskadmin.before_request
 def before_request():
@@ -29,9 +31,8 @@ def before_request():
 
 
 @taskadmin.route('/task-admin/')
-@inject(mongo=MongoDB)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('task_admin')
-def task_admin(mongo):
-
-    status, tasks = MongoTaskLoader(mongo.db).get_all_tasks()
+def task_admin(mongo, user_config):
+    status, tasks = MongoTaskLoader(mongo.db, user_config).get_all_tasks()
     return {'status': status, 'tasks': tasks}

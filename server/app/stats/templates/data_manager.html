@@ -53,7 +53,8 @@
                     <option value="raw_data" title="Raw Data">Load Tables To MC</option>
                 </select>
             </div>
-                <button id="btn-sched-frequency" style="width: 100%" class="btn btn-primary btn-default navbar-btn"><span class="glyphicon glyphicon-time"></span> Schedule Data Load</button>
+            <button id="btn-sched-frequency" style="width: 100%" class="btn btn-info btn-default navbar-btn"><span class="glyphicon glyphicon-time"></span> Schedule Data Load</button>
+            <button id="btn-manage-data-sources" style="width: 100%" class="btn btn-success btn-default navbar-btn"><span class="glyphicon glyphicon-download"></span> Manage Data Sources</button>
             <div id="shopify_tasks" class="well form-well">
                 <strong>Shopify :</strong>
                 <ul>
@@ -104,13 +105,13 @@
     </div>
 
     <!-- Modal Table For Data Load Frequency -->
-    <div id="modalTable" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div id="frequencyModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header" style="padding:25px 50px;">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span></button>
-                    <h4 id="data-sources-modal"> <span class="glyphicon glyphicon-menu-hamburger"></span> Data Sources</h4>
+                    <h4 id="data-load-jobs"> <span class="glyphicon glyphicon-menu-hamburger"></span> Data Load Jobs</h4>
                 </div>
                 <div class="modal-body">
                     <table id="data-load-frequency-table"></table>
@@ -152,4 +153,67 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
+
+    <!-- Modal Table For Data Load Sources -->
+    <div id="sourcesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:25px 50px;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 id="data-sources"> <span class="glyphicon glyphicon-menu-hamburger"></span> Data Sources</h4>
+                </div>
+                <div class="modal-body">
+                    <table id="data-load-sources-table"></table>
+                    <div class="row" id="source-selector" style="display: none">
+                        <select id="add-source" title="Sources" style="width: 100%">>
+                            <option value="select" title="select">-- Select Data Source --</option>
+                            <option value="shopify" title="shopify">Shopify</option>
+                            <option value="magento" title="shopify">Magento</option>
+                            <option value="bigcommerce" title="shopify">BigCommerce</option>
+                            <option value="x2crm" title="x2crm">X2 CRM</option>
+                        </select>
+                        <div></div>
+                        <!--<th>Starts On:</th>-->
+                        <!--<input id="frequency-start" type="datetime-local">-->
+                        <!--<div></div>-->
+                        <!--<th>Ends On  : </th>-->
+                        <!--<input id="frequency-end" type="datetime-local">-->
+                    </div> <br>
+                    <div id="data-info-block" style="display: none">
+                        <div class="form-group" id="domain">
+                            <label for="domain">Domain:</label>
+                            <input type="text" class="form-control" id="domain_val" placeholder="Domain Name, e.g. https://www.mybigcommerce.com">
+                        </div>
+                        <div class="form-group" id="id">
+                            <label for="domain">UserName:</label>
+                            <input type="text" class="form-control" id="id_val" placeholder="Username or Id">
+                        </div>
+                        <div class="form-group" id="secret">
+                            <label for="secret">Password:</label>
+                            <input type="password" class="form-control" id="secret_val" placeholder="Password or Secret">
+                        </div>
+                        <div class="form-group" id="token">
+                            <label for="token">Token:</label>
+                            <input type="text" class="form-control" id="token_val" placeholder="API Token">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="row" id="saved-sources-buttons">
+                        <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                        <button type="submit" id="btn-edit-source" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-pencil"></span> Edit Data Source</button>
+                        <button type="submit" id="btn-add-source" class="btn btn-success btn-default pull-left"><span class="glyphicon glyphicon-plus"></span> Add Source</button>
+                        <button type="submit" id="btn-delete-source" class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-trash"></span> Delete Source</button>
+                    </div>
+                    <div class="row" id="change-source-buttons" style="display: none">
+                        <button id="btn-save-source" class="btn btn-success btn-default pull-right"><span class="glyphicon glyphicon-ok"></span> Save</button>
+                        <button type="submit" id="btn-return-to-available-sources" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
+                        <h4 id="source-footer" style="text-align: center"></h4>
+                    </div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
 {% endblock %}

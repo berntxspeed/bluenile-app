@@ -28,7 +28,7 @@ class AppModule(Module):
     @provides(UserSessionConfig)
     def provides_user_session_config(self, app):
         from flask import session
-        return session.get('postgres_uri')
+        return session.get('user_params')
 
     @inject(app=Flask, config=UserSessionConfig)
     @provides(DBSession)
@@ -37,7 +37,7 @@ class AppModule(Module):
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
 
-        engine = create_engine(config)
+        engine = create_engine(config.get('postgres_uri'))
         session = scoped_session(sessionmaker(bind=engine))
 
         return session

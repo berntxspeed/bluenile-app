@@ -21,6 +21,7 @@ class OktaUsersClient(UsersClient):
         response = ApiClient.get_path(self, '/{0}'.format(uid))
         return response.json()
 
+
 class OktaUser(UserMixin):
     def __init__(self, okta_user):
         self.id = okta_user.get('id')
@@ -68,10 +69,9 @@ class AuthService(DbService):
                 login_user(user, form.remember_me.data)
 
                 # Save user/account info in the current session
-                session['account_name'] = user.account
-                session['user_name'] = user.firstname
-                session['postgres_uri'] = user.get_postgres_uri_from_account_name()
-
+                session['user_params'] = dict(account_name=user.account,
+                                              user_name=user.firstname,
+                                              postgres_uri=user.get_postgres_uri_from_account_name())
                 return redirect(self.__next_url(request))
 
             else:

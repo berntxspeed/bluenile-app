@@ -1,7 +1,7 @@
 from flask import jsonify, Response, send_from_directory, send_file
 from premailer import transform
 import json
-from PIL import Image, ImageDraw
+# from PIL import Image, ImageDraw
 from urllib.parse import urlsplit
 import os
 import base64

@@ -4,14 +4,14 @@ import traceback
 from io import StringIO
 
 from flask import Response
-from flask import make_response, redirect, request, session, url_for
+from flask import make_response, redirect, request, url_for
 from flask_login import login_required
 from injector import inject
 from sqlalchemy import func
 
 from server.app.common.models import *
 from server.app.common.views.decorators import templated
-from server.app.injector_keys import MongoDB, DBSession
+from server.app.injector_keys import MongoDB, DBSession, UserSessionConfig
 from .injector_keys import SqlQueryServ
 from . import databuilder
 from .services.data_builder_query import DataBuilderQuery
@@ -35,38 +35,37 @@ def before_request():
 
 @databuilder.route('/data-builder/')
 @databuilder.route('/data-builder/<query_id>')
-@inject(mongo=MongoDB)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('data_builder')
-def data_builder(mongo, query_id=None):
+def data_builder(mongo, user_config, query_id=None):
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
               WebTrackingEcomm, WebTrackingPageView]
 
     result = SqlQueryService.map_models_to_columns(models)
-    status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+    status, data = DataBuilderQuery(mongo.db, user_config).get_query_by_name(query_id)
     response_dict = {'model': result, 'data': data, 'status': status}
 
     if request.args.get('sync') == 'True':
         from ..data.workers import sync_query_to_mc
         from flask import session
-        db_uri = session.get('postgres_uri')
+        user_params = session.get('user_params')
 
-        result = sync_query_to_mc.delay(data, user_db=db_uri, task_type='data-push', query_name=query_id)
+        result = sync_query_to_mc.delay(data, user_params=user_params, task_type='data-push', query_name=query_id)
         response_dict.update({'task_id': result.id})
 
     return response_dict
 
 
 @databuilder.route('/sync-query/<query_id>')
-@inject(mongo=MongoDB)
 @templated('data_builder')
-def sync_current_query_to_mc(mongo, query_id):
+def sync_current_query_to_mc(query_id):
     return redirect(url_for('data_builder.data_builder', query_id=query_id, sync=True))
 
 
 @databuilder.route('/get-queries')
-@inject(mongo=MongoDB)
-def get_queries(mongo):
-    status, result = DataBuilderQuery(mongo.db).get_all_queries()
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def get_queries(mongo, user_config):
+    status, result = DataBuilderQuery(mongo.db, user_config).get_all_queries()
     columns = [{
             'field': 'name',
             'title': 'Query Name'
@@ -96,16 +95,16 @@ def get_default_queries(mongo):
 
 
 @databuilder.route('/get-query/<query_id>')
-@inject(mongo=MongoDB)
-def get_query(mongo, query_id):
-    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def get_query(mongo, user_config, query_id):
+    status, result = DataBuilderQuery(mongo.db, user_config).get_query_by_name(query_id)
     return Response(json.dumps(result), mimetype='application/json')
 
 
 @databuilder.route('/delete-query/<query_id>', methods=['POST'])
-@inject(mongo=MongoDB)
-def delete_query(mongo, query_id):
-    success, error = DataBuilderQuery(mongo.db).remove_query(query_id)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def delete_query(mongo, user_config, query_id):
+    success, error = DataBuilderQuery(mongo.db, user_config).remove_query(query_id)
     if success:
         return 'OK', 200
     else:
@@ -113,11 +112,11 @@ def delete_query(mongo, query_id):
 
 
 @databuilder.route('/save-query/<query_id>', methods=['POST'])
-@inject(mongo=MongoDB)
-def save_query(mongo, query_id):
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def save_query(mongo, user_config, query_id):
     # TODO: get user_id from session: for now saves only _csrf_token
     query = request.json
-    success, error = DataBuilderQuery(mongo.db).save_query(query_id, query)
+    success, error = DataBuilderQuery(mongo.db, user_config).save_query(query_id, query)
     if success:
         return 'OK', 200
     else:
@@ -144,9 +143,9 @@ def custom_query_preview(query_sttmt, db_session):
 
 
 @databuilder.route('/export/<query_name>', methods=['GET'])
-@inject(mongo=MongoDB, sql_query_service=SqlQueryServ, db_session=DBSession)
-def export_query_result(mongo, sql_query_service, query_name, db_session):
-    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
+@inject(mongo=MongoDB, sql_query_service=SqlQueryServ, db_session=DBSession, user_config=UserSessionConfig)
+def export_query_result(mongo, sql_query_service, query_name, db_session, user_config):
+    status, result = DataBuilderQuery(mongo.db, user_config).get_query_by_name(query_name)
 
     if status is not True:
         # TODO: handle error
