@@ -43,6 +43,7 @@ manager.add_command('runserver', Server(host='0.0.0.0', port=5000, extra_files=[
 
 @manager.command
 def init_db():
+    from server.app.common.models.system_models import system_db
     from server.app.task_admin.services.account_creation_service import AccountCreationService
 
     # creates the system database
