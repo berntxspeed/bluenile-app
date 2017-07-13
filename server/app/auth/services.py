@@ -47,6 +47,20 @@ class AuthService(DbService):
                  session):
         super(AuthService, self).__init__(config=config, db=db, logger=logger)
 
+    @staticmethod
+    def get_user_accounts(user_email):
+        # Fetch the user's authorizations
+        db_session = system_session()
+        accounts = db_session.query(ClientAccount).join(ClientAccount.permissions) \
+            .filter(UserPermissions.username == user_email)
+        return accounts
+
+    @staticmethod
+    def set_user_account(account):
+        # Save user/account info in the current session
+        session['account_name'] = account.account_name
+        session['postgres_uri'] = account.database_uri
+
     def login(self, request):
 
         form = LoginForm(request.form)
@@ -67,16 +81,10 @@ class AuthService(DbService):
                 user = OktaUser(okta_user)
                 login_user(user, form.remember_me.data)
 
-                # Fetch the user's authorizations
-                db_session = system_session()
-                accounts = db_session.query(ClientAccount).join(ClientAccount.permissions) \
-                    .filter(UserPermissions.username == user.email)
-                    #(ClientAccount.permissions.username == user.email)
+                accounts = self.get_user_accounts(user.email)
 
-                # Save user/account info in the current session
-                session['account_name'] = user.account
                 session['user_name'] = user.firstname
-                session['postgres_uri'] = accounts.first().database_uri
+                self.set_user_account(accounts.first())
 
                 return redirect(self.__next_url(request))
 
