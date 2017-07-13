@@ -9,6 +9,8 @@ class AccountCreationService:
 
     def execute(self):
         userdb_uri = self.create_postgres(self.account_name, user_db)
+        if userdb_uri is None:
+            raise Exception("Cannot create database {0}".format(self.account_name))
         self.create_mongo(self.account_name)
         self.init_system_entries(self.account_name, userdb_uri, self.admin_user)
 
@@ -35,7 +37,8 @@ class AccountCreationService:
 
             # create default db
             if sqlalchemy_utils.database_exists(db_uri):
-                sqlalchemy_utils.drop_database(db_uri)
+                #sqlalchemy_utils.drop_database(db_uri)
+                return None
             sqlalchemy_utils.create_database(db_uri)
 
             # create tables

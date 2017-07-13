@@ -43,6 +43,8 @@ def task_admin(mongo, user_config):
 def create_account(account_name):
     admin = request.args.get('admin')
     service = AccountCreationService(account_name, admin)
-    service.execute()
-
-    return 'ok'
+    try:
+        service.execute()
+        return 'ok', 200
+    except Exception as ex:
+        return repr(ex), 409

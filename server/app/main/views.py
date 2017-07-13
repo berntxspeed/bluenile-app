@@ -37,6 +37,10 @@ def change(new_account_name):
     accounts = AuthService.get_user_accounts(user.email)
     from server.app.common.models.system_models import ClientAccount
     new_account = accounts.filter(ClientAccount.account_name == new_account_name).first()
+
+    #error checking
+    if new_account is None:
+        return redirect("/index")
     AuthService.set_user_account(new_account)
 
     return index()
