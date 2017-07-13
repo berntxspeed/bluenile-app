@@ -58,8 +58,8 @@ class AuthService(DbService):
     @staticmethod
     def set_user_account(account):
         # Save user/account info in the current session
-        session['account_name'] = account.account_name
-        session['postgres_uri'] = account.database_uri
+        session['user_params'] = dict(account_name=account.account_name,
+                                      postgres_uri=account.database_uri)
 
     def login(self, request):
 
@@ -84,10 +84,8 @@ class AuthService(DbService):
                 accounts = self.get_user_accounts(user.email)
 
                 # Save user/account info in the current session
-                session['user_params'] = dict(account_name=user.account,
-                                              user_name=user.firstname,
-                                              postgres_uri=user.get_postgres_uri_from_account_name())
                 self.set_user_account(accounts.first())
+
                 return redirect(self.__next_url(request))
 
             else:

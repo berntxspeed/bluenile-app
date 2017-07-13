@@ -21,7 +21,7 @@ def before_request():
 def index():
     user = current_user
     user_name = user.firstname #session.get('user_name', 'Anonymous')
-    account = session['account_name']
+    account = session['user_params']['account_name']
     accounts = AuthService.get_user_accounts(user.email)
     user = {'nickname': user_name,
             'account': account,
