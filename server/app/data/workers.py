@@ -19,10 +19,11 @@ def clean_sync_flags(table):
 
 @celery.task(base=BaseTask)
 def sync_query_to_mc(query_rules, **kwargs):
-    if 'user_db' in kwargs:
+    user_params = kwargs.get('user_params')
+    if user_params:
         with app.app_context():
             service = injector.get(UserDataPushServ)
-            service.init_user_db(kwargs['user_db'])
+            service.init_user_db(user_params)
             service.exec_safe_session(service.sync_query_to_mc, query_rules)
     else:
         with app.app_context():

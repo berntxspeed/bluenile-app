@@ -83,9 +83,11 @@ class AuthService(DbService):
 
                 accounts = self.get_user_accounts(user.email)
 
-                session['user_name'] = user.firstname
+                # Save user/account info in the current session
+                session['user_params'] = dict(account_name=user.account,
+                                              user_name=user.firstname,
+                                              postgres_uri=user.get_postgres_uri_from_account_name())
                 self.set_user_account(accounts.first())
-
                 return redirect(self.__next_url(request))
 
             else:

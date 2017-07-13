@@ -100,10 +100,12 @@ class UserDataPushService(DataPushService):
             'purchase': Purchase
         }
 
-    def init_user_db(self, db_uri):
+    def init_user_db(self, user_params):
         from sqlalchemy import create_engine
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
 
-        engine = create_engine(db_uri)
-        self.db_session = scoped_session(sessionmaker(bind=engine))
+        db_uri = user_params.get('postgres_uri')
+        if db_uri:
+            engine = create_engine(db_uri)
+            self.db_session = scoped_session(sessionmaker(bind=engine))

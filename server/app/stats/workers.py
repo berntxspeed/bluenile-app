@@ -25,12 +25,12 @@ class BaseTask(celery.Task):
         with app.app_context():
             mongo = injector.get(MongoDB)
             from server.app.task_admin.services.mongo_task_loader import MongoTaskLoader
-            success, error = MongoTaskLoader(mongo.db).save_task(task)
+            success, error = MongoTaskLoader(mongo.db, kwargs.get('user_params')).save_task(task)
 
             if kwargs.get('task_type') == 'data-push':
                 if kwargs.get('query_name') is not None:
                     from server.app.data_builder.services.data_builder_query import DataBuilderQuery
-                    status, result = DataBuilderQuery(mongo.db).update_last_run_info(kwargs['query_name'])
+                    status, result = DataBuilderQuery(mongo.db, kwargs.get('user_params')).update_last_run_info(kwargs['query_name'])
                 if kwargs.get('remaining_queries') is not None:
                     rem_queries = kwargs['remaining_queries']
                     if len(rem_queries) > 0:
@@ -39,15 +39,16 @@ class BaseTask(celery.Task):
                         sync_query_to_mc.delay(a_query,
                                                task_type='data-push',
                                                query_name=a_query.get('name'),
-                                               remaining_queries=rem_queries)
+                                               remaining_queries=rem_queries,
+                                               user_params=kwargs.get('user_params'))
 
             elif kwargs.get('task_type', '').startswith('load'):
-                from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
-                _, result = MongoDataJobConfigLoader(mongo.db).update_last_load_info(kwargs['task_type'])
+                # from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
+                # _, result = MongoDataJobConfigLoader(mongo.db, kwargs.get('user_params')).update_last_load_info(kwargs['task_type'])
 
                 # schedule sync_query_to_mc for all queries after successful data load
                 if status == 'SUCCESS' and kwargs.get('sync_queries') is True:
-                    sync_all_queries_to_mc.delay(task_type='sync-all-queries')
+                    sync_all_queries_to_mc.delay(task_type='sync-all-queries', user_params=kwargs.get('user_params'))
 
         super(BaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
@@ -89,10 +90,11 @@ celery.conf.beat_schedule = {
 @celery.task(base=BaseTask)
 def basic_load_task(**kwargs):
     # TODO: remove if/else to default to user_db
-    if 'user_db' in kwargs:
+    user_params = kwargs.get('user_params')
+    if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
-            service.init_user_db(kwargs['user_db'])
+            service.init_user_db(user_params)
             service.exec_safe_session(service.simple_data_load(kwargs))
     else:
         with app.app_context():
@@ -142,7 +144,8 @@ def sync_all_queries_to_mc(**kwargs):
         mongo = injector.get(MongoDB)
         from ..data_builder.services.data_builder_query import DataBuilderQuery
 
-        get_queries_status, all_queries = DataBuilderQuery(mongo.db).get_all_queries(type='auto_sync')
+        user_params = kwargs.get('user_params')
+        get_queries_status, all_queries = DataBuilderQuery(mongo.db, user_params).get_all_queries(type='auto_sync')
         if get_queries_status is True:
             from ..data.workers import sync_query_to_mc
             if len(all_queries):
@@ -152,7 +155,8 @@ def sync_all_queries_to_mc(**kwargs):
                 sync_query_to_mc.delay(a_query,
                                        task_type='data-push',
                                        query_name=a_query.get('name'),
-                                       remaining_queries=all_queries)
+                                       remaining_queries=all_queries,
+                                       user_params=user_params)
 
 
 @celery.task(base=BaseTask)

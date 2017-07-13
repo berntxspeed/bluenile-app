@@ -231,6 +231,9 @@ class DataLoadService(DbService):
         else:
             raise Exception(vendor_configs)
 
+        if not vendor_configs or not user_config:
+            raise Exception('Vendor {0} is not supported'.format(data_source))
+
         api_args['headers'] = copy.copy(vendor_config.get('headers'))
         if 'token' in user_config.keys():
             api_args['headers']['Authorization'] += user_config['token']
@@ -975,12 +978,15 @@ class UserDataLoadService(DataLoadService):
                               }
         self.api_config_file = 'api_config.yml'
         self.data_load_config = self.load_config()
-        self.user_api_config = MongoUserApiConfigLoader(self.mongo.db).get_user_api_config()
 
-    def init_user_db(self, db_uri):
+    def init_user_db(self, user_params):
         from sqlalchemy import create_engine
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
 
-        engine = create_engine(db_uri)
-        self.db_session = scoped_session(sessionmaker(bind=engine))
+        postgres_uri = user_params.get('postgres_uri')
+        if postgres_uri:
+            engine = create_engine(postgres_uri)
+            self.db_session = scoped_session(sessionmaker(bind=engine))
+
+        self.user_api_config = MongoUserApiConfigLoader(self.mongo.db, user_params).get_user_api_config()

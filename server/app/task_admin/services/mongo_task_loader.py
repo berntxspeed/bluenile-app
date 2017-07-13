@@ -3,11 +3,17 @@ from ...stats.services.classes.db_data_loader import MongoDataLoader
 
 
 class MongoTaskLoader(object):
-    def __init__(self, client_instance):
+    def __init__(self, client_instance, user_config=None):
         self._db = client_instance
-        self._collection_name = 'celery_tasks'
-        self._collection = self._db[self._collection_name]
         self._primary_key = 'task_id'
+        self._collection_name = 'celery_tasks'
+
+        user_account = user_config and user_config.get('account_name')
+        print('MongoTaskLoader: Mongo Account ' + (user_account or 'None'))
+        if user_account:
+            self._collection_name = self._collection_name + '_' + user_account
+
+        self._collection = self._db[self._collection_name]
         self._limit = 1000
 
     @staticmethod

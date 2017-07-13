@@ -24,11 +24,16 @@ SYNC_MAP = {
 
 
 class MongoDataJobConfigLoader(object):
-    def __init__(self, client_instance):
+    def __init__(self, client_instance, user_config=None):
         self._db = client_instance
         self._collection_name = 'data_load_jobs'
-        self._collection = self._db[self._collection_name]
         self._primary_key = 'job_type'
+
+        user_account = user_config and user_config.get('account_name')
+        print('MongoDataJobConfigLoader: Mongo Account ' + (user_account or 'None'))
+        if user_account:
+            self._collection_name = self._collection_name + '_' + user_account
+        self._collection = self._db[self._collection_name]
 
     def get_data_load_jobs(self):
         all_data_load_jobs = []
@@ -36,13 +41,13 @@ class MongoDataJobConfigLoader(object):
             for a_config in self._collection.find({}, {'_id': 0}):
                 all_data_load_jobs.append(a_config)
 
-            self.convert_frequency(all_data_load_jobs)
+            self.convert_fields(all_data_load_jobs)
             return True, all_data_load_jobs
         except Exception as e:
             return False, 'Getting Data Load Job Config Failed: {0}'.format(str(e))
 
     @staticmethod
-    def convert_frequency(dl_jobs):
+    def convert_fields(dl_jobs):
         for a_dl_job in dl_jobs:
             if a_dl_job.get('job_type'):
                 a_dl_job['job_type_full'] = a_dl_job['job_type'].replace('_', ' ').title()
@@ -88,11 +93,16 @@ class MongoDataJobConfigLoader(object):
 
 
 class MongoUserApiConfigLoader(object):
-    def __init__(self, client_instance):
+    def __init__(self, client_instance, user_config=None):
         self._db = client_instance
         self._collection_name = 'user_api_config'
-        self._collection = self._db[self._collection_name]
         self._primary_key = 'data_source'
+
+        user_account = user_config and user_config.get('account_name')
+        print('MongoUserApiConfigLoader: Mongo Account ' + (user_account or 'None'))
+        if user_account:
+            self._collection_name = self._collection_name + '_' + user_account
+        self._collection = self._db[self._collection_name]
 
     @staticmethod
     def encrypt(str_to_encode):
@@ -125,9 +135,11 @@ class MongoUserApiConfigLoader(object):
 
     def save_api_config(self, vendor_config, update=False):
         """Use this method to setup user api config """
+        if not vendor_config:
+            return False, 'Cannot Save Empty Api Config'
         if not update:
             for k, v in vendor_config.items():
-                if k not in ['data_source']:
+                if k in ['domain', 'token', 'secret', 'id']:
                     vendor_config[k] = MongoUserApiConfigLoader.encrypt(v)
 
             vendor_config['timestamp'] = str(datetime.datetime.now())
@@ -145,7 +157,15 @@ class MongoUserApiConfigLoader(object):
         except Exception as e:
             return False, 'Getting Data Config Failed: {0}'.format(str(e))
 
+    def remove_api_config_by_source(self, data_source):
+        try:
+            self._collection.remove({self._primary_key: data_source})
+            return True, True
+        except Exception as e:
+            return False, 'Removing Data Load Config Failed: {0}'.format(str(e))
+
     def update_last_run_info(self, data_source):
+
         import datetime
         status, data_config = self.get_data_config_by_source(data_source)
         last_load = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
