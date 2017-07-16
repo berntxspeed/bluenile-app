@@ -27,14 +27,18 @@
                 <li>
                     <a href="{{ url_for('stats.data_manager') }}">Data Manager</a>
                 </li>
-                <li>
-                    <a href="{{ url_for('data.data_pusher') }}">Data Push</a>
-                </li>
+                <!--<li>-->
+                    <!--<a href="{{ url_for('data.data_pusher') }}">Data Push</a>-->
+                <!--</li>-->
                 <li>
                     <a href="{{ url_for('task_admin.task_admin') }}"> Admin</a>
                 </li>
                 <li>
-                    <a href="{{ url_for('auth.logout') }}">Log Out</a>
+                    {% if user is defined %}
+                        <a href="{{ url_for('auth.logout') }}"><span style="font-size:18px"> Log Out </span><span style="font-size: 18px" class="label label-pill label-info">{{user.account}}</span></a>
+                    {% else %}
+                        <a href="{{ url_for('auth.logout') }}">Log Out</a>
+                    {% endif %}
                 </li>
             {% endif %}
         </ul>

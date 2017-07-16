@@ -38,18 +38,18 @@ def before_request():
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('data_builder')
 def data_builder(mongo, user_config, query_id=None):
+    from flask import session
+    user_params = session.get('user_params', {})
+    user = dict(account=user_params.get('account_name'))
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
               WebTrackingEcomm, WebTrackingPageView]
 
     result = SqlQueryService.map_models_to_columns(models)
     status, data = DataBuilderQuery(mongo.db, user_config).get_query_by_name(query_id)
-    response_dict = {'model': result, 'data': data, 'status': status}
+    response_dict = {'model': result, 'data': data, 'status': status, 'user': user}
 
     if request.args.get('sync') == 'True':
         from ..data.workers import sync_query_to_mc
-        from flask import session
-        user_params = session.get('user_params')
-
         result = sync_query_to_mc.delay(data, user_params=user_params, task_type='data-push', query_name=query_id)
         response_dict.update({'task_id': result.id})
 

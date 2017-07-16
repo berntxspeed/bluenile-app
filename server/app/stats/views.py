@@ -40,8 +40,9 @@ def special_logged_in_page(jb_stats_service):
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('data_manager')
 def data_manager(mongo, user_config):
+    user = dict(account=session.get('user_params', {}).get('account_name'))
     status, avail_vendors = MongoUserApiConfigLoader(mongo.db, user_config).get_user_api_config()
-    return {'status': status, 'avail_vendors': avail_vendors}
+    return {'status': status, 'avail_vendors': avail_vendors, 'user': user}
 
 
 @stats.route('/data-manager/save-load-job-config/<job_type>', methods=['POST'])
@@ -57,7 +58,6 @@ def save_load_job_config(mongo, user_config, job_type):
 
 @stats.route('/data-manager/get-data-sources')
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
-@templated('data_manager')
 def get_data_sources(mongo, user_config):
 
     status, data_load_jobs = MongoUserApiConfigLoader(mongo.db, user_config).get_user_api_config()
@@ -96,7 +96,6 @@ def save_vendor_api_config(mongo, user_config):
 
 @stats.route('/data-manager/get-dl-jobs')
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
-@templated('data_manager')
 def get_data_load_jobs(mongo, user_config):
 
     status, data_load_jobs = MongoDataJobConfigLoader(mongo.db).get_data_load_jobs()
@@ -182,6 +181,7 @@ def load(action):
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
     from ..data.workers import sync_data_to_mc
 
+    user = dict(account=session.get('user_params', {}).get('account_name'))
     load_map = {'x2crm_customers': {'load_func': basic_load_task,
                                     'data_source': 'x2crm',
                                     'data_type': 'customer'},
@@ -243,7 +243,7 @@ def load(action):
     else:
         result = task.delay(task_type=action)
 
-    return dict(task_id=result.id)
+    return dict(task_id=result.id, user=user)
 
 
 @stats.route('/get-columns/<tbl>')

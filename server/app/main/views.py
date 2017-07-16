@@ -14,6 +14,7 @@ def before_request():
         code = 301
         return redirect(url, code=code)
 
+
 @main.route('/')
 @main.route('/index')
 @login_required
@@ -27,6 +28,7 @@ def index():
             'account': account,
             'accounts': [acc.account_name for acc in accounts]} # Okta User
     return dict(user=user)
+
 
 @main.route('/')
 @main.route('/change-account/<new_account_name>')
