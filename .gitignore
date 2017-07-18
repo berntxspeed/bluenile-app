@@ -118,3 +118,7 @@ static/bower_components/bootstrap/package.js
 static/bower_components/bootstrap/package.json
 static/bower_components/bootstrap_old/
 
+
+cert.pem
+
+key.pem
