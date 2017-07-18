@@ -9,9 +9,9 @@ from flask_login import login_required
 from injector import inject
 from sqlalchemy import func
 
-from server.app.common.models import *
+from server.app.common.models.user_models import *
 from server.app.common.views.decorators import templated
-from server.app.injector_keys import MongoDB
+from server.app.injector_keys import MongoDB, DBSession, UserSessionConfig
 from .injector_keys import SqlQueryServ
 from . import databuilder
 from .services.data_builder_query import DataBuilderQuery
@@ -24,6 +24,7 @@ from .services.query_service import SqlQueryService
 def before_request():
     pass
 
+
 @databuilder.before_request
 def before_request():
     if request.url.startswith('http://'):
@@ -31,37 +32,40 @@ def before_request():
         code = 301
         return redirect(url, code=code)
 
+
 @databuilder.route('/data-builder/')
 @databuilder.route('/data-builder/<query_id>')
-@inject(mongo=MongoDB)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('data_builder')
-def data_builder(mongo, query_id=None):
+def data_builder(mongo, user_config, query_id=None):
+    from flask import session
+    user_params = session.get('user_params', {})
+    user = dict(account=user_params.get('account_name'))
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
               WebTrackingEcomm, WebTrackingPageView]
 
     result = SqlQueryService.map_models_to_columns(models)
-    status, data = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
-    response_dict = {'model': result, 'data': data, 'status': status}
+    status, data = DataBuilderQuery(mongo.db, user_config).get_query_by_name(query_id)
+    response_dict = {'model': result, 'data': data, 'status': status, 'user': user}
 
     if request.args.get('sync') == 'True':
         from ..data.workers import sync_query_to_mc
-        result = sync_query_to_mc.delay(data, task_type='data-push', query_name=query_id)
+        result = sync_query_to_mc.delay(data, user_params=user_params, task_type='data-push', query_name=query_id)
         response_dict.update({'task_id': result.id})
 
     return response_dict
 
 
 @databuilder.route('/sync-query/<query_id>')
-@inject(mongo=MongoDB)
 @templated('data_builder')
-def sync_current_query_to_mc(mongo, query_id):
+def sync_current_query_to_mc(query_id):
     return redirect(url_for('data_builder.data_builder', query_id=query_id, sync=True))
 
 
 @databuilder.route('/get-queries')
-@inject(mongo=MongoDB)
-def get_queries(mongo):
-    status, result = DataBuilderQuery(mongo.db).get_all_queries()
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def get_queries(mongo, user_config):
+    status, result = DataBuilderQuery(mongo.db, user_config).get_all_queries()
     columns = [{
             'field': 'name',
             'title': 'Query Name'
@@ -71,7 +75,7 @@ def get_queries(mongo):
             'title': 'Sync Frequency'
         },
         {
-            'field': 'last_sync',
+            'field': 'last_run',
             'title': 'Last Sync'
     }]
     return Response(json.dumps({'columns': columns, 'data': result}, default=SqlQueryService.alchemy_encoder),
@@ -91,16 +95,16 @@ def get_default_queries(mongo):
 
 
 @databuilder.route('/get-query/<query_id>')
-@inject(mongo=MongoDB)
-def get_query(mongo, query_id):
-    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_id)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def get_query(mongo, user_config, query_id):
+    status, result = DataBuilderQuery(mongo.db, user_config).get_query_by_name(query_id)
     return Response(json.dumps(result), mimetype='application/json')
 
 
 @databuilder.route('/delete-query/<query_id>', methods=['POST'])
-@inject(mongo=MongoDB)
-def delete_query(mongo, query_id):
-    success, error = DataBuilderQuery(mongo.db).remove_query(query_id)
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def delete_query(mongo, user_config, query_id):
+    success, error = DataBuilderQuery(mongo.db, user_config).remove_query(query_id)
     if success:
         return 'OK', 200
     else:
@@ -108,11 +112,11 @@ def delete_query(mongo, query_id):
 
 
 @databuilder.route('/save-query/<query_id>', methods=['POST'])
-@inject(mongo=MongoDB)
-def save_query(mongo, query_id):
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def save_query(mongo, user_config, query_id):
     # TODO: get user_id from session: for now saves only _csrf_token
     query = request.json
-    success, error = DataBuilderQuery(mongo.db).save_query(query_id, query)
+    success, error = DataBuilderQuery(mongo.db, user_config).save_query(query_id, query)
     if success:
         return 'OK', 200
     else:
@@ -120,11 +124,11 @@ def save_query(mongo, query_id):
 
 
 @databuilder.route('/custom-query-preview/<query_sttmt>', methods=['POST'])
-@inject(alchemy=SQLAlchemy)
-def custom_query_preview(alchemy, query_sttmt):
+@inject(db_session=DBSession)
+def custom_query_preview(query_sttmt, db_session):
     try:
-        results = eval('alchemy.session.' + query_sttmt + '.distinct(Customer.id).limit(100).all()')
-        rows_count = eval('alchemy.session.' + query_sttmt + '.distinct(Customer.id).count()')
+        results = eval('db_session.' + query_sttmt + '.distinct(Customer.id).limit(100).all()')
+        rows_count = eval('db_session.' + query_sttmt + '.distinct(Customer.id).count()')
         columns, data = SqlQueryService.extract_data(results, {})
         return Response(json.dumps({'columns': columns,
                                     'data': data,
@@ -139,15 +143,16 @@ def custom_query_preview(alchemy, query_sttmt):
 
 
 @databuilder.route('/export/<query_name>', methods=['GET'])
-@inject(alchemy=SQLAlchemy, mongo=MongoDB, sql_query_service=SqlQueryServ)
-def export_query_result(alchemy, mongo, sql_query_service, query_name):
-    status, result = DataBuilderQuery(mongo.db).get_query_by_name(query_name)
+@inject(mongo=MongoDB, sql_query_service=SqlQueryServ, db_session=DBSession, user_config=UserSessionConfig)
+def export_query_result(mongo, sql_query_service, query_name, db_session, user_config):
+    status, result = DataBuilderQuery(mongo.db, user_config).get_query_by_name(query_name)
+
     if status is not True:
         # TODO: handle error
         pass
     if 'custom_sql' in result.keys():
         from sqlalchemy import func
-        results = eval('alchemy.session.' + result['custom_sql'] + '.distinct(Customer.id).all()')
+        results = eval('db_session.' + result['custom_sql'] + '.distinct(Customer.id).all()')
         columns, data = SqlQueryService.extract_data(results, {})
     else:
         final_query = sql_query_service.get_customer_query_based_on_rules(result)
@@ -175,27 +180,26 @@ def export_query_result(alchemy, mongo, sql_query_service, query_name):
 def query_preview(sql_query_service):
     rules_query = request.json
     final_query = sql_query_service.get_customer_query_based_on_rules(rules_query)
-
     results = final_query.distinct(Customer.id).limit(100).all()
     columns, data = sql_query_service.extract_data(results, rules_query)
     return Response(json.dumps({'columns': columns,
                                 'data': data,
                                 'no_of_rows': final_query.distinct(Customer.id).count()
-                                }, default=SqlQueryService.alchemy_encoder),
+                                }, default=sql_query_service.alchemy_encoder),
                     mimetype='application/json')
 
 
 @databuilder.route('/request-explore-values', methods=['POST'])
-@inject(db=SQLAlchemy)
-def request_explore_values(db):
+@inject(db_session=DBSession)
+def request_explore_values(db_session):
     rules_query = request.json
     expression = rules_query.get('expression')
-    get_results_query = 'db.session.query({0}, func.count({0}).label("total")).' \
+    get_results_query = 'db_session.query({0}, func.count({0}).label("total")).' \
                         'group_by({0}).order_by("total DESC").all()'.format(expression)
     results = eval(get_results_query)
     if (None, 0) in results:
         results.remove((None, 0))
-    db.session.close()
+    db_session.close()
 
     return Response(json.dumps([dict(value=result[0], count=result[1]) for result in results]),
                     mimetype='application/json')

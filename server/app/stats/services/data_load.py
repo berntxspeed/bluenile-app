@@ -3,14 +3,17 @@ import os
 import requests
 import sys
 import traceback
+import yaml
 
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile, CsvFile
+from .mongo_user_config_loader import MongoUserApiConfigLoader
 from ...common.services import DbService
-from ...common.models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
+from ...common.models.user_models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, \
+    SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
 # user specific: authentication + domain
-# TODO: store as dict in MongoDB or templated string
+"""
 user_api_config = {
     'magento':  {'domain': "http://127.0.0.1:32768",# domain address before 'index.php'
                  'token': "npk3nc7gyhn8leab9baifl5075q45uhl"
@@ -35,8 +38,10 @@ user_api_config = {
                  'secret': ''
                  }
 }
+"""
 
 # general config based on data_source
+"""
 api_config = {
     'magento': {
         'headers': {
@@ -178,33 +183,56 @@ api_config = {
         }
     }
 }
+"""
 
 
 class DataLoadService(DbService):
-
-    def __init__(self, config, db, logger, mongo):
+    def __init__(self, config, logger, db, db_session, mongo):
         super(DataLoadService, self).__init__(config, db, logger)
+        self.db_session = db_session
         self.mongo = mongo
-        self.user_api_config = user_api_config
-        self.data_load_config = api_config
         self.data_type_map = {'customer': Customer,
                               'purchase': Purchase
                               }
+        self.api_config_file = 'api_config.yml'
+        self.data_load_config = self.load_config()
+        self.user_api_config = MongoUserApiConfigLoader(self.mongo.db).get_user_api_config()
+
+    def load_config(self):
+        try:
+            with open(self.api_config_file) as config_file:
+                return yaml.load(config_file)
+        except Exception:
+            return {}
 
     def exec_safe_session(self, load_func=None, *args):
         if load_func:
             try:
                 load_func(*args)
             except Exception as exc:
-                self.db.session.rollback()
+                self.db_session.rollback()
                 raise type(exc)('DataLoad Error: {0}: {1}'.format(type(exc).__name__, exc.args))
             finally:
-                self.db.session.remove()
+                self.db_session.remove()
 
     def get_api_args(self, data_source, data_type):
         vendor_config = self.data_load_config.get(data_source, {})
-        user_config = self.user_api_config.get(data_source, {})
         api_args = copy.copy(vendor_config.get(data_type, {}))
+
+        user_config = None
+
+        # TODO: check for False status, log error
+        status, vendor_configs = self.user_api_config
+        if status is True:
+            for vendor_user_config in vendor_configs:
+                if vendor_user_config.get('data_source') == data_source:
+                    user_config = vendor_user_config
+                    break
+        else:
+            raise Exception(vendor_configs)
+
+        if not vendor_configs or not user_config:
+            raise Exception('Vendor {0} is not supported'.format(data_source))
 
         api_args['headers'] = copy.copy(vendor_config.get('headers'))
         if 'token' in user_config.keys():
@@ -212,10 +240,17 @@ class DataLoadService(DbService):
         elif 'id' in user_config.keys():
             api_args['auth'] = (user_config['id'], user_config['secret'])
 
-        api_args['endpoint'] = user_config['domain'] + api_args['endpoint']
+        if 'endpoint' in api_args:
+            api_args['endpoint'] = user_config['domain'] + api_args['endpoint']
+        elif 'pagination' in api_args:
+            for a_key in api_args['pagination'].keys():
+                if a_key.endswith('endpoint') and not api_args['pagination'][a_key].startswith('http'):
+                    api_args['pagination'][a_key] = user_config['domain'] + api_args['pagination'][a_key]
+
         api_args['params'] = vendor_config.get('params')
+        api_args['transform_response_data'] = vendor_config.get('transform_response_data')
         api_args['db_model'] = self.data_type_map.get(data_type)
-        api_args['db_session'] = self.db.session()
+        api_args['db_session'] = self.db_session
 
         return api_args
 
@@ -297,14 +332,14 @@ class DataLoadService(DbService):
                   'ON b."SendID" = a."SendID" ' \
                   'WHERE b."SendID" IS NULL '
             res = self.db.engine.execute(sql)
-            print('inserted '+str(res.rowcount)+' sendjobs')
+            print('inserted ' + str(res.rowcount) + ' sendjobs')
 
             sql = 'DELETE FROM stg_send_job'
             self.db.engine.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing SendJobs.csv'+traceback.print_tb(exc_traceback))
+            print('ALERT: problem importing SendJobs.csv' + traceback.print_tb(exc_traceback))
         try:
             zf.load_data(file='Sent.csv',
                          db_session=self.db.session,
@@ -325,14 +360,14 @@ class DataLoadService(DbService):
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
             res = self.db.engine.execute(sql)
-            print('inserted '+str(res.rowcount)+' sends')
+            print('inserted ' + str(res.rowcount) + ' sends')
 
             sql = 'DELETE FROM stg_eml_send'
             self.db.engine.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing Sent.csv'+traceback.print_tb(exc_traceback))
+            print('ALERT: problem importing Sent.csv' + traceback.print_tb(exc_traceback))
         try:
             # load Opens data to db
             zf.load_data(file='Opens.csv',
@@ -367,14 +402,14 @@ class DataLoadService(DbService):
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
             res = self.db.engine.execute(sql)
-            print('inserted '+str(res.rowcount)+' opens')
+            print('inserted ' + str(res.rowcount) + ' opens')
 
             sql = 'DELETE FROM stg_eml_open'
             self.db.engine.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing Opens.csv'+traceback.print_tb(exc_traceback))
+            print('ALERT: problem importing Opens.csv' + traceback.print_tb(exc_traceback))
         try:
             # load Clicks data to db
             zf.load_data(file='Clicks.csv',
@@ -413,16 +448,16 @@ class DataLoadService(DbService):
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
             res = self.db.engine.execute(sql)
-            print('inserted '+str(res.rowcount)+' clicks')
+            print('inserted ' + str(res.rowcount) + ' clicks')
 
             sql = 'DELETE FROM stg_eml_click'
             self.db.engine.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem importing Clicks.csv'+traceback.print_tb(exc_traceback))
+            print('ALERT: problem importing Clicks.csv' + traceback.print_tb(exc_traceback))
 
-        zf.clean_up() # delete downloaded files
+        zf.clean_up()  # delete downloaded files
 
         try:
             # execute separate load of exported Journey-based sends information
@@ -453,7 +488,7 @@ class DataLoadService(DbService):
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
             res = self.db.engine.execute(sql)
-            print('inserted '+str(res.rowcount)+' sends')
+            print('inserted ' + str(res.rowcount) + ' sends')
 
             sql = 'UPDATE eml_send ' \
                   'SET "TriggeredSendExternalKey" = ' \
@@ -462,14 +497,14 @@ class DataLoadService(DbService):
                   'WHERE a."SubscriberKey" = eml_send."SubscriberKey" ' \
                   'AND a."EventDate" = eml_send."EventDate")'
             res = self.db.engine.execute(sql)
-            print('updated '+str(res.rowcount)+' sends')
+            print('updated ' + str(res.rowcount) + ' sends')
 
             sql = 'DELETE FROM stg_eml_send'
             self.db.engine.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem loading journey_sends.csv'+traceback.print_tb(exc_traceback))
+            print('ALERT: problem loading journey_sends.csv' + traceback.print_tb(exc_traceback))
         try:
             # execute separate load of exported Journey-based opens information
             filename = 'journey_opens.csv'
@@ -499,7 +534,7 @@ class DataLoadService(DbService):
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
             res = self.db.engine.execute(sql)
-            print('inserted '+str(res.rowcount)+' opens')
+            print('inserted ' + str(res.rowcount) + ' opens')
 
             sql = 'UPDATE eml_open ' \
                   'SET "TriggeredSendExternalKey" = ' \
@@ -508,14 +543,14 @@ class DataLoadService(DbService):
                   'WHERE a."SubscriberKey" = eml_open."SubscriberKey" ' \
                   'AND a."EventDate" = eml_open."EventDate")'
             res = self.db.engine.execute(sql)
-            print('updated '+str(res.rowcount)+' opens')
+            print('updated ' + str(res.rowcount) + ' opens')
 
             sql = 'DELETE FROM stg_eml_open'
             self.db.engine.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem loading journey_opens.csv'+traceback.print_tb(exc_traceback))
+            print('ALERT: problem loading journey_opens.csv' + traceback.print_tb(exc_traceback))
         try:
             # execute separate load of exported Journey-based clicks information
             filename = 'journey_clicks.csv'
@@ -538,14 +573,15 @@ class DataLoadService(DbService):
             csv.load_data()
 
             sql = 'INSERT INTO eml_click("SendID", "SubscriberKey", "EventDate", "TriggeredSendExternalKey") ' \
-                  'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EventDate", a."TriggeredSendExternalKey" ' \
+                  'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", ' \
+                  'a."EventDate", a."TriggeredSendExternalKey" ' \
                   'FROM stg_eml_click a ' \
                   'LEFT JOIN eml_click b ' \
                   'ON b."SubscriberKey" = a."SubscriberKey" ' \
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
             res = self.db.engine.execute(sql)
-            print('inserted '+str(res.rowcount)+' clicks')
+            print('inserted ' + str(res.rowcount) + ' clicks')
 
             sql = 'UPDATE eml_click ' \
                   'SET "TriggeredSendExternalKey" = ' \
@@ -557,11 +593,11 @@ class DataLoadService(DbService):
 
             sql = 'DELETE FROM stg_eml_click'
             res = self.db.engine.execute(sql)
-            print('updated '+str(res.rowcount)+' clicks')
+            print('updated ' + str(res.rowcount) + ' clicks')
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print('ALERT: problem loading journey_clicks.csv'+str(exc)+traceback.print_tb(exc_traceback))
+            print('ALERT: problem loading journey_clicks.csv' + str(exc) + traceback.print_tb(exc_traceback))
 
         # TODO: append county FIPS codes to open and click data
 
@@ -576,13 +612,13 @@ class DataLoadService(DbService):
         self.__load_mc_journeys_to_db(journeys, token)
 
     def __get_mc_auth(self):
-        #TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
+        # TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
         config = self.config
         mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('EMAIL_DATA_DEST'))
         # get auth token
-        url = mc_data_creds.get('auth_url') # was 'https://auth.exacttargetapis.com/v1/requestToken'
-        body = dict(clientId=mc_data_creds.get('id'), # was '3t1ch44ej7pb4p117oyr7m4g',
-                    clientSecret=mc_data_creds.get('secret')) # was '2Cegvz6Oe9qTmc8HMUn2RWKh')
+        url = mc_data_creds.get('auth_url')  # was 'https://auth.exacttargetapis.com/v1/requestToken'
+        body = dict(clientId=mc_data_creds.get('id'),  # was '3t1ch44ej7pb4p117oyr7m4g',
+                    clientSecret=mc_data_creds.get('secret'))  # was '2Cegvz6Oe9qTmc8HMUn2RWKh')
         r = requests.post(url, data=body)
         if r.status_code != 200:
             raise PermissionError('ET auth code retrieval: failed to get auth token')
@@ -617,7 +653,7 @@ class DataLoadService(DbService):
                     primary_keys=['id'])
                 adm.load_data()
             except KeyError as exc:
-                print('problem with journey id ['+journey['id']+']')
+                print('problem with journey id [' + journey['id'] + ']')
 
     def load_web_tracking(self, startDate=None, endDate=None):
 
@@ -646,27 +682,27 @@ class DataLoadService(DbService):
 
         def load_web_tracking_data(model, dims, metrics, db_field_map):
             response = analytics.reports().batchGet(
-              body={
-                'reportRequests': [
-                {
-                  'viewId': VIEW_ID,
-                  'dateRanges': [{'startDate': startDate, 'endDate': endDate}],
-                  'metrics': [
-                      {'expression': metrics[0]},
-                      {'expression': metrics[1]},
-                      {'expression': metrics[2]}
-                  ],
-                  'dimensions': [
-                      {'name': 'ga:dimension1'},
-                      {'name': 'ga:dimension3'},
-                      {'name': 'ga:dimension2'},
-                      {'name': dims[0]},
-                      {'name': dims[1]},
-                      {'name': dims[2]},
-                      {'name': dims[3]}
-                  ]
-                }]
-              }
+                body={
+                    'reportRequests': [
+                        {
+                            'viewId': VIEW_ID,
+                            'dateRanges': [{'startDate': startDate, 'endDate': endDate}],
+                            'metrics': [
+                                {'expression': metrics[0]},
+                                {'expression': metrics[1]},
+                                {'expression': metrics[2]}
+                            ],
+                            'dimensions': [
+                                {'name': 'ga:dimension1'},
+                                {'name': 'ga:dimension3'},
+                                {'name': 'ga:dimension2'},
+                                {'name': dims[0]},
+                                {'name': dims[1]},
+                                {'name': dims[2]},
+                                {'name': dims[3]}
+                            ]
+                        }]
+                }
             ).execute()
 
             ad = ApiDataToSql(db_session=self.db.session,
@@ -682,21 +718,22 @@ class DataLoadService(DbService):
                                    dims=('ga:pagePath', 'ga:browser', 'ga:browserSize', 'ga:operatingSystem'),
                                    metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
                                    db_field_map=dict(browser_id='dimensions[0]',
-                                                    utc_millisecs='dimensions[2]',
-                                                    hashed_email='dimensions[1]',
-                                                    page_path='dimensions[3]',
-                                                    browser='dimensions[4]',
-                                                    browser_size='dimensions[5]',
-                                                    operating_system='dimensions[6]',
-                                                    sessions='metrics[0].values[0]',
-                                                    page_value='metrics[0].values[1]',
-                                                    page_views='metrics[0].values[2]'))
+                                                     utc_millisecs='dimensions[2]',
+                                                     hashed_email='dimensions[1]',
+                                                     page_path='dimensions[3]',
+                                                     browser='dimensions[4]',
+                                                     browser_size='dimensions[5]',
+                                                     operating_system='dimensions[6]',
+                                                     sessions='metrics[0].values[0]',
+                                                     page_value='metrics[0].values[1]',
+                                                     page_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
             print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingPageView,
-                                   dims=('ga:pagePath', 'ga:deviceCategory', 'ga:mobileDeviceBranding', 'ga:mobileDeviceModel'),
+                                   dims=('ga:pagePath', 'ga:deviceCategory', 'ga:mobileDeviceBranding',
+                                         'ga:mobileDeviceModel'),
                                    metrics=('ga:sessions', 'ga:pageValue', 'ga:pageviews'),
                                    db_field_map=dict(browser_id='dimensions[0]',
                                                      utc_millisecs='dimensions[2]',
@@ -710,7 +747,7 @@ class DataLoadService(DbService):
                                                      page_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingPageView,
                                    dims=('ga:pagePath', 'ga:country', 'ga:region', 'ga:metro'),
@@ -727,7 +764,7 @@ class DataLoadService(DbService):
                                                      page_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingPageView,
                                    dims=('ga:pagePath', 'ga:city', 'ga:latitude', 'ga:longitude'),
@@ -744,7 +781,7 @@ class DataLoadService(DbService):
                                                      page_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:eventLabel', 'ga:eventCategory', 'ga:browser'),
@@ -760,7 +797,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:browser', 'ga:browserSize', 'ga:operatingSystem'),
@@ -776,10 +813,11 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
-                                   dims=('ga:eventAction', 'ga:deviceCategory', 'ga:mobileDeviceBranding', 'ga:mobileDeviceModel'),
+                                   dims=('ga:eventAction', 'ga:deviceCategory', 'ga:mobileDeviceBranding',
+                                         'ga:mobileDeviceModel'),
                                    metrics=('ga:eventValue', 'ga:sessionsWithEvent', 'ga:totalEvents'),
                                    db_field_map=dict(browser_id='dimensions[0]',
                                                      utc_millisecs='dimensions[2]',
@@ -792,7 +830,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:country', 'ga:region', 'ga:metro'),
@@ -808,7 +846,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingEvent,
                                    dims=('ga:eventAction', 'ga:city', 'ga:latitude', 'ga:longitude'),
@@ -824,7 +862,7 @@ class DataLoadService(DbService):
                                                      sessions_with_event='metrics[0].values[1]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingEcomm,
                                    dims=('ga:browser', 'ga:browserSize', 'ga:operatingSystem', 'ga:deviceCategory'),
@@ -841,7 +879,7 @@ class DataLoadService(DbService):
                                                      product_detail_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingEcomm,
                                    dims=('ga:mobileDeviceBranding', 'ga:mobileDeviceModel', 'ga:country', 'ga:region'),
@@ -858,7 +896,7 @@ class DataLoadService(DbService):
                                                      product_detail_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
         try:
             load_web_tracking_data(WebTrackingEcomm,
                                    dims=('ga:metro', 'ga:city', 'ga:latitude', 'ga:longitude'),
@@ -875,7 +913,7 @@ class DataLoadService(DbService):
                                                      product_detail_views='metrics[0].values[2]'))
             print('successfully loaded part of web tracking data')
         except Exception as exc:
-            print('failed one of the web tracking lookups: '+ str(exc))
+            print('failed one of the web tracking lookups: ' + str(exc))
 
     # this works with the fips_codes_website.csv file - which has the right FIPS values to match
     # - up with the ids of the us-10m.v1.json data from D3
@@ -927,3 +965,28 @@ class DataLoadService(DbService):
                         rec.__setattr__(fips_field, str(row['State FIPS Code'] + row['County FIPS Code']))
                         db.session.add(rec)
                     db.session.commit()
+
+
+class UserDataLoadService(DataLoadService):
+    def __init__(self, config, logger, mongo):
+        self.config = config
+        self.logger = logger
+        self.mongo = mongo
+        self.db_session = None
+        self.data_type_map = {'customer': Customer,
+                              'purchase': Purchase
+                              }
+        self.api_config_file = 'api_config.yml'
+        self.data_load_config = self.load_config()
+
+    def init_user_db(self, user_params):
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import scoped_session
+        from sqlalchemy.orm import sessionmaker
+
+        postgres_uri = user_params.get('postgres_uri')
+        if postgres_uri:
+            engine = create_engine(postgres_uri)
+            self.db_session = scoped_session(sessionmaker(bind=engine))
+
+        self.user_api_config = MongoUserApiConfigLoader(self.mongo.db, user_params).get_user_api_config()

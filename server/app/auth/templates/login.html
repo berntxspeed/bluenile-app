@@ -5,12 +5,12 @@
 
 {% block title %}Log In{% endblock %}
 
-
-
 {% block body %}
       <div class="row">
           <div class="col-md-6 center-block">
-              <h1>&nbsp;</h1>
+              <div id="flash-messages">
+                  {% include 'flash_messages.html' %}
+              </div>
               <h1>Log In</h1>
           </div>
       </div>

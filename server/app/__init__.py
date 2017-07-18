@@ -13,6 +13,7 @@ from webassets.filter import register_filter
 from server.app.injector_keys import MongoDB
 from ..config import config
 
+
 def get_config():
     env = os.getenv('APP_SETTINGS')
     config_obj = config.get(env)
@@ -29,11 +30,16 @@ def create_app():
                 template_folder=config_obj.TEMPLATE_FOLDER,
                 static_url_path=config_obj.STATIC_URL_PATH)
 
-    app.debug = False
+    app.debug = True
     app.config.from_object(config_obj)
     config_obj.init_app(app)
+<<<<<<< HEAD
+=======
+    Session(app)
+>>>>>>> origin/feature/okta_integration
 
     return app
+
 
 def configure(app):
     from .module import get_blueprints
@@ -44,8 +50,12 @@ def configure(app):
     for blueprint in get_blueprints():
         app.register_blueprint(blueprint)
 
+<<<<<<< HEAD
     sess = Session()
     sess.init_app(app)
+=======
+    create_app()
+>>>>>>> origin/feature/okta_integration
 
 
 def create_injector(app=None):
@@ -62,8 +72,12 @@ def create_injector(app=None):
 
 
 def init_db(app):
-    from .common.models import db, SendJob, EmlSend, EmlOpen, EmlClick, Customer
-    db.init_app(app)
+    from .common.models.system_models import system_db
+    from .common.models.user_models import user_db
+    system_db.init_app(app)
+
+    # TODO:remove this
+    user_db.init_app(app)
 
 
 def init_mongo(app, mongo):
@@ -71,14 +85,17 @@ def init_mongo(app, mongo):
 
 
 def init_login_manager(app):
-    from .common.models import User
+    from server.app.auth.services import OktaUser, OktaUsersClient
     login_manager = LoginManager()
     login_manager.session_protection = 'strong'
     login_manager.login_view = 'auth.login'
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        users_client = OktaUsersClient('https://dev-198609.oktapreview.com',
+                                       '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
+        okta_user = users_client.get_user(user_id)
+        return OktaUser(okta_user)
 
     login_manager.init_app(app)
 
@@ -94,7 +111,7 @@ def init_assets(app):
 
 def create_event_mgr(app):
     from .common.utils.event_mgr import EventMgr
-    from .common.models import db, Event, EventDefinition
+    from .common.models.user_models import user_db as db, Event, EventDefinition
     from flask_sqlalchemy import SignallingSession
 
     event_mgr = EventMgr(db, Event, EventDefinition)

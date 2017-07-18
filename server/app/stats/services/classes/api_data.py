@@ -22,14 +22,13 @@ def json_select(json, selector):
     return retval
 
 
-
-
 class ApiData(object):
-    def __init__(self, endpoint, auth, headers, params, body_json=None):
+    def __init__(self, endpoint, auth, headers, params, pagination=None, body_json=None):
         self._endpoint = endpoint
         self._auth = auth
         self._headers = headers
         self._params = params
+        self._pagination = pagination
         self._body_json = body_json
 
     def get_data(self, http_method=None):
@@ -38,11 +37,36 @@ class ApiData(object):
             http_method = 'GET'
 
         if http_method is 'GET':
-            # retrieves the data from the api endpoint
-            response = requests.get(url=self._endpoint,
-                                    params=self._params,
-                                    headers=self._headers,
-                                    auth=self._auth)
+            if self._endpoint is not None:
+                # retrieves the data from the api endpoint
+                response = requests.get(url=self._endpoint,
+                                        params=self._params,
+                                        headers=self._headers,
+                                        auth=self._auth)
+
+            elif self._pagination is not None:
+                response = []
+                no_of_records_response = requests.get(url=self._pagination['count_endpoint'],
+                                                      params=self._params,
+                                                      headers=self._headers,
+                                                      auth=self._auth)
+
+                no_of_records = no_of_records_response.json().get(self._pagination['count_data_key'])
+
+                int_no_of_pages = int(no_of_records/self._pagination['records_limit'])
+                if no_of_records/self._pagination['records_limit'] > int_no_of_pages:
+                    number_of_pages = int_no_of_pages + 1
+                else:
+                    number_of_pages = int_no_of_pages
+                for page_no in range(1, number_of_pages + 1):
+                    page_url = '{0}{1}'.format(self._pagination['endpoint'], page_no)
+                    page_response = requests.get(url=page_url,
+                                                 params=self._params,
+                                                 headers=self._headers,
+                                                 auth=self._auth)
+                    response.append(page_response)
+
+
         elif http_method is 'POST':
             response = requests.post(url=self._endpoint,
                                      data=self._body_json,
@@ -82,21 +106,23 @@ class ApiDataToSql(ApiData, SqlDataLoader):
 
     def __init__(self, db_session, db_model, primary_keys, db_field_map,
                  endpoint=None, auth=None, headers=None, params=None,
-                 json_data_keys=None):
+                 json_data_keys=None, pagination=None, transform_response_data=None):
 
         SqlDataLoader.__init__(self,
                                db_session=db_session,
                                db_model=db_model,
                                primary_keys=primary_keys)
 
-        if endpoint is not None:
+        if endpoint or pagination:
             ApiData.__init__(self, endpoint=endpoint,
-                            auth=auth,
-                            headers=headers,
-                            params=params)
+                             auth=auth,
+                             headers=headers,
+                             params=params,
+                             pagination=pagination)
 
         self._json_data_keys = json_data_keys
         self._db_field_map = db_field_map
+        self._transform_response_data = transform_response_data
 
     def load_data(self, preload_data=None):
 
@@ -107,15 +133,31 @@ class ApiDataToSql(ApiData, SqlDataLoader):
 
         if preload_data is None:
             response = ApiData.get_data(self)
-            response = response.json()
+            if isinstance(response, list):
+                response = [an_item.json() for an_item in response]
+            else:
+                response = response.json()
         else:
             response = preload_data
 
         # access the desired data from the full response
         if self._json_data_keys is not None:
-            for jdk in self._json_data_keys.split('.'):
-                response = json_select(response, jdk)
-                # response = response[jdk]
+            if isinstance(response, list):
+                full_response = list()
+                for response_page in response:
+                    for jdk in self._json_data_keys.split('.'):
+                        response_page = json_select(response_page, jdk)
+                    full_response.append(response_page)
+
+                response = [item for sublist in full_response for item in sublist]
+
+            else:
+                for jdk in self._json_data_keys.split('.'):
+                    response = json_select(response, jdk)
+                    # response = response[jdk]
+
+        if self._transform_response_data:
+            response = self._transpose_data(response)
 
         # create a dict of items for loading to db,
         # - key = composite(primarykeys)
@@ -148,6 +190,23 @@ class ApiDataToSql(ApiData, SqlDataLoader):
             # item = item[field]
         return item
 
+    @staticmethod
+    def _transpose_data(data):
+        """ Transforms a request into standard data format for SqlDataLoader
+                -final format should be a list of dictionaries: records
+                -temporary fix for zoho data load
+        """
+        record_data_key = 'FL'
+        result = []
+        for data_item in data:
+            result_subitem = {}
+            content_val_pairs = data_item[record_data_key]
+            for a_content_val_pair in content_val_pairs:
+                result_subitem[a_content_val_pair['val']] = a_content_val_pair['content']
+            result.append(result_subitem)
+
+        return result
+
 
 class ApiDataToMongo(ApiData, MongoDataLoader):
     def __init__(self, endpoint, auth, headers, params, collection, primary_keys, json_data_keys=None):
@@ -173,6 +232,3 @@ class ApiDataToMongo(ApiData, MongoDataLoader):
                 response = json_select(response, jdk)
 
         return response
-
-
-

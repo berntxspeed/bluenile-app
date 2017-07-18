@@ -143,17 +143,17 @@ $(document).ready(function() {
                      request.setRequestHeader("X-CSRFToken", g_csrf_token)
                  },
                  success: function(data) {
-                     visible_header = (data.data.length > 0)
-                     destroyTable(preview_table)
-                     data.showHeader = visible_header
-                     data.formatShowingRows = function(pageFrom, pageTo, totalRows){
-                             return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
-                         }
-                     preview_table.bootstrapTable(data);
-                     (preview_table.bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
+                    visible_header = (data.data.length > 0)
+                    destroyTable(preview_table)
+                    data.showHeader = visible_header
+                    data.formatShowingRows = function(pageFrom, pageTo, totalRows){
+                            return 'Found ' + data.no_of_rows + ' records. Showing ' + pageFrom + ' through ' + pageTo
+                        }
+                    preview_table.bootstrapTable(data);
+                    (preview_table.bootstrapTable('getOptions').totalPages > 1) && showElement($("#gotopage"));
                  },
                  error: function(err) {
-//                   TODO: handle the error or retry
+//                  TODO: handle the error or retry
                  }
              });
         $("#btn-save-query-as").prop('disabled', false);
@@ -546,6 +546,13 @@ $(document).ready(function() {
             $("#frequency").val("0")
             hideElement($("#every-x-hours-block"))
         }
+        if (row.auto_sync != null) {
+            document.getElementById("auto-sync").checked = true;
+        }
+        else {
+            document.getElementById("auto-sync").checked = false;
+
+        }
     })
 
     $("#btn-return-to-saved-queries").click(function () {
@@ -563,26 +570,44 @@ $(document).ready(function() {
     $("#btn-save-periodic-sync").click(function (e) {
         changed = false
         save_query = g_current_query.current_row
+
         current_frequency = g_current_query.current_row.periodic_sync
         new_periodic_sync= $("#frequency").val()
-        if (new_periodic_sync == '1') {
-            //check for valid entry values
-            if ( ($("#every-x-hours").val() === "") || (!(0 < parseInt($("#every-x-hours").val()) < 24)) ){
-                document.getElementById('periodic-footer').innerHTML = "Enter Value between 1 and 23"
-            }
-            //check if frequency changed
-            else if ( (current_frequency === new_periodic_sync) && (g_current_query.current_row.hourly_frequency === $("#every-x-hours").val()) ) {
-                document.getElementById('periodic-footer').innerHTML = "Change Hourly Frequency Before Save"
-            }
-            else {
-                save_query.hourly_frequency = $("#every-x-hours").val()
-                changed = true
-            }
+
+        current_auto_sync = g_current_query.current_row.auto_sync
+        new_auto_sync = (document.getElementById('auto-sync').checked === true)
+        console.log(current_auto_sync)
+        console.log(new_auto_sync)
+
+        if ((current_auto_sync == null) && (new_auto_sync === true)) {
+            save_query.auto_sync = new_auto_sync
+            changed = true
         }
-        else if ( (new_periodic_sync === current_frequency) || ((new_periodic_sync === "0") && (current_frequency == null)) ){
-            $("#btn-return-to-saved-queries").click()
+        else if ((current_auto_sync == true) && (new_auto_sync === false)) {
+            save_query.auto_sync = null
+            changed = true
         }
-        else {changed = true}
+
+        if (changed === false){
+            if (new_periodic_sync == '1') {
+                //check for valid entry values
+                if ( ($("#every-x-hours").val() === "") || (!(0 < parseInt($("#every-x-hours").val()) < 24)) ){
+                    document.getElementById('periodic-footer').innerHTML = "Enter Value between 1 and 23"
+                }
+                //check if frequency changed
+                else if ( (current_frequency === new_periodic_sync) && (g_current_query.current_row.hourly_frequency === $("#every-x-hours").val()) ) {
+                    document.getElementById('periodic-footer').innerHTML = "Change Hourly Frequency Before Save"
+                }
+                else {
+                    save_query.hourly_frequency = $("#every-x-hours").val()
+                    changed = true
+                }
+            }
+            else if ( (new_periodic_sync === current_frequency) || ((new_periodic_sync === "0") && (current_frequency == null)) ){
+                $("#btn-return-to-saved-queries").click()
+            }
+            else {changed = true}
+        }
         if (changed) {
             save_query.periodic_sync = new_periodic_sync
             $.ajax({

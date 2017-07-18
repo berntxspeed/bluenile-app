@@ -1,7 +1,7 @@
 from flask import jsonify, Response, send_from_directory, send_file
 from premailer import transform
 import json
-from PIL import Image, ImageDraw
+# from PIL import Image, ImageDraw
 from urllib.parse import urlsplit
 import os
 import base64
@@ -13,7 +13,7 @@ from os import remove
 
 from .classes.esp_push import EmlPush, ImgPush
 from ...common.services import DbService
-from ...common.models import Upload, Template
+from ...common.models.user_models import Upload, Template
 
 class EmailService(DbService):
 

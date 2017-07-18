@@ -1,6 +1,7 @@
+from time import sleep
 from manage import celery, injector, app
 from celery.schedules import crontab
-from .injector_keys import DataLoadServ
+from .injector_keys import DataLoadServ, UserDataLoadServ
 from ...app.injector_keys import MongoDB
 
 
@@ -21,16 +22,33 @@ class BaseTask(celery.Task):
                 'task_type': kwargs.get('task_type'),
                 'einfo': str(einfo)
                 }
-
         with app.app_context():
             mongo = injector.get(MongoDB)
             from server.app.task_admin.services.mongo_task_loader import MongoTaskLoader
-            success, error = MongoTaskLoader(mongo.db).save_task(task)
+            success, error = MongoTaskLoader(mongo.db, kwargs.get('user_params')).save_task(task)
+
             if kwargs.get('task_type') == 'data-push':
                 if kwargs.get('query_name') is not None:
                     from server.app.data_builder.services.data_builder_query import DataBuilderQuery
-                    status, result = DataBuilderQuery(mongo.db).update_last_run_info(kwargs['query_name'])
+                    status, result = DataBuilderQuery(mongo.db, kwargs.get('user_params')).update_last_run_info(kwargs['query_name'])
+                if kwargs.get('remaining_queries') is not None:
+                    rem_queries = kwargs['remaining_queries']
+                    if len(rem_queries) > 0:
+                        from ..data.workers import sync_query_to_mc
+                        a_query = rem_queries.pop()
+                        sync_query_to_mc.delay(a_query,
+                                               task_type='data-push',
+                                               query_name=a_query.get('name'),
+                                               remaining_queries=rem_queries,
+                                               user_params=kwargs.get('user_params'))
 
+            elif kwargs.get('task_type', '').startswith('load'):
+                # from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
+                # _, result = MongoDataJobConfigLoader(mongo.db, kwargs.get('user_params')).update_last_load_info(kwargs['task_type'])
+
+                # schedule sync_query_to_mc for all queries after successful data load
+                if status == 'SUCCESS' and kwargs.get('sync_queries') is True:
+                    sync_all_queries_to_mc.delay(task_type='sync-all-queries', user_params=kwargs.get('user_params'))
 
         super(BaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
@@ -56,68 +74,32 @@ celery.conf.beat_schedule = {
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'mc-email-data'}
     },
-    'every-hour_periodic_sync_to_mc': {
-        'task': 'server.app.stats.workers.periodic_sync_to_mc',
+    'every-hour_schedule_sync_jobs': {
+        'task': 'server.app.stats.workers.schedule_sync_jobs',
         'schedule': crontab(minute=0, hour='*'),
-        'kwargs': {'task_type': 'periodic-sync'}
+        'kwargs': {'task_type': 'schedule-sync-jobs'}
+    },
+    'every-hour_schedule_load_jobs': {
+        'task': 'server.app.stats.workers.schedule_load_jobs',
+        'schedule': crontab(minute=30, hour='*'),
+        'kwargs': {'task_type': 'schedule-load-jobs'}
     }
 }
 
 
 @celery.task(base=BaseTask)
-def load_shopify_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_shopify_purchases(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_magento_purchases(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_magento_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_bigcommerce_purchases(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_bigcommerce_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_stripe_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
-
-
-@celery.task(base=BaseTask)
-def load_x2crm_customers(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.simple_data_load(kwargs))
+def basic_load_task(**kwargs):
+    # TODO: remove if/else to default to user_db
+    user_params = kwargs.get('user_params')
+    if user_params:
+        with app.app_context():
+            service = injector.get(UserDataLoadServ)
+            service.init_user_db(user_params)
+            service.exec_safe_session(service.simple_data_load(kwargs))
+    else:
+        with app.app_context():
+            service = injector.get(DataLoadServ)
+            service.exec_safe_session(service.simple_data_load(kwargs))
 
 
 @celery.task(base=BaseTask)
@@ -125,13 +107,6 @@ def load_mc_email_data(**kwargs):
     with app.app_context():
         service = injector.get(DataLoadServ)
         service.exec_safe_session(service.load_mc_email_data)
-
-
-@celery.task
-def load_artists():
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_artists)
 
 
 @celery.task(base=BaseTask)
@@ -164,7 +139,28 @@ def add_fips_location_emlclick(**kwargs):
 
 
 @celery.task(base=BaseTask)
-def periodic_sync_to_mc(**kwargs):
+def sync_all_queries_to_mc(**kwargs):
+    with app.app_context():
+        mongo = injector.get(MongoDB)
+        from ..data_builder.services.data_builder_query import DataBuilderQuery
+
+        user_params = kwargs.get('user_params')
+        get_queries_status, all_queries = DataBuilderQuery(mongo.db, user_params).get_all_queries(type='auto_sync')
+        if get_queries_status is True:
+            from ..data.workers import sync_query_to_mc
+            if len(all_queries):
+                print('Found {0} Queries for Auto Sync:\n{1}'.
+                      format(len(all_queries), ', '.join(q.get('name') for q in all_queries)))
+                a_query = all_queries.pop()
+                sync_query_to_mc.delay(a_query,
+                                       task_type='data-push',
+                                       query_name=a_query.get('name'),
+                                       remaining_queries=all_queries,
+                                       user_params=user_params)
+
+
+@celery.task(base=BaseTask)
+def schedule_sync_jobs(**kwargs):
     from server.app.data_builder.services.data_builder_query import DataBuilderQuery
     from .services.classes.stats_utils import find_relevant_periodic_tasks
 
@@ -177,6 +173,83 @@ def periodic_sync_to_mc(**kwargs):
             from ..data.workers import sync_query_to_mc
             for a_query in relevant_queries:
                 sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
+
+
+@celery.task(base=BaseTask)
+def schedule_load_jobs(**kwargs):
+    from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
+    from .services.classes.stats_utils import find_relevant_periodic_tasks
+
+    with app.app_context():
+        mongo = injector.get(MongoDB)
+        status, dl_jobs = MongoDataJobConfigLoader(mongo.db).get_data_load_jobs()
+        relevant_load_jobs = find_relevant_periodic_tasks(dl_jobs)
+
+        if len(relevant_load_jobs):
+                from .workers import basic_load_task, load_mc_journeys, \
+                    load_web_tracking, load_lead_perfection
+                from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+                from ..data.workers import sync_data_to_mc
+
+                load_map = {'x2crm_customers': {'load_func': basic_load_task,
+                                                'data_source': 'x2crm',
+                                                'data_type': 'customer'},
+                            'zoho_customers': {'load_func': basic_load_task,
+                                               'data_source': 'zoho',
+                                               'data_type': 'customer'},
+                            'magento_customers': {'load_func': basic_load_task,
+                                                  'data_source': 'magento',
+                                                  'data_type': 'customer'},
+                            'magento_purchases': {'load_func': basic_load_task,
+                                                  'data_source': 'magento',
+                                                  'data_type': 'purchase'},
+                            'shopify_customers': {'load_func': basic_load_task,
+                                                  'data_source': 'shopify',
+                                                  'data_type': 'customer'},
+                            'shopify_purchases': {'load_func': basic_load_task,
+                                                  'data_source': 'shopify',
+                                                  'data_type': 'purchase'},
+                            'bigcommerce_customers': {'load_func': basic_load_task,
+                                                      'data_source': 'bigcommerce',
+                                                      'data_type': 'customer'},
+                            'bigcommerce_purchases': {'load_func': basic_load_task,
+                                                      'data_source': 'bigcommerce',
+                                                      'data_type': 'purchase'},
+                            'stripe_customers': {'load_func': basic_load_task,
+                                                 'data_source': 'stripe',
+                                                 'data_type': 'customer'},
+                            # 'artists': load_artists,
+                            'mc-email-data': load_mc_email_data,
+                            'mc-journeys': load_mc_journeys,
+                            'web-tracking': load_web_tracking,
+                            'add-fips-location-emlopen': add_fips_location_emlopen,
+                            'add-fips-location-emlclick': add_fips_location_emlclick,
+                            'lead-perfection': load_lead_perfection,
+                            'customer_table': {'load_func': sync_data_to_mc,
+                                               'table_name': 'customer',
+                                               },
+                            'purchase_table': {'load_func': sync_data_to_mc,
+                                               'table_name': 'purchase',
+                                               }
+                            }
+
+                while len(relevant_load_jobs):
+                    a_job = relevant_load_jobs.pop()
+                    task = load_map.get(a_job.get('job_type'))
+                    if not task:
+                        continue
+                    sync_queries = (len(relevant_load_jobs) == 0)
+                    if 'table_name' in task:
+                        task['load_func'].delay(task['table_name'],
+                                                task_type='load_' + a_job['job_type'],
+                                                table_name=task['table_name'])
+                    else:
+                        task['load_func'].delay(task_type='load_' + a_job['job_type'],
+                                                data_source=task['data_source'],
+                                                data_type=task['data_type'],
+                                                sync_queries=sync_queries)
+
+                    sleep(60)
 
 
 def load_lead_perfection(**kwargs):
@@ -204,3 +277,4 @@ def long_task(self):
         sleep(1)
         self.update_state(state='PROGRESS',
                           meta={'process_percent': process_percent})
+
