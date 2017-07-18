@@ -82,6 +82,7 @@ class AuthService(DbService):
                 login_user(user, form.remember_me.data)
 
                 accounts = self.get_user_accounts(user.email)
+                session['accounts'] = [account.account_name for account in accounts]
 
                 # Save user/account info in the current session
                 first_account = accounts.first()

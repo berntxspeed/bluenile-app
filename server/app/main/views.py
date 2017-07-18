@@ -21,13 +21,9 @@ def before_request():
 @templated('index')
 def index():
     user = current_user
-    user_name = user.firstname #session.get('user_name', 'Anonymous')
-    account = session['user_params']['account_name']
-    accounts = AuthService.get_user_accounts(user.email)
-    user = {'nickname': user_name,
-            'account': account,
-            'accounts': [acc.account_name for acc in accounts]} # Okta User
-    return dict(user=user)
+    user_name = user.firstname
+    return_dict = {'nickname': user_name}
+    return dict(user=return_dict)
 
 
 @main.route('/')

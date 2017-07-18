@@ -10,8 +10,8 @@
               <h2>You are logged in for account {{user.account}}</h2>
               <div><p>Change the account:</p>
                   <select id="option" width="300px"  onchange="leaveChange()">
-                      {% for x in user.accounts %}
-                         <option value="{{ x }}" {% if x == user.account %} SELECTED {% endif %}>{{ x }}</option>
+                      {% for x in session.accounts %}
+                         <option value="{{ x }}" {% if x == session.user_params.account_name %} SELECTED {% endif %}>{{ x }}</option>
                       {% endfor %}
                   </select>
               </div>

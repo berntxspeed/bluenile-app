@@ -5,7 +5,7 @@ from io import StringIO
 
 from flask import Response
 from flask import make_response
-from flask import request, redirect
+from flask import request, redirect, session
 from flask_login import login_required
 from injector import inject
 
@@ -35,7 +35,8 @@ def before_request():
 @templated('task_admin')
 def task_admin(mongo, user_config):
     status, tasks = MongoTaskLoader(mongo.db, user_config).get_all_tasks()
-    return {'status': status, 'tasks': tasks}
+    user = dict(account=session.get('user_params', {}).get('account_name'))
+    return dict(status=status, tasks=tasks, user=user)
 
 
 @taskadmin.route('/create_account/<account_name>')

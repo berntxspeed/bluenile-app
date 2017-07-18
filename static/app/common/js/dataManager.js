@@ -5,6 +5,9 @@ $(document).ready(function(){
                           bigcommerce:  ['domain', 'id', 'secret'],
                           x2crm:        ['domain', 'token'],
                           magento:      ['domain', 'token'],
+                          stripe:       ['domain', 'id'],
+                          zoho:         ['domain', 'token'],
+
                         }
     var g_account_atts = ['domain', 'id', 'secret', 'token']
 
@@ -321,6 +324,8 @@ $(document).ready(function(){
             }
         }
 
+        if (source == 'stripe') {api_config.secret = ''}
+        console.log(api_config)
         if (data_valid != true ){
             document.getElementById('source-footer').innerHTML = "All Fields Are Mandatory"
         }
