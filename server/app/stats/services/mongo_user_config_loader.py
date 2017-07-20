@@ -22,14 +22,24 @@ SYNC_MAP = {
     "8": "Annually"
 }
 
+VENDOR_API_TO_TABLES_MAP = {
+    'shopify': ['customer', 'purchase'],
+    'magento': ['customer', 'purchase'],
+    'bigcommerce': ['customer', 'purchase'],
+    'stripe': ['customer'],
+    'x2crm': ['customer'],
+    'zoho': ['customer']
+}
+
 
 class MongoDataJobConfigLoader(object):
     def __init__(self, client_instance, user_config=None):
         self._db = client_instance
         self._collection_name = 'data_load_jobs'
         self._primary_key = 'job_type'
+        self._user_config = user_config
 
-        user_account = user_config and user_config.get('account_name')
+        user_account = self._user_config and self._user_config.get('account_name')
         print('MongoDataJobConfigLoader: Mongo Account ' + (user_account or 'None'))
         if user_account:
             self._collection_name = self._collection_name + '_' + user_account
@@ -70,9 +80,9 @@ class MongoDataJobConfigLoader(object):
         except Exception as e:
             return False, 'Saving Data Load Job Config Failed: {0}'.format(str(e))
 
-    def remove_data_load_config_by_type(self, job_type):
+    def remove_data_load_config_by_data_source(self, data_source):
         try:
-            self._collection.remove({self._primary_key: job_type})
+            self._collection.remove({'data_source': data_source})
             return True, True
         except Exception as e:
             return False, 'Removing Data Load Config Failed: {0}'.format(str(e))
@@ -87,9 +97,18 @@ class MongoDataJobConfigLoader(object):
     def update_last_load_info(self, job_type):
         import datetime
         status, load_job_config = self.get_data_load_config_by_type(job_type.replace('load_', ''))
+        if status is False:
+            return status, load_job_config
         last_load = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
         load_job_config['last_run'] = last_load
         return self.save_data_load_config(load_job_config, update=True)
+
+    def create_default_config(self, data_source):
+        for a_data_type in VENDOR_API_TO_TABLES_MAP.get(data_source, []):
+            default_config = dict(data_source=data_source)
+            default_config['data_type'] = a_data_type
+            default_config['job_type'] = '{0}_{1}s'.format(data_source, a_data_type)
+            self.save_data_load_config(default_config)
 
 
 class MongoUserApiConfigLoader(object):
@@ -97,8 +116,9 @@ class MongoUserApiConfigLoader(object):
         self._db = client_instance
         self._collection_name = 'user_api_config'
         self._primary_key = 'data_source'
+        self._user_config = user_config
 
-        user_account = user_config and user_config.get('account_name')
+        user_account = self._user_config and self._user_config.get('account_name')
         print('MongoUserApiConfigLoader: Mongo Account ' + (user_account or 'None'))
         if user_account:
             self._collection_name = self._collection_name + '_' + user_account
@@ -143,6 +163,8 @@ class MongoUserApiConfigLoader(object):
                     vendor_config[k] = MongoUserApiConfigLoader.encrypt(v)
 
             vendor_config['timestamp'] = str(datetime.datetime.now())
+            MongoDataJobConfigLoader(self._db, self._user_config).create_default_config(vendor_config['data_source'])
+
         item_loader = MongoDataLoader(self._collection, [self._primary_key])
         try:
             item_loader.load_to_db(vendor_config)
@@ -160,12 +182,11 @@ class MongoUserApiConfigLoader(object):
     def remove_api_config_by_source(self, data_source):
         try:
             self._collection.remove({self._primary_key: data_source})
-            return True, True
+            return MongoDataJobConfigLoader(self._db, self._user_config).remove_data_load_config_by_data_source(data_source)
         except Exception as e:
             return False, 'Removing Data Load Config Failed: {0}'.format(str(e))
 
     def update_last_run_info(self, data_source):
-
         import datetime
         status, data_config = self.get_data_config_by_source(data_source)
         last_load = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")

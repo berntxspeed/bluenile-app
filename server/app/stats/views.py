@@ -45,9 +45,9 @@ def data_manager(mongo, user_config):
     return {'status': status, 'avail_vendors': avail_vendors, 'user': user}
 
 
-@stats.route('/data-manager/save-load-job-config/<job_type>', methods=['POST'])
+@stats.route('/data-manager/save-load-job-config/', methods=['POST'])
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
-def save_load_job_config(mongo, user_config, job_type):
+def save_load_job_config(mongo, user_config):
     load_job_config = request.json
     success, error = MongoDataJobConfigLoader(mongo.db, user_config).save_data_load_config(load_job_config)
     if success:
@@ -98,7 +98,7 @@ def save_vendor_api_config(mongo, user_config):
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
 def get_data_load_jobs(mongo, user_config):
 
-    status, data_load_jobs = MongoDataJobConfigLoader(mongo.db).get_data_load_jobs()
+    status, data_load_jobs = MongoDataJobConfigLoader(mongo.db, user_config).get_data_load_jobs()
     columns = [{
                     'field': 'job_type_full',
                     'title': 'Data Load Type'
@@ -233,7 +233,8 @@ def load(action):
         if 'table_name' in task:
             result = task['load_func'].delay(task['table_name'],
                                              task_type='load_'+action,
-                                             table_name=task['table_name'])
+                                             table_name=task['table_name'],
+                                             user_params=user_params)
         else:
             result = task['load_func'].delay(task_type='load_'+action,
                                              data_source=task['data_source'],

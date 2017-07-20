@@ -43,8 +43,8 @@ class BaseTask(celery.Task):
                                                user_params=kwargs.get('user_params'))
 
             elif kwargs.get('task_type', '').startswith('load'):
-                # from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
-                # _, result = MongoDataJobConfigLoader(mongo.db, kwargs.get('user_params')).update_last_load_info(kwargs['task_type'])
+                from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
+                _, result = MongoDataJobConfigLoader(mongo.db, kwargs.get('user_params')).update_last_load_info(kwargs['task_type'])
 
                 # schedule sync_query_to_mc for all queries after successful data load
                 if status == 'SUCCESS' and kwargs.get('sync_queries') is True:

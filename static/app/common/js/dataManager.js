@@ -162,7 +162,7 @@ $(document).ready(function(){
         if (changed) {
             save_load_job.periodic_sync = new_periodic_load
             $.ajax({
-                 url: "/data-manager/save-load-job-config/" + save_load_job.job_type,
+                 url: "/data-manager/save-load-job-config/",
                  method: "POST",
                  data: JSON.stringify(save_load_job),
                  contentType: 'application/json;charset=UTF-8',
@@ -306,13 +306,11 @@ $(document).ready(function(){
     $("#btn-save-source").click(function (e) {
         if ( $("#source-selector").is(":visible") ){
             source = $("#add-source").val()
-            api_config = {'data_source': source}
-            fields_to_validate = g_sources_map[source]
         }
-        else {
-            api_config = { 'data_source': g_current_source.data_source}
-            fields_to_validate = g_sources_map[g_current_source.data_source]
-        }
+        else { source = g_current_source.data_source }
+
+        api_config = { 'data_source': source}
+        fields_to_validate = g_sources_map[source]
 
         // TODO: data validation only on empty fields
         data_valid = true

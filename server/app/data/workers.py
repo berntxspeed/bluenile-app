@@ -5,9 +5,16 @@ from .injector_keys import DataPushServ, UserDataPushServ
 
 @celery.task(base=BaseTask)
 def sync_data_to_mc(table, **kwargs):
-    with app.app_context():
-        service = injector.get(DataPushServ)
-        service.exec_safe_session(service.sync_data_to_mc, table)
+    user_params = kwargs.get('user_params')
+    if user_params:
+        with app.app_context():
+            service = injector.get(UserDataPushServ)
+            service.init_user_db(user_params)
+            service.exec_safe_session(service.sync_data_to_mc, table)
+    else:
+        with app.app_context():
+            service = injector.get(DataPushServ)
+            service.exec_safe_session(service.sync_data_to_mc, table)
 
 
 @celery.task
