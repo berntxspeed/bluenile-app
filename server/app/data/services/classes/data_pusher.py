@@ -157,12 +157,12 @@ class DataPusher(object):
 
     def _find_recs_for_insert(self):
         Model = self._model
-        recs = Model.query.filter(Model._last_ext_sync == None)
+        recs = self._db_session.query(Model).filter(Model._last_ext_sync == None)
         return recs.all()
 
     def _find_recs_for_update(self):
         Model = self._model
-        recs = Model.query.filter(Model._last_ext_sync != None,
+        recs = self._db_session.query(Model).filter(Model._last_ext_sync != None,
                                   Model._last_ext_sync + datetime.timedelta(minutes=1)
                                   < Model._last_updated)
         return recs.all()

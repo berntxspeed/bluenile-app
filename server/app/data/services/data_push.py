@@ -45,7 +45,7 @@ class DataPushService(DbService):
 
         try:
             model = self._models[table]
-            for rec in model.query:
+            for rec in self.db_session.query(model):
                 rec._last_ext_sync = None
                 self.db_session.add(rec)
             self.db_session.commit()

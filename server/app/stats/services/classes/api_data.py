@@ -163,6 +163,9 @@ class ApiDataToSql(ApiData, SqlDataLoader):
         # - key = composite(primarykeys)
         # - value = db_model instance
         data = {}
+        if response is None:
+            raise Exception('Empty response: no data to load. Check your data source config')
+
         for item in response:
             data_row = self._db_model()
             for db_field, api_field in self._db_field_map.items():

@@ -95,32 +95,56 @@ def basic_load_task(**kwargs):
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params)
-            service.exec_safe_session(service.simple_data_load(kwargs))
+            service.exec_safe_session(service.simple_data_load, **kwargs)
     else:
         with app.app_context():
             service = injector.get(DataLoadServ)
-            service.exec_safe_session(service.simple_data_load(kwargs))
+            service.exec_safe_session(service.simple_data_load, **kwargs)
 
 
 @celery.task(base=BaseTask)
 def load_mc_email_data(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_mc_email_data)
+    # TODO: remove if/else to default to user_db
+    user_params = kwargs.get('user_params')
+    if user_params:
+        with app.app_context():
+            service = injector.get(UserDataLoadServ)
+            service.init_user_db(user_params)
+            service.exec_safe_session(service.load_mc_email_data)
+    else:
+        with app.app_context():
+            service = injector.get(DataLoadServ)
+            service.exec_safe_session(service.load_mc_email_data)
 
 
 @celery.task(base=BaseTask)
 def load_mc_journeys(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_mc_journeys)
+    # TODO: remove if/else to default to user_db
+    user_params = kwargs.get('user_params')
+    if user_params:
+        with app.app_context():
+            service = injector.get(UserDataLoadServ)
+            service.init_user_db(user_params, postgres=False)
+            service.exec_safe_session(service.load_mc_journeys)
+    else:
+        with app.app_context():
+            service = injector.get(DataLoadServ)
+            service.exec_safe_session(service.load_mc_journeys)
 
 
 @celery.task(base=BaseTask)
 def load_web_tracking(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_web_tracking)
+    # TODO: remove if/else to default to user_db
+    user_params = kwargs.get('user_params')
+    if user_params:
+        with app.app_context():
+            service = injector.get(UserDataLoadServ)
+            service.init_user_db(user_params)
+            service.exec_safe_session(service.load_web_tracking)
+    else:
+        with app.app_context():
+            service = injector.get(DataLoadServ)
+            service.exec_safe_session(service.load_web_tracking)
 
 
 @celery.task

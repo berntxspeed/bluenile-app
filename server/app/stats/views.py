@@ -235,14 +235,14 @@ def load(action):
                                              task_type='load_'+action,
                                              table_name=task['table_name'],
                                              user_params=user_params)
-        else:
+        elif 'data_source' in task:
             result = task['load_func'].delay(task_type='load_'+action,
                                              data_source=task['data_source'],
                                              data_type=task['data_type'],
                                              sync_queries=True,
                                              user_params=user_params)
     else:
-        result = task.delay(task_type=action)
+        result = task.delay(task_type=action, user_params=user_params)
 
     return dict(task_id=result.id, user=user)
 

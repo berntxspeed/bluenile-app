@@ -205,15 +205,16 @@ class DataLoadService(DbService):
         except Exception:
             return {}
 
-    def exec_safe_session(self, load_func=None, *args):
+    def exec_safe_session(self, load_func=None, *args, **kwargs):
         if load_func:
             try:
-                load_func(*args)
+                load_func(*args, **kwargs)
             except Exception as exc:
                 self.db_session.rollback()
                 raise type(exc)('DataLoad Error: {0}: {1}'.format(type(exc).__name__, exc.args))
             finally:
-                self.db_session.remove()
+                if self.db_session is not None:
+                    self.db_session.remove()
 
     def get_api_args(self, data_source, data_type):
         vendor_config = self.data_load_config.get(data_source, {})
@@ -254,7 +255,7 @@ class DataLoadService(DbService):
 
         return api_args
 
-    def simple_data_load(self, kwargs):
+    def simple_data_load(self, **kwargs):
         api_call_config = self.get_api_args(kwargs['data_source'], kwargs['data_type'])
         if api_call_config is not None:
             ad1 = ApiDataToSql(**api_call_config)
@@ -271,7 +272,7 @@ class DataLoadService(DbService):
         filename = mc_data_creds.get('filename')
         filepath = mc_data_creds.get('filepath')
         csv = CsvFile(file=filename,
-                      db_session=self.db.session,
+                      db_session=self.db_session,
                       db_model=Customer,
                       primary_keys=['customer_id'],
                       db_field_map=dict(
@@ -309,10 +310,12 @@ class DataLoadService(DbService):
                      ftp_path=filepath,
                      ftp_cfg=cfg)
 
+        engine_instance = self.db_session.get_bind()
+
         try:
             # load Sendjobs data to db
             zf.load_data(file='SendJobs.csv',
-                         db_session=self.db.session,
+                         db_session=self.db_session,
                          db_model=StgSendJob,
                          primary_keys=['SendID'],
                          db_field_map={
@@ -331,18 +334,18 @@ class DataLoadService(DbService):
                   'LEFT JOIN send_job b ' \
                   'ON b."SendID" = a."SendID" ' \
                   'WHERE b."SendID" IS NULL '
-            res = self.db.engine.execute(sql)
+            res = engine_instance.execute(sql)
             print('inserted ' + str(res.rowcount) + ' sendjobs')
 
             sql = 'DELETE FROM stg_send_job'
-            self.db.engine.execute(sql)
+            engine_instance.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing SendJobs.csv' + traceback.print_tb(exc_traceback))
         try:
             zf.load_data(file='Sent.csv',
-                         db_session=self.db.session,
+                         db_session=self.db_session,
                          db_model=StgEmlSend,
                          primary_keys=['SubscriberKey', 'EventDate'],
                          db_field_map={
@@ -359,11 +362,12 @@ class DataLoadService(DbService):
                   'ON b."SubscriberKey" = a."SubscriberKey" ' \
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
-            res = self.db.engine.execute(sql)
+
+            res = engine_instance.execute(sql)
             print('inserted ' + str(res.rowcount) + ' sends')
 
             sql = 'DELETE FROM stg_eml_send'
-            self.db.engine.execute(sql)
+            engine_instance.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -371,7 +375,7 @@ class DataLoadService(DbService):
         try:
             # load Opens data to db
             zf.load_data(file='Opens.csv',
-                         db_session=self.db.session,
+                         db_session=self.db_session,
                          db_model=StgEmlOpen,
                          primary_keys=['SubscriberKey', 'EventDate'],
                          db_field_map={
@@ -401,11 +405,12 @@ class DataLoadService(DbService):
                   'ON b."SubscriberKey" = a."SubscriberKey" ' \
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
-            res = self.db.engine.execute(sql)
+
+            res = engine_instance.execute(sql)
             print('inserted ' + str(res.rowcount) + ' opens')
 
             sql = 'DELETE FROM stg_eml_open'
-            self.db.engine.execute(sql)
+            engine_instance.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -413,7 +418,7 @@ class DataLoadService(DbService):
         try:
             # load Clicks data to db
             zf.load_data(file='Clicks.csv',
-                         db_session=self.db.session,
+                         db_session=self.db_session,
                          db_model=StgEmlClick,
                          primary_keys=['SubscriberKey', 'EventDate'],
                          db_field_map={
@@ -447,11 +452,12 @@ class DataLoadService(DbService):
                   'ON b."SubscriberKey" = a."SubscriberKey" ' \
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
-            res = self.db.engine.execute(sql)
+
+            res = engine_instance.execute(sql)
             print('inserted ' + str(res.rowcount) + ' clicks')
 
             sql = 'DELETE FROM stg_eml_click'
-            self.db.engine.execute(sql)
+            engine_instance.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -464,7 +470,7 @@ class DataLoadService(DbService):
             filename = 'journey_sends.csv'
             filepath = '/Export/'
             csv = CsvFile(file=filename,
-                          db_session=self.db.session,
+                          db_session=self.db_session,
                           db_model=StgEmlSend,
                           primary_keys=['SubscriberKey', 'EventDate'],
                           db_field_map={
@@ -487,7 +493,8 @@ class DataLoadService(DbService):
                   'ON b."SubscriberKey" = a."SubscriberKey" ' \
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
-            res = self.db.engine.execute(sql)
+
+            res = engine_instance.execute(sql)
             print('inserted ' + str(res.rowcount) + ' sends')
 
             sql = 'UPDATE eml_send ' \
@@ -496,11 +503,11 @@ class DataLoadService(DbService):
                   'FROM stg_eml_send a ' \
                   'WHERE a."SubscriberKey" = eml_send."SubscriberKey" ' \
                   'AND a."EventDate" = eml_send."EventDate")'
-            res = self.db.engine.execute(sql)
+            res = engine_instance.execute(sql)
             print('updated ' + str(res.rowcount) + ' sends')
 
             sql = 'DELETE FROM stg_eml_send'
-            self.db.engine.execute(sql)
+            engine_instance.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -510,7 +517,7 @@ class DataLoadService(DbService):
             filename = 'journey_opens.csv'
             filepath = '/Export/'
             csv = CsvFile(file=filename,
-                          db_session=self.db.session,
+                          db_session=self.db_session,
                           db_model=StgEmlOpen,
                           primary_keys=['SubscriberKey', 'EventDate'],
                           db_field_map={
@@ -533,7 +540,8 @@ class DataLoadService(DbService):
                   'ON b."SubscriberKey" = a."SubscriberKey" ' \
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
-            res = self.db.engine.execute(sql)
+
+            res = engine_instance.execute(sql)
             print('inserted ' + str(res.rowcount) + ' opens')
 
             sql = 'UPDATE eml_open ' \
@@ -542,11 +550,11 @@ class DataLoadService(DbService):
                   'FROM stg_eml_open a ' \
                   'WHERE a."SubscriberKey" = eml_open."SubscriberKey" ' \
                   'AND a."EventDate" = eml_open."EventDate")'
-            res = self.db.engine.execute(sql)
+            res = engine_instance.execute(sql)
             print('updated ' + str(res.rowcount) + ' opens')
 
             sql = 'DELETE FROM stg_eml_open'
-            self.db.engine.execute(sql)
+            engine_instance.execute(sql)
 
         except Exception as exc:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -556,7 +564,7 @@ class DataLoadService(DbService):
             filename = 'journey_clicks.csv'
             filepath = '/Export/'
             csv = CsvFile(file=filename,
-                          db_session=self.db.session,
+                          db_session=self.db_session,
                           db_model=StgEmlClick,
                           primary_keys=['SubscriberKey', 'EventDate'],
                           db_field_map={
@@ -580,7 +588,7 @@ class DataLoadService(DbService):
                   'ON b."SubscriberKey" = a."SubscriberKey" ' \
                   'AND b."EventDate" = a."EventDate" ' \
                   'WHERE b."SubscriberKey" IS NULL '
-            res = self.db.engine.execute(sql)
+            res = engine_instance.execute(sql)
             print('inserted ' + str(res.rowcount) + ' clicks')
 
             sql = 'UPDATE eml_click ' \
@@ -589,10 +597,10 @@ class DataLoadService(DbService):
                   'FROM stg_eml_click a ' \
                   'WHERE a."SubscriberKey" = eml_click."SubscriberKey" ' \
                   'AND a."EventDate" = eml_click."EventDate")'
-            self.db.engine.execute(sql)
+            engine_instance.execute(sql)
 
             sql = 'DELETE FROM stg_eml_click'
-            res = self.db.engine.execute(sql)
+            res = engine_instance.execute(sql)
             print('updated ' + str(res.rowcount) + ' clicks')
 
         except Exception as exc:
@@ -602,14 +610,15 @@ class DataLoadService(DbService):
         # TODO: append county FIPS codes to open and click data
 
         # append sent/open/click counts to SendJob rows
-        sends = SendJob.query.all()
+        sends = self.db_session.query(SendJob).all()
         for send in sends:
             send._get_stats()
 
     def load_mc_journeys(self):
         token = self.__get_mc_auth()
+        print('load_mc_journeys: token: ', token)
         journeys = self.__get_mc_journeys(token)
-        self.__load_mc_journeys_to_db(journeys, token)
+        self.__load_mc_journeys_to_mongo(journeys, token)
 
     def __get_mc_auth(self):
         # TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
@@ -637,9 +646,12 @@ class DataLoadService(DbService):
         journeys = ad.get_data().json()
         return journeys
 
-    def __load_mc_journeys_to_db(self, journeys, token):
+    def __load_mc_journeys_to_mongo(self, journeys, token):
 
-        collection = self.mongo.db.journeys
+        if self.user_params is not None:
+            collection = self.mongo.db['journeys_' + self.user_params.get('account_name', '')]
+        else:
+            collection = self.mongo.db.journeys
 
         for journey in journeys['items']:
             try:
@@ -705,7 +717,7 @@ class DataLoadService(DbService):
                 }
             ).execute()
 
-            ad = ApiDataToSql(db_session=self.db.session,
+            ad = ApiDataToSql(db_session=self.db_session,
                               db_model=model,
                               primary_keys=['browser_id', 'utc_millisecs'],
                               db_field_map=db_field_map,
@@ -926,7 +938,7 @@ class DataLoadService(DbService):
 
 
         filename = 'static/data/fips_codes_website.csv'
-        db = self.db
+        db_session = self.db_session
         if city_field is None:
             city_field = 'City'
         if state_field is None:
@@ -956,15 +968,15 @@ class DataLoadService(DbService):
 
                 already_processed.append((row['GU Name'], row['State Abbreviation']))
 
-                recs = model.query.filter(city == row['GU Name'].replace(' ', '').upper(),
+                recs = db_session.query(model).filter(city == row['GU Name'].replace(' ', '').upper(),
                                           state == row['State Abbreviation']).all()
                 # print('*', end='', flush=True)
                 if len(recs) > 0:
                     print('found ' + str(len(recs)) + ' records with city ' + row['GU Name'].replace(' ', ''))
                     for rec in recs:
                         rec.__setattr__(fips_field, str(row['State FIPS Code'] + row['County FIPS Code']))
-                        db.session.add(rec)
-                    db.session.commit()
+                        db_session.add(rec)
+                    db_session.commit()
 
 
 class UserDataLoadService(DataLoadService):
@@ -973,20 +985,24 @@ class UserDataLoadService(DataLoadService):
         self.logger = logger
         self.mongo = mongo
         self.db_session = None
+        self.user_params = None
         self.data_type_map = {'customer': Customer,
                               'purchase': Purchase
                               }
         self.api_config_file = 'api_config.yml'
         self.data_load_config = self.load_config()
 
-    def init_user_db(self, user_params):
-        from sqlalchemy import create_engine
-        from sqlalchemy.orm import scoped_session
-        from sqlalchemy.orm import sessionmaker
+    def init_user_db(self, user_params, postgres=True):
+        self.user_params = user_params
 
-        postgres_uri = user_params.get('postgres_uri')
-        if postgres_uri:
+        postgres_uri = self.user_params.get('postgres_uri')
+        if postgres_uri and postgres is True:
+            from sqlalchemy import create_engine
+            from sqlalchemy.orm import scoped_session
+            from sqlalchemy.orm import sessionmaker
+
             engine = create_engine(postgres_uri)
             self.db_session = scoped_session(sessionmaker(bind=engine))
+            print('init db: ', id(self.db_session))
 
         self.user_api_config = MongoUserApiConfigLoader(self.mongo.db, user_params).get_user_api_config()
