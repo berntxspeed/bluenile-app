@@ -12,13 +12,19 @@ from shutil import copyfileobj
 from os import remove
 
 from .classes.esp_push import EmlPush, ImgPush
-from ...common.services import DbService
 from ...common.models.user_models import Upload, Template
 
-class EmailService(DbService):
 
-    def __init__(self, config, db, logger):
-        super(EmailService, self).__init__(config, db, logger)
+class EmailService(object):
+
+    def __init__(self, config, db_session, logger):
+        self.config = config
+        self.db_session = db_session
+        self.logger = logger
+
+    @staticmethod
+    def validate_on_submit(request, form):
+        return request.method == 'POST' and form.validate()
 
     def download(self, request):
         html = transform(request.form.get('html', None))
@@ -49,7 +55,7 @@ class EmailService(DbService):
                 print('found file')
                 filename = file.filename
                 print('uploaded filename: ' + filename)
-                img = ImgPush(self.db, file, filename)
+                img = ImgPush(self.db_session, file, filename)
                 resp, http_status_code = img.save()
                 return jsonify(files=[resp]), http_status_code
             else:
@@ -117,8 +123,8 @@ class EmailService(DbService):
             template.template_data = template_data
             template.meta_data = meta_data
 
-            self.db.session.add(template)
-            self.db.session.commit()
+            self.db_session.add(template)
+            self.db_session.commit()
             return jsonify(status='template saved', key=str(template.key)), 200
         elif action == 'load':
             key = request.form.get('key', None)
