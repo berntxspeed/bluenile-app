@@ -54,16 +54,16 @@ class BaseTask(celery.Task):
 
 
 celery.conf.beat_schedule = {
-    'every-1-hours_lead_perfection': {
+    """ 'every-1-hours_lead_perfection': {
         'task': 'server.app.stats.workers.load_lead_perfection',
         'schedule': crontab(minute=0, hour='*/1'),
         'kwargs': {'task_type': 'lead_perfection'}
     },
-    """ 'every-4-hours_web_tracking': {
+    'every-4-hours_web_tracking': {
         'task': 'server.app.stats.workers.load_web_tracking',
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'web-tracking'}
-    },"""
+    },
     'every-4-hours_mc_journeys': {
         'task': 'server.app.stats.workers.load_mc_journeys',
         'schedule': crontab(minute=0, hour='*/4'),
@@ -73,16 +73,16 @@ celery.conf.beat_schedule = {
         'task': 'server.app.stats.workers.load_mc_email_data',
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'mc-email-data'}
-    },
+    },"""
     'every-hour_schedule_sync_jobs': {
         'task': 'server.app.stats.workers.schedule_sync_jobs',
         'schedule': crontab(minute=0, hour='*'),
-        'kwargs': {'task_type': 'schedule-sync-jobs'}
+        'kwargs': {'task_type': 'schedule-sync-jobs', 'user_params': {'account_name': 'bluenile'}}
     },
     'every-hour_schedule_load_jobs': {
         'task': 'server.app.stats.workers.schedule_load_jobs',
         'schedule': crontab(minute=30, hour='*'),
-        'kwargs': {'task_type': 'schedule-load-jobs'}
+        'kwargs': {'task_type': 'schedule-load-jobs', 'user_params': {'account_name': 'bluenile'}}
     }
 }
 
@@ -149,17 +149,32 @@ def load_web_tracking(**kwargs):
 
 @celery.task
 def add_fips_location_emlopen(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.add_fips_location_data, 'EmlOpen')
+    # TODO: remove if/else to default to user_db
+    user_params = kwargs.get('user_params')
+    if user_params:
+        with app.app_context():
+            service = injector.get(UserDataLoadServ)
+            service.init_user_db(user_params)
+            service.exec_safe_session(service.add_fips_location_data, 'EmlOpen')
+    else:
+        with app.app_context():
+            service = injector.get(DataLoadServ)
+            service.exec_safe_session(service.add_fips_location_data, 'EmlOpen')
 
 
 @celery.task
 def add_fips_location_emlclick(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.add_fips_location_data('EmlClick')
-        service.exec_safe_session(service.add_fips_location_data, 'EmlClick')
+    # TODO: remove if/else to default to user_db
+    user_params = kwargs.get('user_params')
+    if user_params:
+        with app.app_context():
+            service = injector.get(UserDataLoadServ)
+            service.init_user_db(user_params)
+            service.exec_safe_session(service.add_fips_location_data, 'EmlClick')
+    else:
+        with app.app_context():
+            service = injector.get(DataLoadServ)
+            service.exec_safe_session(service.add_fips_location_data, 'EmlClick')
 
 
 @celery.task(base=BaseTask)
@@ -188,15 +203,25 @@ def schedule_sync_jobs(**kwargs):
     from server.app.data_builder.services.data_builder_query import DataBuilderQuery
     from .services.classes.stats_utils import find_relevant_periodic_tasks
 
-    with app.app_context():
-        mongo = injector.get(MongoDB)
-        status, all_queries = DataBuilderQuery(mongo.db).get_all_queries()
-        relevant_queries = find_relevant_periodic_tasks(all_queries)
+    #Find all the active client accounts
+    from server.app.common.models.system_models import ClientAccount
+    from server.app.common.models.system_models import system_session
+    session = system_session()
+    client_accounts_result = session.query(ClientAccount).all()
 
-        if len(relevant_queries):
-            from ..data.workers import sync_query_to_mc
-            for a_query in relevant_queries:
-                sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'))
+    for an_account in client_accounts_result:
+        print('account name: ', an_account.account_name)
+        user_config = dict(account_name=an_account.account_name, postgres_uri=an_account.database_uri)
+        with app.app_context():
+            mongo = injector.get(MongoDB)
+            status, all_queries = DataBuilderQuery(mongo.db, user_config).get_all_queries()
+            relevant_queries = find_relevant_periodic_tasks(all_queries)
+
+            if len(relevant_queries):
+                from ..data.workers import sync_query_to_mc
+                for a_query in relevant_queries:
+                    print('query name: ', a_query.get('name'))
+                    sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'), user_params=user_config)
 
 
 @celery.task(base=BaseTask)
@@ -204,82 +229,101 @@ def schedule_load_jobs(**kwargs):
     from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
     from .services.classes.stats_utils import find_relevant_periodic_tasks
 
-    with app.app_context():
-        mongo = injector.get(MongoDB)
-        status, dl_jobs = MongoDataJobConfigLoader(mongo.db).get_data_load_jobs()
-        relevant_load_jobs = find_relevant_periodic_tasks(dl_jobs)
+    #Find all the active client accounts
+    from server.app.common.models.system_models import ClientAccount
+    from server.app.common.models.system_models import system_session
+    session = system_session()
+    client_accounts_result = session.query(ClientAccount).all()
 
-        if len(relevant_load_jobs):
-                from .workers import basic_load_task, load_mc_journeys, \
-                    load_web_tracking, load_lead_perfection
-                from .workers import add_fips_location_emlopen, add_fips_location_emlclick
-                from ..data.workers import sync_data_to_mc
+    for an_account in client_accounts_result:
+        print('account name: ', an_account.account_name)
+        user_config = dict(account_name=an_account.account_name, postgres_uri=an_account.database_uri)
 
-                load_map = {'x2crm_customers': {'load_func': basic_load_task,
-                                                'data_source': 'x2crm',
-                                                'data_type': 'customer'},
-                            'zoho_customers': {'load_func': basic_load_task,
-                                               'data_source': 'zoho',
-                                               'data_type': 'customer'},
-                            'magento_customers': {'load_func': basic_load_task,
-                                                  'data_source': 'magento',
-                                                  'data_type': 'customer'},
-                            'magento_purchases': {'load_func': basic_load_task,
-                                                  'data_source': 'magento',
-                                                  'data_type': 'purchase'},
-                            'shopify_customers': {'load_func': basic_load_task,
-                                                  'data_source': 'shopify',
-                                                  'data_type': 'customer'},
-                            'shopify_purchases': {'load_func': basic_load_task,
-                                                  'data_source': 'shopify',
-                                                  'data_type': 'purchase'},
-                            'bigcommerce_customers': {'load_func': basic_load_task,
-                                                      'data_source': 'bigcommerce',
+        with app.app_context():
+            mongo = injector.get(MongoDB)
+            status, dl_jobs = MongoDataJobConfigLoader(mongo.db, user_config).get_data_load_jobs()
+            relevant_load_jobs = find_relevant_periodic_tasks(dl_jobs)
+
+            if len(relevant_load_jobs):
+                    from .workers import basic_load_task, load_mc_journeys, \
+                        load_web_tracking, load_lead_perfection
+                    from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+                    from ..data.workers import sync_data_to_mc
+
+                    load_map = {'x2crm_customers': {'load_func': basic_load_task,
+                                                    'data_source': 'x2crm',
+                                                    'data_type': 'customer'},
+                                'zoho_customers': {'load_func': basic_load_task,
+                                                   'data_source': 'zoho',
+                                                   'data_type': 'customer'},
+                                'magento_customers': {'load_func': basic_load_task,
+                                                      'data_source': 'magento',
                                                       'data_type': 'customer'},
-                            'bigcommerce_purchases': {'load_func': basic_load_task,
-                                                      'data_source': 'bigcommerce',
+                                'magento_purchases': {'load_func': basic_load_task,
+                                                      'data_source': 'magento',
                                                       'data_type': 'purchase'},
-                            'stripe_customers': {'load_func': basic_load_task,
-                                                 'data_source': 'stripe',
-                                                 'data_type': 'customer'},
-                            # 'artists': load_artists,
-                            'mc-email-data': load_mc_email_data,
-                            'mc-journeys': load_mc_journeys,
-                            'web-tracking': load_web_tracking,
-                            'add-fips-location-emlopen': add_fips_location_emlopen,
-                            'add-fips-location-emlclick': add_fips_location_emlclick,
-                            'lead-perfection': load_lead_perfection,
-                            'customer_table': {'load_func': sync_data_to_mc,
-                                               'table_name': 'customer',
-                                               },
-                            'purchase_table': {'load_func': sync_data_to_mc,
-                                               'table_name': 'purchase',
-                                               }
-                            }
+                                'shopify_customers': {'load_func': basic_load_task,
+                                                      'data_source': 'shopify',
+                                                      'data_type': 'customer'},
+                                'shopify_purchases': {'load_func': basic_load_task,
+                                                      'data_source': 'shopify',
+                                                      'data_type': 'purchase'},
+                                'bigcommerce_customers': {'load_func': basic_load_task,
+                                                          'data_source': 'bigcommerce',
+                                                          'data_type': 'customer'},
+                                'bigcommerce_purchases': {'load_func': basic_load_task,
+                                                          'data_source': 'bigcommerce',
+                                                          'data_type': 'purchase'},
+                                'stripe_customers': {'load_func': basic_load_task,
+                                                     'data_source': 'stripe',
+                                                     'data_type': 'customer'},
+                                # 'artists': load_artists,
+                                'mc-email-data': load_mc_email_data,
+                                'mc-journeys': load_mc_journeys,
+                                'web-tracking': load_web_tracking,
+                                'add-fips-location-emlopen': add_fips_location_emlopen,
+                                'add-fips-location-emlclick': add_fips_location_emlclick,
+                                'lead-perfection': load_lead_perfection,
+                                'customer_table': {'load_func': sync_data_to_mc,
+                                                   'table_name': 'customer',
+                                                   },
+                                'purchase_table': {'load_func': sync_data_to_mc,
+                                                   'table_name': 'purchase',
+                                                   }
+                                }
 
-                while len(relevant_load_jobs):
-                    a_job = relevant_load_jobs.pop()
-                    task = load_map.get(a_job.get('job_type'))
-                    if not task:
-                        continue
-                    sync_queries = (len(relevant_load_jobs) == 0)
-                    if 'table_name' in task:
-                        task['load_func'].delay(task['table_name'],
-                                                task_type='load_' + a_job['job_type'],
-                                                table_name=task['table_name'])
-                    else:
-                        task['load_func'].delay(task_type='load_' + a_job['job_type'],
-                                                data_source=task['data_source'],
-                                                data_type=task['data_type'],
-                                                sync_queries=sync_queries)
+                    while len(relevant_load_jobs):
+                        a_job = relevant_load_jobs.pop()
+                        task = load_map.get(a_job.get('job_type'))
+                        if not task:
+                            continue
+                        sync_queries = (len(relevant_load_jobs) == 0)
+                        if 'table_name' in task:
+                            task['load_func'].delay(task['table_name'],
+                                                    task_type='load_' + a_job['job_type'],
+                                                    table_name=task['table_name'])
+                        else:
+                            task['load_func'].delay(task_type='load_' + a_job['job_type'],
+                                                    data_source=task['data_source'],
+                                                    data_type=task['data_type'],
+                                                    sync_queries=sync_queries)
 
-                    sleep(60)
+                        sleep(60)
 
 
+@celery.task(base=BaseTask)
 def load_lead_perfection(**kwargs):
-    with app.app_context():
-        service = injector.get(DataLoadServ)
-        service.exec_safe_session(service.load_lead_perfection)
+    # TODO: remove if/else to default to user_db
+    user_params = kwargs.get('user_params')
+    if user_params:
+        with app.app_context():
+            service = injector.get(UserDataLoadServ)
+            service.init_user_db(user_params)
+            service.exec_safe_session(service.load_lead_perfection)
+    else:
+        with app.app_context():
+            service = injector.get(DataLoadServ)
+            service.exec_safe_session(service.load_lead_perfection)
 
 
 NUM_OBJ_TO_CREATE = 30
