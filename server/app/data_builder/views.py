@@ -38,9 +38,7 @@ def before_request():
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('data_builder')
 def data_builder(mongo, user_config, query_id=None):
-    from flask import session
-    user_params = session.get('user_params', {})
-    user = dict(account=user_params.get('account_name'))
+    user = dict(account=user_config.get('account_name'))
     models = [Customer, EmlOpen, EmlSend, EmlClick, Purchase, WebTrackingEvent,
               WebTrackingEcomm, WebTrackingPageView]
 
@@ -50,7 +48,7 @@ def data_builder(mongo, user_config, query_id=None):
 
     if request.args.get('sync') == 'True':
         from ..data.workers import sync_query_to_mc
-        result = sync_query_to_mc.delay(data, user_params=user_params, task_type='data-push', query_name=query_id)
+        result = sync_query_to_mc.delay(data, user_params=user_config, task_type='data-push', query_name=query_id)
         response_dict.update({'task_id': result.id})
 
     return response_dict

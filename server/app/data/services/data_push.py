@@ -22,10 +22,12 @@ class DataPushService(DbService):
             try:
                 service_func(*args)
             except Exception as exc:
-                self.db_session.rollback()
+                if self.db_session is not None:
+                    self.db_session.rollback()
                 raise type(exc)('Data Push Error: {0}: {1}'.format(type(exc).__name__, exc.args))
             finally:
-                self.db_session.remove()
+                if self.db_session is not None:
+                    self.db_session.remove()
 
     def sync_data_to_mc(self, table):
         if table not in self._models.keys():

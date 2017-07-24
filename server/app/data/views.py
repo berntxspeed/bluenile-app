@@ -33,10 +33,11 @@ def data_pusher(mongo, user_config):
 
 
 @data.route('/clear-sync-flags/<table>')
+@inject(user_config=UserSessionConfig)
 @templated('data_pusher')
-def clr_ext_sync_flags(table):
+def clr_ext_sync_flags(table, user_config):
     from .workers import clean_sync_flags
-    result = clean_sync_flags.delay(table)
+    result = clean_sync_flags.delay(table, user_params=user_config)
     return dict(task_id=result.id)
 
 

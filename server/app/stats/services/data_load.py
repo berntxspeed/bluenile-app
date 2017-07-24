@@ -210,7 +210,8 @@ class DataLoadService(DbService):
             try:
                 load_func(*args, **kwargs)
             except Exception as exc:
-                self.db_session.rollback()
+                if self.db_session is not None:
+                    self.db_session.rollback()
                 raise type(exc)('DataLoad Error: {0}: {1}'.format(type(exc).__name__, exc.args))
             finally:
                 if self.db_session is not None:
@@ -1003,6 +1004,5 @@ class UserDataLoadService(DataLoadService):
 
             engine = create_engine(postgres_uri)
             self.db_session = scoped_session(sessionmaker(bind=engine))
-            print('init db: ', id(self.db_session))
 
         self.user_api_config = MongoUserApiConfigLoader(self.mongo.db, user_params).get_user_api_config()
