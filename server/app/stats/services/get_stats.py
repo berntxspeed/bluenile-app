@@ -1,15 +1,17 @@
 from flask import jsonify
 from sqlalchemy import func
 
-from ...common.services import DbService
 from ...common.models.user_models import Artist, Customer, Purchase, EmlSend, EmlOpen, EmlClick, SendJob, Event, \
     WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm, Report
 from .classes.get_stats import StatsGetter
 
 
-class GetStatsService(DbService):
-    def __init__(self, config, db, logger):
-        super(GetStatsService, self).__init__(config, db, logger)
+class GetStatsService(object):
+    def __init__(self, config, db_session, logger):
+        self.config = config
+        self.db_session = db_session
+        self.logger = logger
+
         self._acceptable_tables = {
             'Customer': Customer,
             'Purchase': Purchase,
@@ -24,13 +26,17 @@ class GetStatsService(DbService):
             'SendJob': SendJob
         }
 
+    @staticmethod
+    def validate_on_submit(request, form):
+        return request.method == 'POST' and form.validate()
+
     def get_columns(self, tbl):
         """
         Returns: a list of columns for a table
         tbl = 'EmlOpen' # a table to query
         """
         try:
-            st = StatsGetter(db=self.db,
+            st = StatsGetter(db_session=self.db_session,
                              tbl=tbl,
                              acceptable_tbls=self._acceptable_tables)
         except ValueError as exc:
@@ -60,7 +66,7 @@ class GetStatsService(DbService):
         ]
         """
         try:
-            st = StatsGetter(db=self.db,
+            st = StatsGetter(db_session=self.db_session,
                              tbl=tbl,
                              acceptable_tbls=self._acceptable_tables,
                              grp_by=grp_by,

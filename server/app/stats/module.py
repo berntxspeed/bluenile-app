@@ -24,15 +24,14 @@ class StatsModule(Module):
                                   db=db,
                                   mongo=mongo)
 
-        @singleton
         @inject(config=Config,
                 logger=Logging,
-                db=SQLAlchemy)
+                db_session=DBSession)
         @provides(GetStatsServ)
-        def provide_get_stats_service(self, config, logger, db):
+        def provide_get_stats_service(self, config, logger, db_session):
             return GetStatsService(config=config,
                                    logger=logger,
-                                   db=db)
+                                   db_session=db_session)
 
         @singleton
         @inject(config=Config,
