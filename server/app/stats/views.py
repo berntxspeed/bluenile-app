@@ -116,18 +116,18 @@ def get_data_load_jobs(mongo, user_config):
 
 
 @stats.route('/journey-view')
-@inject(jb_stats_service=JbStatsServ)
+@inject(jb_stats_service=JbStatsServ, user_config=UserSessionConfig)
 @templated('journey_view')
-def journey_view(jb_stats_service):
+def journey_view(jb_stats_service, user_config):
     # passes all journey ids to view
-    return jb_stats_service.journey_view()
+    return jb_stats_service.journey_view(user_config=user_config)
 
 
 @stats.route('/journey-detail/<id>')
-@inject(jb_stats_service=JbStatsServ)
-def journey_detail(jb_stats_service, id):
+@inject(jb_stats_service=JbStatsServ, user_config=UserSessionConfig)
+def journey_detail(jb_stats_service, id, user_config):
     # returns all information about one journey
-    result = jb_stats_service.journey_detail(id)
+    result = jb_stats_service.journey_detail(id, user_config=user_config)
     return Response(dumps(result), mimetype='application/json')
 
 

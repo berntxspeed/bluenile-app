@@ -7,13 +7,15 @@ from ...common.models.system_models import User
 
 from bson.objectid import ObjectId
 
+
 class JbStatsService(DbService):
 
     def __init__(self, config, db, logger, mongo):
         super(JbStatsService, self).__init__(config, db, logger)
         self.mongo = mongo
 
-    def special_logged_in_page(self, request, session):
+    @staticmethod
+    def special_logged_in_page(request, session):
         facebook_id = session.get('facebook_id')
         if facebook_id:
             user = User.query.filter_by(facebook_id=facebook_id).first()
@@ -26,9 +28,15 @@ class JbStatsService(DbService):
             'fb_id': facebook_id
         }
 
-    def journey_view(self):
+    def journey_view(self, user_config=None):
         journeys = []
-        for j in self.mongo.db.journeys.find():
+
+        if user_config is not None:
+            collection = self.mongo.db['journeys_' + self.user_config.get('account_name', '')]
+        else:
+            collection = self.mongo.db.journeys
+
+        for j in collection.find():
             journeys.append({
                 '_id': j['_id'],
                 'name': j['name']
@@ -40,9 +48,13 @@ class JbStatsService(DbService):
             'journeys': journeys
         }
 
-    def journey_detail(self, id):
-        journey = self.mongo.db.journeys.find_one_or_404({'_id': ObjectId(id)})
+    def journey_detail(self, id, user_config=None):
+
+        if user_config is not None:
+            collection = self.mongo.db['journeys_' + self.user_config.get('account_name', '')]
+        else:
+            collection = self.mongo.db.journeys
+
+        journey = collection.find_one_or_404({'_id': ObjectId(id)})
         journey['_id'] = str(journey['_id'])
         return journey
-
-
