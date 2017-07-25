@@ -86,8 +86,4 @@ class AuthService(DbService):
 
     def __next_url(self, request):
         next_url = request.args.get('next')
-        if next_url:
-            next_url = url_for('main.index')
-        else:
-            next_url = url_for('main.index')
-        return next_url
+        return next_url or url_for('main.index')
