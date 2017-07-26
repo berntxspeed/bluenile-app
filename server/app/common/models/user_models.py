@@ -402,13 +402,16 @@ class SendJob(user_db.Model):
     num_clicks = user_db.Column(user_db.Integer)
 
     def _get_stats(self):
-        self.num_sends = user_db.session.object_session(self).query(EmlSend).with_parent(self, "eml_sends").count()
-        self.num_opens = user_db.session.object_session(self).query(EmlOpen).filter(EmlOpen.IsUnique == True).with_parent(
+        current_session = user_db.session.object_session(self)
+
+        self.num_sends = current_session.query(EmlSend).with_parent(self, "eml_sends").count()
+        self.num_opens = current_session.query(EmlOpen).filter(EmlOpen.IsUnique == True).with_parent(
             self, "eml_opens").count()
-        self.num_clicks = user_db.session.object_session(self).query(EmlClick).filter(EmlClick.IsUnique == True).with_parent(
+        self.num_clicks = current_session.query(EmlClick).filter(EmlClick.IsUnique == True).with_parent(
             self, "eml_clicks").count()
-        user_db.session.add(self)
-        user_db.session.commit()
+
+        current_session.add(self)
+        current_session.commit()
 
     def _update_last_ext_sync(self):
         self._last_ext_sync = datetime.datetime.utcnow()

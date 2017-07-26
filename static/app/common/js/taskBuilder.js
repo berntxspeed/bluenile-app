@@ -149,20 +149,6 @@ $(document).ready(function() {
 
     init()
 
-    var alertUser = function(alert_message, timeout=null) {
-        (timeout)? g_timeout = timeout: g_timeout = 1700
-        document.getElementById('modal-content').innerHTML = alert_message
-        $("#alertModal").modal({'backdrop': false, 'keyboard': true})
-    };
-
-    $("#alertModal").on('show.bs.modal', function(){
-        var myModal = $(this);
-        clearTimeout(myModal.data('hideInterval'));
-        myModal.data('hideInterval', setTimeout(function(){
-            myModal.modal('hide');
-        }, g_timeout));
-    });
-
     /*
             ACCOUNT MANAGEMENT
     */
@@ -240,11 +226,7 @@ $(document).ready(function() {
                  },
                  success: function(data) {
                     document.getElementById('accounts-footer').innerHTML = "Account Successfully Created!"
-
-                    clearTimeout($(this).data('hideInterval'));
-                    $(this).data('hideInterval', setTimeout(function(){
-                        $("#btn-manage-user-accounts").click()
-                    }, 1200));
+                    $('#source-footer').fadeOut(1500, function(){$("#btn-manage-user-accounts").click()})
                  },
                  error: function(err) {
 //                         TODO: handle the error here
