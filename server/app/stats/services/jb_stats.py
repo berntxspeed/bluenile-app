@@ -32,7 +32,7 @@ class JbStatsService(DbService):
         journeys = []
 
         if user_config is not None:
-            collection = self.mongo.db['journeys_' + self.user_config.get('account_name', '')]
+            collection = self.mongo.db['journeys_' + user_config.get('account_name', '')]
         else:
             collection = self.mongo.db.journeys
 
@@ -51,7 +51,7 @@ class JbStatsService(DbService):
     def journey_detail(self, id, user_config=None):
 
         if user_config is not None:
-            collection = self.mongo.db['journeys_' + self.user_config.get('account_name', '')]
+            collection = self.mongo.db['journeys_' + user_config.get('account_name', '')]
         else:
             collection = self.mongo.db.journeys
 

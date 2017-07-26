@@ -17,4 +17,4 @@ class EmailModule(Module):
     def provide_email_service(self, config, logger, db_session):
         return EmailService(config=config,
                             logger=logger,
-                            db=db_session)
+                            db_session=db_session)

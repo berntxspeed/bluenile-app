@@ -56,6 +56,12 @@ class AuthService(DbService):
         return accounts
 
     @staticmethod
+    def get_all_accounts():
+        db_session = system_session()
+        accounts = db_session.query(ClientAccount).all()
+        return [dict(account_name=account.account_name) for account in accounts]
+
+    @staticmethod
     def set_user_account(account):
         # Save user/account info in the current session
         session['user_params'] = dict(account_name=account.account_name,

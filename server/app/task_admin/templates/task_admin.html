@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
 
-{% block title %}Data Manager{% endblock %}
-
 {% block head %}
 {{ super() }}
 
@@ -31,11 +29,15 @@
 
 {% endblock %}
 
+
+
+
 {% block banner %}
     <div class="container banner banner-jumbotron banner-gray">
         <div class="row">
             <div class="center-block">
                 <h1>&nbsp;</h1>
+                <button id="btn-manage-user-accounts" style="font-size: 18px; float: right;" class="btn btn-secondary btn-default navbar-btn"><span class="glyphicon glyphicon-user"></span> Manage User Accounts </button>
                 <h3>Monitor & Manage Data Load Tasks</h3>
             </div>
         </div>
@@ -88,4 +90,48 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Table For Account Management-->
+    <div id="usersModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:25px 50px;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 id="user-accounts"> <span class="glyphicon glyphicon-user"></span> User Accounts</h4>
+                </div>
+                <div class="modal-body">
+                    <table id="user-accounts-table"></table>
+                    <div id="user-info-block" style="display: none">
+                        <div class="form-group" id="domain">
+                            <label for="account">Account:</label>
+                            <input type="text" class="form-control" id="account" placeholder="account name">
+                        </div>
+                        <div class="form-group" id="id">
+                            <label for="username">Username:</label>
+                            <input type="email" class="form-control" id="username" placeholder="username: must be email, e.g. user@bluenile.com">
+                        </div>
+                        <!--<div class="form-group" id="secret">-->
+                            <!--<label for="password">Password:</label>-->
+                            <!--<input type="password" class="form-control" id="password" placeholder="Password">-->
+                        <!--</div>-->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="row" id="avail-accounts-buttons">
+                        <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                        <button type="submit" id="btn-add-account" class="btn btn-success btn-default pull-left"><span class="glyphicon glyphicon-plus"></span> Add Account</button>
+                        <button type="submit" id="btn-edit-account" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-pencil"></span> Edit Account</button>
+                        <button type="submit" id="btn-delete-account" class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-trash"></span> Delete Account</button>
+                    </div>
+                    <div class="row" id="edit-account-buttons" style="display: none">
+                        <button id="btn-save-account" class="btn btn-success btn-default pull-right"><span class="glyphicon glyphicon-ok"></span> Save</button>
+                        <button type="submit" id="btn-return-to-accounts" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
+                        <h4 id="accounts-footer" style="text-align: center"></h4>
+                    </div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
 {% endblock %}

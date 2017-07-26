@@ -125,7 +125,7 @@ $(document).ready(function(){
     })
 
     $("#btn-return-to-available-load-jobs").click(function () {
-        $("#btn-sched-frequency").click()
+        $("#btn-manage-data-sources").click()
     })
 
   	function getSelectedRow(table) {
@@ -155,7 +155,7 @@ $(document).ready(function(){
             }
         }
         else if ( (new_periodic_load === current_frequency) || ((new_periodic_load === "0") && (current_frequency == null)) ){
-            $("#btn-return-to-available-load-jobs").click()
+            $("#btn-sched-frequency").click()
         }
         else {changed = true}
 
@@ -179,7 +179,7 @@ $(document).ready(function(){
 
             clearTimeout($(this).data('hideInterval'));
             $(this).data('hideInterval', setTimeout(function(){
-                $("#btn-return-to-available-load-jobs").click()
+                $("#btn-sched-frequency").click()
             }, 1000));
         }
     })
@@ -195,8 +195,8 @@ $(document).ready(function(){
                 url: "/data-manager/get-dl-jobs",
                 dataType: "json",
                 success: function(data) {
-                    data.formatShowingRows = function(pageFrom, pageTo, totalRows){
-                        return 'Showing ' + pageFrom + ' to ' + pageTo + ' of ' + totalRows + ' queries'
+                    data.formatNoMatches = function(){
+                        return 'Define Data Sources First'
                     }
                     data_load_frequency_table.bootstrapTable(data)
                 },
@@ -223,8 +223,8 @@ $(document).ready(function(){
                 url: "/data-manager/get-data-sources",
                 dataType: "json",
                 success: function(data) {
-                    data.formatShowingRows = function(pageFrom, pageTo, totalRows){
-                        return 'Showing ' + pageFrom + ' to ' + pageTo + ' of ' + totalRows + ' queries'
+                    data.formatNoMatches = function(){
+                        return 'Click "Add Source" to Define Data Sources'
                     }
                     data_load_sources_table.bootstrapTable(data)
                 },
@@ -338,18 +338,14 @@ $(document).ready(function(){
                  },
                  success: function(data) {
                     document.getElementById('source-footer').innerHTML = "Data Source Update Successful"
+                    $('#source-footer').fadeOut(2000, function(){$("#btn-manage-data-sources").click()})
                  },
                  error: function(err) {
 //                         TODO: handle the error here
                  }
             })
+
         }
-
-
-        clearTimeout($(this).data('hideInterval'));
-        $(this).data('hideInterval', setTimeout(function(){
-            $("#btn-return-to-available-sources").click()
-        }, 1200));
     })
 
     $("#add-source").on('change', function() {
