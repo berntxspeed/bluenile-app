@@ -14,6 +14,29 @@ class AccountCreationService:
         self.create_mongo(self.account_name)
         self.init_system_entries(self.account_name, userdb_uri, self.admin_user)
 
+    def delete_account(self, mongo=None):
+        import sqlalchemy_utils
+        local_session = system_session()
+
+        # Eliminate system_db entries
+        account = local_session.query(ClientAccount).filter(ClientAccount.account_name == self.account_name).first()
+        local_session.delete(account)
+        local_session.commit()
+        local_session.close()
+
+        # Demolish postgres
+        db_uri = 'postgresql://localhost/{0}'.format(self.account_name)
+        if sqlalchemy_utils.database_exists(db_uri):
+            sqlalchemy_utils.drop_database(db_uri)
+
+        # Eradicate mongo collections
+        if mongo is not None:
+            for a_collection_name in mongo.db.collection_names():
+                if a_collection_name.endswith(self.account_name):
+                    print('dropping collection: ', a_collection_name)
+                    mongo.db[a_collection_name].drop()
+
+
     @staticmethod
     def init_system_entries(name, uri, username='vitalik301@gmail.com'):
         local_session = system_session()
@@ -37,8 +60,8 @@ class AccountCreationService:
 
             # create default db
             if sqlalchemy_utils.database_exists(db_uri):
-                #sqlalchemy_utils.drop_database(db_uri)
-                return None
+                sqlalchemy_utils.drop_database(db_uri)
+                # return None
             sqlalchemy_utils.create_database(db_uri)
 
             # create tables

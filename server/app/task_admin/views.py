@@ -47,9 +47,26 @@ def create_account():
     service = AccountCreationService(account_config['account'], account_config['username'])
     try:
         service.execute()
-        if current_user.email == account_config['username']:
+        if current_user.email == account_config['username'] and account_config['account'] not in session['accounts']:
             session['accounts'].append(account_config['account'])
-        return 'ok', 200
+        return 'OK', 200
+    except Exception as ex:
+        return repr(ex), 409
+
+
+@inject(mongo=MongoDB)
+@taskadmin.route('/delete-account/<account_name>')
+def delete_account(account_name, mongo):
+    print(account_name)
+    service = AccountCreationService(account_name, '')
+    try:
+        # TODO: prevent deleting currently active account
+        if account_name == session['user_params']['account_name']:
+            raise Exception('Cannot Delete Currently Active Account!')
+        service.delete_account(mongo)
+        if account_name in session['accounts']:
+            session['accounts'].remove(account_name)
+        return 'OK', 200
     except Exception as ex:
         return repr(ex), 409
 

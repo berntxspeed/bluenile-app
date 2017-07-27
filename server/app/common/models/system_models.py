@@ -107,10 +107,11 @@ class ClientAccount(system_db.Model):
     account_name = system_db.Column(String(255), unique=True)
     database_uri = system_db.Column(String(255))
     # other account info goes here (billing, contact, address, etc etc)
-    permissions = relationship(UserPermissions, backref='client_account',
+    permissions = relationship(UserPermissions,
+                               backref='client_account',
                                primaryjoin='UserPermissions.account_id==ClientAccount.id',
                                foreign_keys=[UserPermissions.account_id],
-                               passive_deletes='all')
+                               cascade="all, delete-orphan")
 
 # 1 bluenile
 # 2 yeti .... "YETI"

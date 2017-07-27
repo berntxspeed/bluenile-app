@@ -33,6 +33,11 @@ $(document).ready(function() {
         table.bootstrapTable('destroy')
     };
 
+  	function getSelectedRow(table) {
+        var index = table.find('tr.success').data('index')
+        return table.bootstrapTable('getData')[index]
+    }
+
     showElement = function() {
         var args = Array.prototype.slice.call(arguments)
         for (element in args){
@@ -198,6 +203,30 @@ $(document).ready(function() {
         return reg.test(email);
     }
 
+    $("#btn-delete-account").click(function () {
+        var row = getSelectedRow(user_accounts_table)
+        if (row == null) { return }
+        account_name = row.account_name
+        $.ajax({
+                 url: "/admin/delete-account/" + account_name,
+                 contentType: 'application/json;charset=UTF-8',
+                 beforeSend: function(request) {
+                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
+                 },
+                 success: function(data) {
+                    if (data === 'OK'){
+                        user_accounts_table.bootstrapTable('remove', {
+                            field: 'account_name',
+                            values: [row.account_name]
+                        });
+                    }
+                 },
+                 error: function(err) {
+                    console.log(err.responseText)
+                 }
+        });
+    })
+
     $("#btn-save-account").click(function (e) {
         account_config = {}
         data_valid = true
@@ -226,7 +255,7 @@ $(document).ready(function() {
                  },
                  success: function(data) {
                     document.getElementById('accounts-footer').innerHTML = "Account Successfully Created!"
-                    $('#source-footer').fadeOut(1500, function(){$("#btn-manage-user-accounts").click()})
+                    $('#accounts-footer').fadeOut(2000, function(){$("#btn-manage-user-accounts").click()})
                  },
                  error: function(err) {
 //                         TODO: handle the error here
