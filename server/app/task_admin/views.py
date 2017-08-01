@@ -11,7 +11,7 @@ from injector import inject
 
 from server.app.common.views.decorators import templated
 from server.app.data_builder.services.query_service import SqlQueryService
-from server.app.injector_keys import MongoDB, UserSessionConfig
+from server.app.injector_keys import MongoDB, UserSessionConfig, Config
 from server.app.task_admin.services.account_creation_service import AccountCreationService
 from . import taskadmin
 from .services.mongo_task_loader import MongoTaskLoader
@@ -41,10 +41,11 @@ def task_admin(mongo, user_config):
     return dict(status=status, tasks=tasks, user=user)
 
 
+@inject(config=Config)
 @taskadmin.route('/create-account', methods=['POST'])
-def create_account():
+def create_account(config):
     account_config = request.json
-    service = AccountCreationService(account_config['account'], account_config['username'])
+    service = AccountCreationService(account_config['account'], account_config['username'], config)
     try:
         service.execute()
         if current_user.email == account_config['username'] and account_config['account'] not in session['accounts']:

@@ -46,8 +46,9 @@ def init_db():
     from server.app.task_admin.services.account_creation_service import AccountCreationService
 
     # creates the system database
-    AccountCreationService.create_postgres('bluenile', system_db)
-    AccountCreationService('test-account', 'vitalik301@gmail.com').execute()
+    account_service = AccountCreationService('test-account2', 'vitalik301@gmail.com', config)
+    account_service.create_postgres('bluenile', system_db)
+    account_service.execute()
 
 
 if __name__ == '__main__':

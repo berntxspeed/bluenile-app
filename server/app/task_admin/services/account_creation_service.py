@@ -1,13 +1,17 @@
-
 from server.app.common.models.system_models import session_scope
 from server.app.common.models.system_models import ClientAccount, UserPermissions
 from server.app.common.models.user_models import user_db
 
 
 class AccountCreationService:
-    def __init__(self, account_name, admin_user):
+    def __init__(self, account_name, admin_user, config):
+        self.config = config
         self.admin_user = admin_user
         self.account_name = account_name
+        if config.get('SQLALCHEMY_DATABASE_URI') is not None:
+            self.db_prefix = '/'.join(config['SQLALCHEMY_DATABASE_URI'].split('/')[:-1])
+        else:
+            self.db_prefix = 'postgresql://localhost'
 
     def execute(self):
         userdb_uri = self.create_postgres(self.account_name, user_db)
@@ -52,13 +56,12 @@ class AccountCreationService:
             db_session.add(account)
             db_session.commit()
 
-    @staticmethod
-    def create_postgres(name, db_model):
+    def create_postgres(self, name, db_model):
         try:
             import sqlalchemy_utils
             from sqlalchemy import create_engine
 
-            db_uri = AccountCreationService.get_postgres_uri_from_account_name(name)
+            db_uri = self.get_postgres_uri_from_account_name(name)
 
             # create default db
             if sqlalchemy_utils.database_exists(db_uri):
@@ -81,7 +84,5 @@ class AccountCreationService:
     def create_mongo(name):
         return True
 
-    # TODO: don't hardcode this, obviously
-    @staticmethod
-    def get_postgres_uri_from_account_name(account_name):
-        return 'postgresql://localhost/{0}'.format(account_name)
+    def get_postgres_uri_from_account_name(self, account_name):
+        return '{0}/{1}'.format(self.db_prefix, account_name)

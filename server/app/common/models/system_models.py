@@ -1,5 +1,5 @@
+import os
 from contextlib import contextmanager
-
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 
@@ -10,6 +10,7 @@ from sqlalchemy.orm import synonym, relationship
 
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
+
 
 HASH_SECRET = b'33jjfSFTW43FE2992222FD'
 
@@ -23,11 +24,16 @@ system_db = SQLAlchemy(session_options={
 # resources
 
 # TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
-engine = create_engine('postgresql://localhost/bluenile')
+db_uri = os.getenv('DATABASE_URL')
+if db_uri is not None:
+    system_db_uri = '/'.join(db_uri.split('/')[:-1]) + '/bluenile'
+else:
+    system_db_uri = 'postgresql://localhost/bluenile'
 
 # Create a configured "Session" class, i.e. session factory, to create a session, call system_session()
 # Never import system_session directly
 # Always use contextmanager instead
+engine = create_engine(system_db_uri)
 system_session = scoped_session(sessionmaker(bind=engine))
 
 
@@ -43,7 +49,6 @@ def session_scope():
         raise
     finally:
         session.close()
-
 
 
 class User(UserMixin, system_db.Model):
