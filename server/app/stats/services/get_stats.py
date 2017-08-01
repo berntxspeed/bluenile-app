@@ -1,14 +1,17 @@
 from flask import jsonify
 from sqlalchemy import func
 
-from ...common.services import DbService
-from ...common.models import Artist, Customer, Purchase, EmlSend, EmlOpen, EmlClick, SendJob, Event, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm, Report
+from ...common.models.user_models import Artist, Customer, Purchase, EmlSend, EmlOpen, EmlClick, SendJob, Event, \
+    WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm, Report
 from .classes.get_stats import StatsGetter
 
-class GetStatsService(DbService):
 
-    def __init__(self, config, db, logger):
-        super(GetStatsService, self).__init__(config, db, logger)
+class GetStatsService(object):
+    def __init__(self, config, db_session, logger):
+        self.config = config
+        self.db_session = db_session
+        self.logger = logger
+
         self._acceptable_tables = {
             'Customer': Customer,
             'Purchase': Purchase,
@@ -23,13 +26,17 @@ class GetStatsService(DbService):
             'SendJob': SendJob
         }
 
+    @staticmethod
+    def validate_on_submit(request, form):
+        return request.method == 'POST' and form.validate()
+
     def get_columns(self, tbl):
         """
         Returns: a list of columns for a table
         tbl = 'EmlOpen' # a table to query
         """
         try:
-            st = StatsGetter(db=self.db,
+            st = StatsGetter(db_session=self.db_session,
                              tbl=tbl,
                              acceptable_tbls=self._acceptable_tables)
         except ValueError as exc:
@@ -59,7 +66,7 @@ class GetStatsService(DbService):
         ]
         """
         try:
-            st = StatsGetter(db=self.db,
+            st = StatsGetter(db_session=self.db_session,
                              tbl=tbl,
                              acceptable_tbls=self._acceptable_tables,
                              grp_by=grp_by,
@@ -120,7 +127,7 @@ class GetStatsService(DbService):
             if sendid is not None and option in ['send-id', 'trig-send-id', 'mult-send-id']:
                 if option == 'send-id':
                     if sendid[0] == '[':
-                        sendid = sendid[1: len(sendid)-1]
+                        sendid = sendid[1: len(sendid) - 1]
                     send = SendJob.query.filter(SendJob.SendID == sendid).first()
                 elif option == 'trig-send-id':
                     eml_send = EmlSend.query.filter(EmlSend.TriggeredSendExternalKey == sendid).first()
@@ -128,12 +135,17 @@ class GetStatsService(DbService):
                         raise ValueError('no emails sent with that TriggeredSendExternalKey')
                     xsendid = eml_send.SendID
                     send = SendJob.query.filter(SendJob.SendID == xsendid).first()
-                    #TODO: add check that a record was yielded from SendJob before proceeding
-                    send.num_sends = self.db.session.query(func.count('*')).filter(EmlSend.TriggeredSendExternalKey == sendid).first()[0]
-                    send.num_opens = self.db.session.query(func.count('*')).filter(EmlOpen.TriggeredSendExternalKey == sendid).filter(EmlOpen.IsUnique == True).first()[0]
-                    send.num_clicks = self.db.session.query(func.count('*')).filter(EmlClick.TriggeredSendExternalKey == sendid).filter(EmlClick.IsUnique == True).first()[0]
+                    # TODO: add check that a record was yielded from SendJob before proceeding
+                    send.num_sends = \
+                    self.db.session.query(func.count('*')).filter(EmlSend.TriggeredSendExternalKey == sendid).first()[0]
+                    send.num_opens = \
+                    self.db.session.query(func.count('*')).filter(EmlOpen.TriggeredSendExternalKey == sendid).filter(
+                        EmlOpen.IsUnique == True).first()[0]
+                    send.num_clicks = \
+                    self.db.session.query(func.count('*')).filter(EmlClick.TriggeredSendExternalKey == sendid).filter(
+                        EmlClick.IsUnique == True).first()[0]
                 elif option == 'mult-send-id':
-                    sends = SendJob.query.filter(SendJob.SendID.in_(sendid[1: len(sendid)-1].split(', '))).all()
+                    sends = SendJob.query.filter(SendJob.SendID.in_(sendid[1: len(sendid) - 1].split(', '))).all()
                     send = sends[0]
                     for xsend in sends[1:]:
                         send.num_sends += xsend.num_sends
@@ -230,4 +242,3 @@ class GetStatsService(DbService):
                 return jsonify(status='deleted')
             except Exception as exc:
                 return jsonify(error='problem deleting report'), 500
-

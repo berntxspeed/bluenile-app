@@ -5,7 +5,7 @@ from injector import singleton
 from injector import inject
 from injector import provides
 
-from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB
+from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB, UserSessionConfig, DBSession
 
 import logging
 import sys
@@ -18,11 +18,29 @@ class AppModule(Module):
     def provide_app_config(self, app):
         return app.config
 
-    @inject(app=Flask)
+    @singleton
     @provides(SQLAlchemy)
-    def provides_sqlalchemy(self, app):
-        from .common.models import db
-        return db
+    def provides_sqlalchemy(self):
+        from .common.models.user_models import user_db
+        return user_db
+
+    @inject(app=Flask)
+    @provides(UserSessionConfig)
+    def provides_user_session_config(self, app):
+        from flask import session
+        return session.get('user_params')
+
+    @inject(app=Flask, config=UserSessionConfig)
+    @provides(DBSession)
+    def provides_sqlalchemy_session(self, app, config):
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import scoped_session
+        from sqlalchemy.orm import sessionmaker
+
+        engine = create_engine(config.get('postgres_uri'))
+        session = scoped_session(sessionmaker(bind=engine))
+
+        return session
 
     @singleton
     @inject(app=Flask)
@@ -54,7 +72,7 @@ def get_modules():
     # import other modules
     from .auth.module import AuthModule
     from .stats.module import StatsModule
-    from .data.module import DataModule
+    from .data.module import UserDataModule
     from .data_builder.module import SqlQueryModule
     from .emails.module import EmailModule
 
@@ -62,7 +80,7 @@ def get_modules():
         AppModule(),
         AuthModule(),
         StatsModule(),
-        DataModule(),
+        UserDataModule(),
         SqlQueryModule(),
         EmailModule()
     ]

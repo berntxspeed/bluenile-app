@@ -25,7 +25,8 @@ class SqlDataLoader(object):
         for last_batch, items in item_generator(**kwargs):
 
             composite_key_list = list(items.keys())
-            if not len(composite_key_list): # no records to update
+            # no records to update
+            if not len(composite_key_list):
                 if last_batch:
                     print('done loading records')
                 return

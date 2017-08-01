@@ -4,7 +4,7 @@ import requests
 import base64
 import json
 
-from ....common.models import Upload, Template
+from ....common.models.user_models import Upload, Template
 from ....stats.services.classes.api_data import ApiData
 
 
@@ -97,8 +97,8 @@ class EmlPush(object):
 
 class ImgPush(object):
 
-    def __init__(self, db, file, filename):
-        self._db = db
+    def __init__(self, db_session, file, filename):
+        self._db_session = db_session
         self._file = file
         self._filename = filename
         self._esp_hosted_url = None
@@ -171,8 +171,8 @@ class ImgPush(object):
                             esp_hosted_category_id = self._esp_hosted_category_id,
                             image_size_width = self._image_size_width,
                             image_size_height = self._image_size_height)
-        self._db.session.add(upload)
-        self._db.session.commit()
+        self._db_session.add(upload)
+        self._db_session.commit()
 
     def _push_to_esp(self, action):
         if action in ['insert', 'update']:

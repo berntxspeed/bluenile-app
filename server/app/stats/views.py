@@ -8,7 +8,10 @@ from injector import inject
 
 from . import stats
 from .injector_keys import JbStatsServ, GetStatsServ
+from .services.mongo_user_config_loader import MongoUserApiConfigLoader, MongoDataJobConfigLoader
+from server.app.injector_keys import MongoDB, UserSessionConfig
 from ..common.views.decorators import templated
+from ..data_builder.services.query_service import SqlQueryService
 
 
 # Pass this function to require login for every request
@@ -17,12 +20,14 @@ from ..common.views.decorators import templated
 def before_request():
     pass
 
+
 @stats.before_request
 def before_request():
     if request.url.startswith('http://'):
         url = request.url.replace('http://', 'https://', 1)
         code = 301
         return redirect(url, code=code)
+
 
 @stats.route('/special-logged-in-page')
 @inject(jb_stats_service=JbStatsServ)
@@ -32,24 +37,99 @@ def special_logged_in_page(jb_stats_service):
 
 
 @stats.route('/data-manager')
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('data_manager')
-def data_manager():
-    return {}
+def data_manager(mongo, user_config):
+    user = dict(account=session.get('user_params', {}).get('account_name'))
+    status, avail_vendors = MongoUserApiConfigLoader(mongo.db, user_config).get_user_api_config()
+    return {'status': status, 'avail_vendors': avail_vendors, 'user': user}
+
+
+@stats.route('/data-manager/save-load-job-config/', methods=['POST'])
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def save_load_job_config(mongo, user_config):
+    load_job_config = request.json
+    success, error = MongoDataJobConfigLoader(mongo.db, user_config).save_data_load_config(load_job_config)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
+
+
+@stats.route('/data-manager/get-data-sources')
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def get_data_sources(mongo, user_config):
+
+    status, data_load_jobs = MongoUserApiConfigLoader(mongo.db, user_config).get_user_api_config()
+    columns = [{
+            'field': 'data_source',
+            'title': 'Data Source'
+        },
+        {
+            'field': 'domain',
+            'title': 'Domain'
+        }]
+    return Response(dumps({'columns': columns, 'data': data_load_jobs}, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
+
+
+@stats.route('/data-manager/delete-api-config/<data_source>', methods=['POST'])
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def delete_vendor_api_config(mongo, user_config, data_source):
+    success, error = MongoUserApiConfigLoader(mongo.db, user_config).remove_api_config_by_source(data_source)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
+
+
+@stats.route('/data-manager/save-api-config', methods=['POST'])
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def save_vendor_api_config(mongo, user_config):
+    vendor_config = request.json
+    success, error = MongoUserApiConfigLoader(mongo.db, user_config).save_api_config(vendor_config)
+    if success:
+        return 'OK', 200
+    else:
+        return error, 500
+
+
+@stats.route('/data-manager/get-dl-jobs')
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+def get_data_load_jobs(mongo, user_config):
+
+    status, data_load_jobs = MongoDataJobConfigLoader(mongo.db, user_config).get_data_load_jobs()
+    columns = [{
+                    'field': 'job_type_full',
+                    'title': 'Data Load Type'
+                },
+                {
+                    'field': 'frequency',
+                    'title': 'Frequency'
+                },
+                {
+                    'field': 'last_run',
+                    'title': 'Last Load'
+                }]
+    return Response(dumps({'columns': columns, 'data': data_load_jobs}, default=SqlQueryService.alchemy_encoder),
+                    mimetype='application/json')
+
 
 @stats.route('/journey-view')
-@inject(jb_stats_service=JbStatsServ)
+@inject(jb_stats_service=JbStatsServ, user_config=UserSessionConfig)
 @templated('journey_view')
-def journey_view(jb_stats_service):
+def journey_view(jb_stats_service, user_config):
     # passes all journey ids to view
-    return jb_stats_service.journey_view()
+    return jb_stats_service.journey_view(user_config=user_config)
 
 
 @stats.route('/journey-detail/<id>')
-@inject(jb_stats_service=JbStatsServ)
-def journey_detail(jb_stats_service, id):
+@inject(jb_stats_service=JbStatsServ, user_config=UserSessionConfig)
+def journey_detail(jb_stats_service, id, user_config):
     # returns all information about one journey
-    result = jb_stats_service.journey_detail(id)
+    result = jb_stats_service.journey_detail(id, user_config=user_config)
     return Response(dumps(result), mimetype='application/json')
+
 
 @stats.route('/report-view')
 @inject(get_stats_service=GetStatsServ)
@@ -57,6 +137,7 @@ def journey_detail(jb_stats_service, id):
 def report_view(get_stats_service):
     # passes all send ids to view
     return get_stats_service.report_view()
+
 
 @stats.route('/send-info/<option>', methods=['POST'])
 @inject(request=Request, get_stats_service=GetStatsServ)
@@ -95,50 +176,75 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import load_shopify_customers, load_artists, load_mc_email_data, load_mc_journeys, load_shopify_purchases, \
-        load_web_tracking, load_lead_perfection, load_magento_purchases, load_magento_customers, load_x2crm_customers, \
-        load_bigcommerce_customers, load_bigcommerce_purchases, load_stripe_customers
+    from .workers import basic_load_task, load_mc_email_data, load_mc_journeys, \
+                         load_web_tracking, load_lead_perfection
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+    from ..data.workers import sync_data_to_mc
 
-    load_map = {'x2crm_customers': {'load_func': load_x2crm_customers, 'data_source': 'x2crm', 'data_type': 'customer'},
-                'magento_customers': {'load_func': load_magento_customers,
+    user = dict(account=session.get('user_params', {}).get('account_name'))
+    load_map = {'x2crm_customers': {'load_func': basic_load_task,
+                                    'data_source': 'x2crm',
+                                    'data_type': 'customer'},
+                'zoho_customers': {'load_func': basic_load_task,
+                                   'data_source': 'zoho',
+                                   'data_type': 'customer'},
+                'magento_customers': {'load_func': basic_load_task,
                                       'data_source': 'magento',
                                       'data_type': 'customer'},
-                'magento_purchases': {'load_func': load_magento_purchases,
+                'magento_purchases': {'load_func': basic_load_task,
                                       'data_source': 'magento',
                                       'data_type': 'purchase'},
-                'shopify_customers': {'load_func': load_shopify_customers,
+                'shopify_customers': {'load_func': basic_load_task,
                                       'data_source': 'shopify',
                                       'data_type': 'customer'},
-                'shopify_purchases': {'load_func': load_shopify_purchases,
+                'shopify_purchases': {'load_func': basic_load_task,
                                       'data_source': 'shopify',
                                       'data_type': 'purchase'},
-                'bigcommerce_customers': {'load_func': load_bigcommerce_customers,
+                'bigcommerce_customers': {'load_func': basic_load_task,
                                           'data_source': 'bigcommerce',
                                           'data_type': 'customer'},
-                'bigcommerce_purchases': {'load_func': load_bigcommerce_purchases,
+                'bigcommerce_purchases': {'load_func': basic_load_task,
                                           'data_source': 'bigcommerce',
                                           'data_type': 'purchase'},
-                'stripe_customers': {'load_func': load_stripe_customers,
-                                      'data_source': 'stripe',
-                                      'data_type': 'customer'},
-                # 'artists': load_artists,
+                'stripe_customers': {'load_func': basic_load_task,
+                                     'data_source': 'stripe',
+                                     'data_type': 'customer'},
                 'mc-email-data': load_mc_email_data,
                 'mc-journeys': load_mc_journeys,
                 'web-tracking': load_web_tracking,
                 'add-fips-location-emlopen': add_fips_location_emlopen,
                 'add-fips-location-emlclick': add_fips_location_emlclick,
-                'lead-perfection': load_lead_perfection}
+                'lead-perfection': load_lead_perfection,
+                'customer_table': {'load_func': sync_data_to_mc,
+                                   'table_name': 'customer',
+                                   },
+                'purchase_table': {'load_func': sync_data_to_mc,
+                                   'table_name': 'purchase',
+                                    },
+                }
+
     task = load_map.get(action, None)
     if task is None:
         return Exception('No such action is available')
 
-    if isinstance(task, dict):
-        result = task['load_func'].delay(task_type=action, data_source=task['data_source'], data_type=task['data_type'])
-    else:
-        result = task.delay(task_type=action)
+    user_params = session.get('user_params')
 
-    return dict(task_id=result.id)
+    if isinstance(task, dict):
+        if 'table_name' in task:
+            result = task['load_func'].delay(task['table_name'],
+                                             task_type='load_'+action,
+                                             table_name=task['table_name'],
+                                             user_params=user_params)
+        elif 'data_source' in task:
+            result = task['load_func'].delay(task_type='load_'+action,
+                                             data_source=task['data_source'],
+                                             data_type=task['data_type'],
+                                             sync_queries=True,
+                                             user_params=user_params)
+    else:
+        result = task.delay(task_type=action, user_params=user_params)
+
+    return dict(task_id=result.id, user=user)
 
 
 @stats.route('/get-columns/<tbl>')
@@ -191,6 +297,7 @@ def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
 def map_graph():
     return {}
 
+
 @stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
 def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field):
@@ -209,10 +316,12 @@ def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, ag
         agg_field = None
     return get_stats_service.save_report(rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field, filters)
 
+
 @stats.route('/report/<rpt_id>')
 @inject(get_stats_service=GetStatsServ)
 def report(get_stats_service, rpt_id):
     return get_stats_service.get_report(rpt_id)
+
 
 @stats.route('/delete-report/<rpt_id>')
 @inject(get_stats_service=GetStatsServ)
