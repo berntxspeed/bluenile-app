@@ -48,6 +48,14 @@ graphing-css:
     contents:
       - bower_components/c3/c3.css
 
+bootstrap-select-css:
+    contents:
+        - bower_components/bootstrap-select/dist/css/bootstrap-select.css
+
+bootstrap-select-js:
+    contents:
+        - bower_components/bootstrap-select/dist/js/bootstrap-select.js
+
 data-manager-js:
     contents:
         - bower_components/moment/moment.js
@@ -86,6 +94,7 @@ task-admin-js:
 base-css:
     contents:
         - bootstrap-css
+        - bootstrap-select-css
         - app/common/css/base.css
     filters: cssmin
     output: gen/base.%(version)s.css
@@ -93,6 +102,7 @@ base-css:
 base-js:
     contents:
         - bootstrap-js
+        - bootstrap-select-js
         - bower_components/knockout/dist/knockout.js
         - app/common/js/polling.js
     filters: rjsmin

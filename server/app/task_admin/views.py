@@ -9,13 +9,13 @@ from flask import request, redirect, session
 from flask_login import login_required, current_user
 from injector import inject
 
-from server.app.auth.services import AuthService
 from server.app.common.views.decorators import templated
 from server.app.data_builder.services.query_service import SqlQueryService
 from server.app.injector_keys import MongoDB, UserSessionConfig
 from server.app.task_admin.services.account_creation_service import AccountCreationService
 from . import taskadmin
 from .services.mongo_task_loader import MongoTaskLoader
+from ..auth.injector_keys import AuthServ
 
 
 @taskadmin.before_request
@@ -57,7 +57,10 @@ def create_account():
 @inject(mongo=MongoDB)
 @taskadmin.route('/delete-account/<account_name>')
 def delete_account(account_name, mongo):
-    print(account_name)
+    # TODO: enable account deletion
+    # Account deletion disabled to prevent accidental data loss
+    return 'Account deletion temporarily disabled', 401
+    """
     service = AccountCreationService(account_name, '')
     try:
         # TODO: prevent deleting currently active account
@@ -69,13 +72,14 @@ def delete_account(account_name, mongo):
         return 'OK', 200
     except Exception as ex:
         return repr(ex), 409
+    """
 
 
+@inject(auth_service=AuthServ)
 @taskadmin.route('/get-all-accounts')
-def get_all_existing_accounts():
+def get_all_existing_accounts(auth_service):
 
-    accounts = AuthService.get_all_accounts()
-
+    accounts = auth_service.get_all_accounts()
     columns = [{
         'field': 'account_name',
         'title': 'Account Name'

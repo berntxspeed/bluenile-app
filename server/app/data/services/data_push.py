@@ -1,6 +1,3 @@
-import datetime
-from sqlalchemy import func
-
 from .classes.data_pusher import DataPusher
 from ...common.services import DbService
 from ...common.models.user_models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, WebTrackingEcomm, \
@@ -58,27 +55,6 @@ class DataPushService(DbService):
     # TODO: Add another func to take query object
 
     def sync_query_to_mc(self, query_rules):
-
-        # query1 = self.db_session.query(Customer)\
-        #     .join(Purchase, Customer.purchases)\
-        #     .group_by(Customer.customer_id)\
-        #     .having(func.count(Customer.purchases) >= 2)
-        #
-        # query2 = self.db_session.query(Customer) \
-        #     .join(WebTrackingPageView, Customer.web_tracking_page_views) \
-        #     .filter(WebTrackingPageView.page_path == '/products/widget-2') \
-        #     .group_by(Customer.customer_id) \
-        #     .having(func.count(Customer.web_tracking_page_views) >= 1)
-        #
-        # query3 = self.db_session.query(Customer) \
-        #     .join(EmlClick, Customer.eml_clicks) \
-        #     .group_by(Customer.customer_id) \
-        #     .having(func.count(Customer.eml_clicks) >= 1)
-
-        # queries = {'query1': {'name': 'customers with 2 or more purchases', 'q': query1},
-        #            'query2': {'name': 'customers who viewed widget2 page on website', 'q': query2},
-        #            'query3': {'name': 'customers who clicked a marketing email', 'q': query3}}
-
         dp = DataPusher(self.db_session, self._models['customer'])
         resp = dp.sync_query(name=query_rules['name'],
                              query=SqlQueryConstructor(self.db_session, query_rules,

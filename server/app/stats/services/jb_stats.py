@@ -1,18 +1,19 @@
-from flask import url_for
 from flask import flash
-from flask import redirect
 
-from ...common.services import DbService
 from ...common.models.system_models import User
 
 from bson.objectid import ObjectId
 
 
-class JbStatsService(DbService):
+class JbStatsService(object):
 
-    def __init__(self, config, db, logger, mongo):
-        super(JbStatsService, self).__init__(config, db, logger)
+    def __init__(self, config, logger, mongo):
+        self.config = config
+        self.logger = logger
         self.mongo = mongo
+
+    def validate_on_submit(self, request, form):
+        return request.method == 'POST' and form.validate()
 
     @staticmethod
     def special_logged_in_page(request, session):
@@ -48,13 +49,12 @@ class JbStatsService(DbService):
             'journeys': journeys
         }
 
-    def journey_detail(self, id, user_config=None):
-
+    def journey_detail(self, journey_id, user_config=None):
         if user_config is not None:
             collection = self.mongo.db['journeys_' + user_config.get('account_name', '')]
         else:
             collection = self.mongo.db.journeys
 
-        journey = collection.find_one_or_404({'_id': ObjectId(id)})
+        journey = collection.find_one_or_404({'_id': ObjectId(journey_id)})
         journey['_id'] = str(journey['_id'])
         return journey

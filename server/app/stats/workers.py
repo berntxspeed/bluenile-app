@@ -1,7 +1,7 @@
 from time import sleep
 from manage import celery, injector, app
 from celery.schedules import crontab
-from .injector_keys import DataLoadServ, UserDataLoadServ
+from .injector_keys import UserDataLoadServ
 from ...app.injector_keys import MongoDB
 
 
@@ -89,91 +89,61 @@ celery.conf.beat_schedule = {
 
 @celery.task(base=BaseTask)
 def basic_load_task(**kwargs):
-    # TODO: remove if/else to default to user_db
     user_params = kwargs.get('user_params')
     if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params)
-            service.exec_safe_session(service.simple_data_load, **kwargs)
-    else:
-        with app.app_context():
-            service = injector.get(DataLoadServ)
             service.exec_safe_session(service.simple_data_load, **kwargs)
 
 
 @celery.task(base=BaseTask)
 def load_mc_email_data(**kwargs):
-    # TODO: remove if/else to default to user_db
     user_params = kwargs.get('user_params')
     if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params)
             service.exec_safe_session(service.load_mc_email_data)
-    else:
-        with app.app_context():
-            service = injector.get(DataLoadServ)
-            service.exec_safe_session(service.load_mc_email_data)
 
 
 @celery.task(base=BaseTask)
 def load_mc_journeys(**kwargs):
-    # TODO: remove if/else to default to user_db
     user_params = kwargs.get('user_params')
     if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params, postgres=False)
             service.exec_safe_session(service.load_mc_journeys)
-    else:
-        with app.app_context():
-            service = injector.get(DataLoadServ)
-            service.exec_safe_session(service.load_mc_journeys)
 
 
 @celery.task(base=BaseTask)
 def load_web_tracking(**kwargs):
-    # TODO: remove if/else to default to user_db
     user_params = kwargs.get('user_params')
     if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params)
-            service.exec_safe_session(service.load_web_tracking)
-    else:
-        with app.app_context():
-            service = injector.get(DataLoadServ)
             service.exec_safe_session(service.load_web_tracking)
 
 
 @celery.task
 def add_fips_location_emlopen(**kwargs):
-    # TODO: remove if/else to default to user_db
     user_params = kwargs.get('user_params')
     if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params)
-            service.exec_safe_session(service.add_fips_location_data, 'EmlOpen')
-    else:
-        with app.app_context():
-            service = injector.get(DataLoadServ)
             service.exec_safe_session(service.add_fips_location_data, 'EmlOpen')
 
 
 @celery.task
 def add_fips_location_emlclick(**kwargs):
-    # TODO: remove if/else to default to user_db
     user_params = kwargs.get('user_params')
     if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params)
-            service.exec_safe_session(service.add_fips_location_data, 'EmlClick')
-    else:
-        with app.app_context():
-            service = injector.get(DataLoadServ)
             service.exec_safe_session(service.add_fips_location_data, 'EmlClick')
 
 
@@ -204,10 +174,9 @@ def schedule_sync_jobs(**kwargs):
     from .services.classes.stats_utils import find_relevant_periodic_tasks
 
     #Find all the active client accounts
-    from server.app.common.models.system_models import ClientAccount
-    from server.app.common.models.system_models import system_session
-    session = system_session()
-    client_accounts_result = session.query(ClientAccount).all()
+    from server.app.common.models.system_models import ClientAccount, session_scope
+    with session_scope() as session:
+        client_accounts_result = session.query(ClientAccount).all()
 
     for an_account in client_accounts_result:
         print('account name: ', an_account.account_name)
@@ -230,10 +199,9 @@ def schedule_load_jobs(**kwargs):
     from .services.classes.stats_utils import find_relevant_periodic_tasks
 
     #Find all the active client accounts
-    from server.app.common.models.system_models import ClientAccount
-    from server.app.common.models.system_models import system_session
-    session = system_session()
-    client_accounts_result = session.query(ClientAccount).all()
+    from server.app.common.models.system_models import ClientAccount, session_scope
+    with session_scope() as session:
+        client_accounts_result = session.query(ClientAccount).all()
 
     for an_account in client_accounts_result:
         print('account name: ', an_account.account_name)
@@ -313,16 +281,11 @@ def schedule_load_jobs(**kwargs):
 
 @celery.task(base=BaseTask)
 def load_lead_perfection(**kwargs):
-    # TODO: remove if/else to default to user_db
     user_params = kwargs.get('user_params')
     if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params)
-            service.exec_safe_session(service.load_lead_perfection)
-    else:
-        with app.app_context():
-            service = injector.get(DataLoadServ)
             service.exec_safe_session(service.load_lead_perfection)
 
 

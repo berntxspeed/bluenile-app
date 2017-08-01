@@ -16,53 +16,6 @@ user_db = SQLAlchemy(session_options={
 })
 
 
-class KeyValue(user_db.Model):
-    __tablename__ = 'key_value'
-    key = user_db.Column(user_db.String(64), primary_key=True)
-    value = user_db.Column(user_db.String(255))
-    price = user_db.Column(user_db.Float)
-    done = user_db.Column(user_db.Boolean)
-    count = user_db.Column(user_db.Integer)
-    created_at = user_db.Column(TIMESTAMP)
-    _last_updated = user_db.Column(TIMESTAMP)
-    _last_ext_sync = user_db.Column(TIMESTAMP)
-
-    def __init__(self, key, value, created_at=None):
-        self.key = key
-        self.value = value
-        if created_at is None:
-            self.created_at = datetime.datetime.utcnow()
-
-    def _update_last_ext_sync(self):
-        self._last_ext_sync = datetime.datetime.utcnow()
-
-    @staticmethod
-    def insert_keyvalues():
-        kvs = {
-            'hello': 'world',
-            'goodbye': 'cruel world'
-        }
-        for key, value in kvs.items():
-            kv = KeyValue.query.filter_by(key=key).first()
-            if kv is None:
-                kv = KeyValue(key=key, value=value)
-                user_db.session.add(kv)
-        user_db.session.commit()
-
-    def serializable(self):
-        return
-
-    def __repr__(self):
-        return '<KeyValue %r>' % self.key
-
-
-@user_db.event.listens_for(KeyValue, 'before_update', retval=True)
-def on_update(mapper, connection, target):
-    print('record ' + target.__repr__() + ' was updated at: ' + str(datetime.datetime.utcnow()))
-    target._last_updated = datetime.datetime.utcnow()
-    return target
-
-
 class Event(user_db.Model):
     __tablename__ = 'event'
     id = user_db.Column(user_db.BigInteger, primary_key=True)

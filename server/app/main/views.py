@@ -1,10 +1,11 @@
 from flask import request, redirect, session
 from flask_login import login_required, current_user
 
-from server.app.auth.services import AuthService
-from ..common.views import context_processors
 from . import main
 from ..common.views.decorators import templated
+
+from injector import inject
+from ..auth.injector_keys import AuthServ
 
 
 @main.before_request
@@ -29,16 +30,17 @@ def index():
 @main.route('/')
 @main.route('/change-account/<new_account_name>')
 @login_required
+@inject(auth_service=AuthServ)
 @templated('index')
-def change(new_account_name):
+def change(auth_service, new_account_name):
     user = current_user
-    accounts = AuthService.get_user_accounts(user.email)
+    accounts = auth_service.get_user_accounts(user.email)
     from server.app.common.models.system_models import ClientAccount
     new_account = accounts.filter(ClientAccount.account_name == new_account_name).first()
 
     #error checking
     if new_account is None:
         return redirect("/index")
-    AuthService.set_user_account(new_account)
+    auth_service.set_user_account(new_account)
 
     return index()

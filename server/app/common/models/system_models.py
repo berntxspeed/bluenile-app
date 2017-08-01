@@ -1,11 +1,15 @@
+from contextlib import contextmanager
+
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+
+from sqlalchemy import create_engine
 from sqlalchemy import Integer, String
-from sqlalchemy.orm import synonym, relationship, backref, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import synonym, relationship
+
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 HASH_SECRET = b'33jjfSFTW43FE2992222FD'
 
@@ -21,8 +25,25 @@ system_db = SQLAlchemy(session_options={
 # TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
 engine = create_engine('postgresql://localhost/bluenile')
 
-# create a configured "Session" class
-system_session = sessionmaker(bind=engine)
+# Create a configured "Session" class, i.e. session factory, to create a session, call system_session()
+# Never import system_session directly
+# Always use contextmanager instead
+system_session = scoped_session(sessionmaker(bind=engine))
+
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = system_session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
 
 
 class User(UserMixin, system_db.Model):

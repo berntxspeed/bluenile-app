@@ -65,11 +65,11 @@ def create_injector(app=None):
 
 def init_db(app):
     from .common.models.system_models import system_db
-    from .common.models.user_models import user_db
     system_db.init_app(app)
 
     # TODO:remove this
-    user_db.init_app(app)
+    # from .common.models.user_models import user_db
+    # user_db.init_app(app)
 
 
 def init_mongo(app, mongo):
@@ -103,29 +103,30 @@ def init_assets(app):
 
 def create_event_mgr(app):
     from .common.utils.event_mgr import EventMgr
-    from .common.models.user_models import user_db as db, Event, EventDefinition
+    from .common.models.user_models import user_db, Event, EventDefinition
     from flask_sqlalchemy import SignallingSession
+
 
     event_mgr = EventMgr(db, Event, EventDefinition)
 
     # process record updates
-    @db.event.listens_for(SignallingSession, 'before_flush')
+    @user_db.event.listens_for(SignallingSession, 'before_flush')
     def on_flush(session, flush_context, instances):
         event_mgr.log_update_events(session)
 
     # process record inserts
-    @db.event.listens_for(SignallingSession, 'after_flush')
+    @user_db.event.listens_for(SignallingSession, 'after_flush')
     def after_flush(session, flush_context):
         event_mgr.log_insert_events(session)
 
     # update event defs loaded in event_mgr
-    @db.event.listens_for(EventDefinition, 'after_insert', retval=True)
+    @user_db.event.listens_for(EventDefinition, 'after_insert', retval=True)
     def on_update(mapper, connection, target):
         event_mgr.refresh_event_defs()
         return target
 
     # update event defs loaded in event_mgr
-    @db.event.listens_for(EventDefinition, 'after_update', retval=True)
+    @user_db.event.listens_for(EventDefinition, 'after_update', retval=True)
     def on_update(mapper, connection, target):
         event_mgr.refresh_event_defs()
         return target

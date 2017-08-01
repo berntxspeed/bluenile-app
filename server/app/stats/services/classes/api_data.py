@@ -52,6 +52,8 @@ class ApiData(object):
                                                       auth=self._auth)
 
                 no_of_records = no_of_records_response.json().get(self._pagination['count_data_key'])
+                if no_of_records is None:
+                    raise Exception('Failed to get records count: check credentials for your GET request')
 
                 int_no_of_pages = int(no_of_records/self._pagination['records_limit'])
                 if no_of_records/self._pagination['records_limit'] > int_no_of_pages:
@@ -65,7 +67,6 @@ class ApiData(object):
                                                  headers=self._headers,
                                                  auth=self._auth)
                     response.append(page_response)
-
 
         elif http_method is 'POST':
             response = requests.post(url=self._endpoint,

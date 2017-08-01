@@ -149,7 +149,6 @@ def export_query_result(mongo, sql_query_service, query_name, db_session, user_c
         # TODO: handle error
         pass
     if 'custom_sql' in result.keys():
-        from sqlalchemy import func
         results = eval('db_session.' + result['custom_sql'] + '.distinct(Customer.id).all()')
         columns, data = SqlQueryService.extract_data(results, {})
     else:

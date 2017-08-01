@@ -20,7 +20,6 @@ class DataBuilderQuery(object):
         self._collection_name = 'data_builder_qs'
 
         user_account = user_config and user_config.get('account_name')
-        print('DataBuilderQuery: Mongo Account ' + (user_account or 'N\A'))
         if user_account:
             self._collection_name = self._collection_name + '_' + user_account
 
@@ -45,7 +44,6 @@ class DataBuilderQuery(object):
         return iso_date
 
     def get_all_queries(self, type=None):
-        print('in get_all_queries: Mongo Collection: ' + self._collection_name)
         all_queries = []
         if type == 'default':
             filter_func = lambda q: 'preset' in q

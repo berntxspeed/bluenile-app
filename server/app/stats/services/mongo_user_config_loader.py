@@ -40,7 +40,6 @@ class MongoDataJobConfigLoader(object):
         self._user_config = user_config
 
         user_account = self._user_config and self._user_config.get('account_name')
-        print('MongoDataJobConfigLoader: Mongo Account ' + (user_account or 'None'))
         if user_account:
             self._collection_name = self._collection_name + '_' + user_account
         self._collection = self._db[self._collection_name]
@@ -119,7 +118,6 @@ class MongoUserApiConfigLoader(object):
         self._user_config = user_config
 
         user_account = self._user_config and self._user_config.get('account_name')
-        print('MongoUserApiConfigLoader: Mongo Account ' + (user_account or 'None'))
         if user_account:
             self._collection_name = self._collection_name + '_' + user_account
         self._collection = self._db[self._collection_name]

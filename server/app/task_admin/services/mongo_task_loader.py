@@ -9,7 +9,6 @@ class MongoTaskLoader(object):
         self._collection_name = 'celery_tasks'
 
         user_account = user_config and user_config.get('account_name')
-        print('MongoTaskLoader: Mongo Account ' + (user_account or 'None'))
         if user_account:
             self._collection_name = self._collection_name + '_' + user_account
 

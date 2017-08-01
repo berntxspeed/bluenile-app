@@ -18,9 +18,9 @@ class AppModule(Module):
     def provide_app_config(self, app):
         return app.config
 
-    @inject(app=Flask)
+    @singleton
     @provides(SQLAlchemy)
-    def provides_sqlalchemy(self, app):
+    def provides_sqlalchemy(self):
         from .common.models.user_models import user_db
         return user_db
 
@@ -72,7 +72,6 @@ def get_modules():
     # import other modules
     from .auth.module import AuthModule
     from .stats.module import StatsModule
-    from .data.module import DataModule
     from .data.module import UserDataModule
     from .data_builder.module import SqlQueryModule
     from .emails.module import EmailModule
@@ -81,7 +80,6 @@ def get_modules():
         AppModule(),
         AuthModule(),
         StatsModule(),
-        DataModule(),
         UserDataModule(),
         SqlQueryModule(),
         EmailModule()

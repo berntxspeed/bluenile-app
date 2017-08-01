@@ -617,7 +617,6 @@ class DataLoadService(DbService):
 
     def load_mc_journeys(self):
         token = self.__get_mc_auth()
-        print('load_mc_journeys: token: ', token)
         journeys = self.__get_mc_journeys(token)
         self.__load_mc_journeys_to_mongo(journeys, token)
 
