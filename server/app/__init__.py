@@ -67,10 +67,6 @@ def init_db(app):
     from .common.models.system_models import system_db
     system_db.init_app(app)
 
-    # TODO:remove this
-    # from .common.models.user_models import user_db
-    # user_db.init_app(app)
-
 
 def init_mongo(app, mongo):
     mongo.init_app(app)
@@ -104,18 +100,17 @@ def init_assets(app):
 def create_event_mgr(app):
     from .common.utils.event_mgr import EventMgr
     from .common.models.user_models import user_db, Event, EventDefinition
-    from flask_sqlalchemy import SignallingSession
+    from sqlalchemy.orm import Session as SessionBase
 
-
-    event_mgr = EventMgr(db, Event, EventDefinition)
+    event_mgr = EventMgr(user_db, Event, EventDefinition)
 
     # process record updates
-    @user_db.event.listens_for(SignallingSession, 'before_flush')
+    @user_db.event.listens_for(SessionBase, 'before_flush')
     def on_flush(session, flush_context, instances):
         event_mgr.log_update_events(session)
 
     # process record inserts
-    @user_db.event.listens_for(SignallingSession, 'after_flush')
+    @user_db.event.listens_for(SessionBase, 'after_flush')
     def after_flush(session, flush_context):
         event_mgr.log_insert_events(session)
 

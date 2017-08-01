@@ -1002,6 +1002,6 @@ class UserDataLoadService(DataLoadService):
             from sqlalchemy.orm import sessionmaker
 
             engine = create_engine(postgres_uri)
-            self.db_session = scoped_session(sessionmaker(bind=engine))
+            self.db_session = scoped_session(sessionmaker(autoflush=False, bind=engine))
 
         self.user_api_config = MongoUserApiConfigLoader(self.mongo.db, user_params).get_user_api_config()

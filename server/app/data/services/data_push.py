@@ -86,4 +86,4 @@ class UserDataPushService(DataPushService):
         db_uri = user_params.get('postgres_uri')
         if db_uri:
             engine = create_engine(db_uri)
-            self.db_session = scoped_session(sessionmaker(bind=engine))
+            self.db_session = scoped_session(sessionmaker(autoflush=False, bind=engine))
