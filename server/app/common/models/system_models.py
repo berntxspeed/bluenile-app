@@ -24,11 +24,7 @@ system_db = SQLAlchemy(session_options={
 # resources
 
 # TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
-db_uri = os.getenv('DATABASE_URL')
-if db_uri is not None:
-    system_db_uri = '/'.join(db_uri.split('/')[:-1]) + '/bluenile'
-else:
-    system_db_uri = 'postgresql://localhost/bluenile'
+system_db_uri = os.getenv('ACCOUNTS_DB_URL')
 
 # Create a configured "Session" class, i.e. session factory, to create a session, call system_session()
 # Never import system_session directly
