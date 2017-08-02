@@ -16,11 +16,6 @@ class OktaUsersClient(UsersClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def get_user(self, uid):
-        # response = ApiClient.get_path(self, '/{0}'.format(uid))
-        # return response.json()
-        return UsersClient.get_user(self, uid)
-
 
 class OktaUser(UserMixin):
     def __init__(self, okta_user):
