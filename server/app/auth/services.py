@@ -3,7 +3,7 @@ from flask import redirect, session
 from flask import url_for
 from flask_login import login_user, logout_user, UserMixin
 from okta import AuthClient, UsersClient
-from okta.framework.ApiClient import ApiClient
+# from okta.framework.ApiClient import ApiClient
 
 from .forms import LoginForm
 from .forms import SignupForm
@@ -17,19 +17,21 @@ class OktaUsersClient(UsersClient):
         super().__init__(*args, **kwargs)
 
     def get_user(self, uid):
-        response = ApiClient.get_path(self, '/{0}'.format(uid))
-        return response.json()
+        # response = ApiClient.get_path(self, '/{0}'.format(uid))
+        # return response.json()
+        return UsersClient.get_user(self, uid)
 
 
 class OktaUser(UserMixin):
     def __init__(self, okta_user):
-        self.id = okta_user.get('id')
-        self.status = okta_user.get('status')
-        self.login = okta_user.get('profile', {}).get('login')
-        self.email = okta_user.get('profile', {}).get('email')
-        self.firstname = okta_user.get('profile', {}).get('firstName')
-        self.lastname = okta_user.get('profile', {}).get('lastName')
-        self.account = okta_user.get('profile', {}).get('account_name')
+        self.id = okta_user.id
+        self.status = okta_user.status
+        self.login = okta_user.profile.login
+        self.email = okta_user.profile.email
+        self.firstname = okta_user.profile.firstName
+        self.lastname = okta_user.profile.lastName
+        # not possible outside ApiClient, and now irrelevant
+        self.account = 'None'
 
     def get_id(self):
         return self.id
