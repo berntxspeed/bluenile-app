@@ -1,4 +1,5 @@
 import os
+import redis
 
 LOCAL = 'local'
 TEST = 'test'
@@ -38,7 +39,7 @@ class Config(object):
 
     REDIS_URI = os.getenv('REDIS_URL')
     CELERY_BROKER_URL = REDIS_URI
-    SESSION_REDIS = REDIS_URI
+    SESSION_REDIS = redis.from_url(REDIS_URI)
 
     # Cache
     CACHE_TYPE = 'simple'
