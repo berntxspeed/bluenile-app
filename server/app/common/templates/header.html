@@ -24,17 +24,17 @@
                 <li>
                     <a href="{{ url_for('data_builder.data_builder') }}"><span style="color:#a0a0a5;font-size:18px;">Blue</span><span style="color:#1c4072;font-size:18px;">Segments</span></a>
                 </li>
-                <!--<li>-->
-                    <!--<a href="{{ url_for('stats.data_manager') }}"><span style="font-size:18px">Data Manager</span></a>-->
-                <!--</li>-->
-                <!--<li>-->
-                    <!--<a href="{{ url_for('data.data_pusher') }}">Data Push</a>-->
-                <!--</li>-->
-                <!--<li>-->
-                    <!--<a href="{{ url_for('task_admin.task_admin') }}"><span style="font-size:18px">Admin</span></a>-->
-                <!--</li>-->
+                <!--<li>
+                    <a href="{{ url_for('stats.data_manager') }}">Data Manager</a>
+                </li>
                 <li>
-                    <a href="{{ url_for('auth.logout') }}"><span style="font-size:18px"> Log Out </span><span style="font-size: 18px" class="label label-pill label-info">{{ session['user_params']['account_name'] }}</span></a>
+                    <a href="{{ url_for('data.data_pusher') }}">Data Push</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('task_admin.task_admin') }}">Task Admin</a>
+                </li>-->
+                <li>
+                    <a href="{{ url_for('auth.logout') }}">Log Out</a>
                 </li>
             {% endif %}
         </ul>

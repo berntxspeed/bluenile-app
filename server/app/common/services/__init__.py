@@ -1,3 +1,7 @@
+
+
+
+
 class DbService(object):
 
     def __init__(self, config, db, logger):
@@ -7,3 +11,5 @@ class DbService(object):
 
     def validate_on_submit(self, request, form):
         return request.method == 'POST' and form.validate()
+
+    

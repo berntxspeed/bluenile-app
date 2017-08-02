@@ -6,7 +6,7 @@ from ....common.utils.db_datatype_handler import convert_to_attr_datatype
 
 class StatsGetter(object):
 
-    def __init__(self, db_session, tbl, acceptable_tbls, grp_by=None, filters=None):
+    def __init__(self, db, tbl, acceptable_tbls, grp_by=None, filters=None):
         # 'in' case expects a string representation of an array of strings like this = '['xss', 'sde', 'wer']'
         self._allowable_filter_ops = {
             'eq': lambda q, col, val: q.filter(col == convert_to_attr_datatype(col, val)),
@@ -22,7 +22,7 @@ class StatsGetter(object):
             'notnull': lambda q, col, val: q.filter(col != None),
             'in': lambda q, col, val: q.filter(col.in_([convert_to_attr_datatype(col, x) for x in val[1: len(val)-1].split(', ')]))
         }
-        self._db_session = db_session
+        self._db = db
         self._tbl = tbl
         self._acceptable_tables = acceptable_tbls
 
@@ -71,7 +71,7 @@ class StatsGetter(object):
         except ValueError:
             raise
 
-        q = self._db_session.query()
+        q = self._db.session.query()
 
         q = self._apply_group_bys_to_query(q)
         q = self._apply_filters_to_query(q)

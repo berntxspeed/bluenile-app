@@ -12,7 +12,6 @@ from . import auth
 from .injector_keys import AuthServ
 from ..common.views.decorators import templated
 
-
 def logout_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -21,14 +20,12 @@ def logout_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
 @auth.before_app_request
 def csrf_protect():
     if request.method == 'POST':
         token = session.get('_csrf_token')
         if not token or token not in (request.form.get('csrf'), request.headers.get('X-CSRFToken')):
             abort(403)
-
 
 @auth.before_request
 def before_request():
@@ -77,7 +74,6 @@ def google_signup(auth_service):
     return auth_service.google_signup(request=request, session=session)
 """
 
-
 @auth.route('/login', methods=['GET', 'POST'])
 @logout_required
 @inject(auth_service=AuthServ)
@@ -85,13 +81,12 @@ def google_signup(auth_service):
 def login(auth_service):
     return auth_service.login(request)
 
-
 @auth.route('/logout')
 @login_required
 @inject(auth_service=AuthServ)
 @templated('logout')
 def logout(auth_service):
-    return auth_service.logout()
+    return auth_service.logout(session)
 
 """
 @auth.route('/signup', methods=['GET', 'POST'])

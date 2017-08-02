@@ -1,22 +1,19 @@
+from flask import url_for
 from flask import flash
+from flask import redirect
 
-from ...common.models.system_models import User
+from ...common.services import DbService
+from ...common.models import User
 
 from bson.objectid import ObjectId
 
+class JbStatsService(DbService):
 
-class JbStatsService(object):
-
-    def __init__(self, config, logger, mongo):
-        self.config = config
-        self.logger = logger
+    def __init__(self, config, db, logger, mongo):
+        super(JbStatsService, self).__init__(config, db, logger)
         self.mongo = mongo
 
-    def validate_on_submit(self, request, form):
-        return request.method == 'POST' and form.validate()
-
-    @staticmethod
-    def special_logged_in_page(request, session):
+    def special_logged_in_page(self, request, session):
         facebook_id = session.get('facebook_id')
         if facebook_id:
             user = User.query.filter_by(facebook_id=facebook_id).first()
@@ -29,15 +26,9 @@ class JbStatsService(object):
             'fb_id': facebook_id
         }
 
-    def journey_view(self, user_config=None):
+    def journey_view(self):
         journeys = []
-
-        if user_config is not None:
-            collection = self.mongo.db['journeys_' + user_config.get('account_name', '')]
-        else:
-            collection = self.mongo.db.journeys
-
-        for j in collection.find():
+        for j in self.mongo.db.journeys.find():
             journeys.append({
                 '_id': j['_id'],
                 'name': j['name']
@@ -49,12 +40,9 @@ class JbStatsService(object):
             'journeys': journeys
         }
 
-    def journey_detail(self, journey_id, user_config=None):
-        if user_config is not None:
-            collection = self.mongo.db['journeys_' + user_config.get('account_name', '')]
-        else:
-            collection = self.mongo.db.journeys
-
-        journey = collection.find_one_or_404({'_id': ObjectId(journey_id)})
+    def journey_detail(self, id):
+        journey = self.mongo.db.journeys.find_one_or_404({'_id': ObjectId(id)})
         journey['_id'] = str(journey['_id'])
         return journey
+
+

@@ -16,7 +16,7 @@ from wtforms.validators import ValidationError
 from ..common.forms import BaseForm
 from ..common.forms.validators import MaxLength
 from ..common.forms.validators import MinLength
-from ..common.models.system_models import User
+from ..common.models import User
 
 # Messages
 
@@ -35,7 +35,7 @@ USERNAME_MIN_LENGTH = 3
 USERNAME_MAX_LENGTH = 16
 USERNAME_REQUIRED_MSG = 'Enter a username.'
 USERNAME_REGEX_MSG = ('Your username must be alphanumeric and can contain underscores and be '
-                      'separated by spaces.')
+    'separated by spaces.')
 USERNAME_EXISTS_MSG = 'That username is taken.'
 USERNAME_REGEX = r"^[\w\.]+(?:\s[\w\.]+)*$"
 USERNAME_LOGIN_REQUIRED_MSG = 'Enter your username.'
@@ -61,18 +61,15 @@ USERNAME_VALIDATORS = (
     Regexp(USERNAME_REGEX, message=USERNAME_REGEX_MSG)
 )
 
-
 # Forms
 
 def validate_email(field):
     if User.query.filter(func.lower(User.email) == func.lower(field.data)).first():
         raise ValidationError(EMAIL_EXISTS_MSG)
 
-
 def validate_username(field):
     if User.query.filter(func.lower(User.username) == func.lower(field.data)).first():
         raise ValidationError(USERNAME_EXISTS_MSG)
-
 
 class ChangePasswordForm(BaseForm):
     old_password = PasswordField('Old Password', validators=[Required('Enter your old password.')])
@@ -87,19 +84,16 @@ class ChangePasswordForm(BaseForm):
         if not check_password_hash(self.user.password_hash, field.data):
             raise ValidationError('Incorrect password')
 
-
 class ChangeEmailForm(BaseForm):
     email = TextField('New Email', validators=EMAIL_VALIDATORS)
 
     def validate_email(self, field):
         validate_email(field)
 
-
 class LoginForm(BaseForm):
     username = TextField('Username', validators=[Required(USERNAME_LOGIN_REQUIRED_MSG)])
     password = PasswordField('Password', validators=[Required(PASSWORD_LOGIN_REQUIRED_MSG)])
     remember_me = BooleanField('')
-
 
 class SignupForm(BaseForm):
     username = TextField('Username', validators=USERNAME_VALIDATORS)
@@ -113,7 +107,6 @@ class SignupForm(BaseForm):
     def validate_username(self, field):
         validate_username(field)
 
-
 class GoogleSignupForm(BaseForm):
     username = TextField('Username', validators=USERNAME_VALIDATORS)
     email = TextField('Email', validators=EMAIL_VALIDATORS)
@@ -123,7 +116,6 @@ class GoogleSignupForm(BaseForm):
 
     def validate_username(self, field):
         validate_username(field)
-
 
 class FacebookSignupForm(BaseForm):
     username = TextField('Username', validators=USERNAME_VALIDATORS)
@@ -135,10 +127,8 @@ class FacebookSignupForm(BaseForm):
     def validate_username(self, field):
         validate_username(field)
 
-
 class ForgotPasswordForm(BaseForm):
     email = TextField('Email', validators=EMAIL_VALIDATORS)
-
 
 class ResetPasswordForm(BaseForm):
     email = TextField('Email', validators=EMAIL_VALIDATORS)

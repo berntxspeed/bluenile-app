@@ -1,25 +1,22 @@
 import decimal
 import re
 
-import datetime
 from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import inspect
 
 from .classes.sql_query_construct import SqlQueryConstructor
-from ...common.models.user_models import Customer
+from ...common.models import *
 from ...common.services import DbService
 
 
-class SqlQueryService(object):
+class SqlQueryService(DbService):
 
-    def __init__(self, config, db_session, logger):
-        self.config = config
-        self.db_session = db_session
-        self.logger = logger
+    def __init__(self, config, db, logger):
+        super(SqlQueryService, self).__init__(config, db, logger)
 
     def get_customer_query_based_on_rules(self, rules_query):
-        composed_query = SqlQueryConstructor(self.db_session, rules_query).construct_sql_query()
+        composed_query = SqlQueryConstructor(self.db, rules_query).construct_sql_query()
         return composed_query
 
     @staticmethod

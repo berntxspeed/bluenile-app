@@ -27,16 +27,10 @@ $(document).ready(function() {
 
     //Tables
     var tasks_table = $("#tasks-table")
-    var user_accounts_table = $("#user-accounts-table")
 
     var destroyTable = function(table){
         table.bootstrapTable('destroy')
     };
-
-  	function getSelectedRow(table) {
-        var index = table.find('tr.success').data('index')
-        return table.bootstrapTable('getData')[index]
-    }
 
     showElement = function() {
         var args = Array.prototype.slice.call(arguments)
@@ -51,10 +45,6 @@ $(document).ready(function() {
             args[element].hide()
         }
     };
-
-    var changeModalHeader = function(header, title) {
-        document.getElementById(header).innerHTML = '<span class="glyphicon glyphicon-hand-down"></span> ' + title
-    }
 
     function rowStyleFunc(row, index) {
 
@@ -154,114 +144,17 @@ $(document).ready(function() {
 
     init()
 
-    /*
-            ACCOUNT MANAGEMENT
-    */
+    var alertUser = function(alert_message, timeout=null) {
+        (timeout)? g_timeout = timeout: g_timeout = 1700
+        document.getElementById('modal-content').innerHTML = alert_message
+        $("#alertModal").modal({'backdrop': false, 'keyboard': true})
+    };
 
-  	user_accounts_table.on('click-row.bs.table', function (e, row, $element) {
-    		$('.success').removeClass('success')
-    		$($element).addClass('success')
-  	})
-
-    $("#btn-manage-user-accounts").on('click', function() {
-        destroyTable(user_accounts_table)
-        changeModalHeader('user-accounts', 'Accounts')
-        hideElement($("#edit-account-buttons"), $("#user-info-block"))
-        showElement($("#avail-accounts-buttons"))
-        $("#usersModal").on('show.bs.modal', function () {
-            $.ajax({
-                url: "/admin/get-all-accounts",
-                dataType: "json",
-                success: function(data) {
-                    user_accounts_table.bootstrapTable(data)
-                },
-                error: function(err) {
-//                    TODO: handle the error or retry
-                    console.log(err)
-                }
-            })
-        })
-        $("#usersModal").modal("show")
-    })
-
-    $("#btn-add-account").click(function () {
-        destroyTable(user_accounts_table)
-        changeModalHeader('user-accounts', 'Enter Account Name and Admin User')
-        document.getElementById('accounts-footer').innerHTML = ""
-        hideElement($("#avail-accounts-buttons"))
-        showElement($("#edit-account-buttons"), $("#user-info-block"))
-        $("#username").val('')
-        $("#account").val('')
-    })
-
-    $("#btn-return-to-accounts").click(function () {
-        $("#btn-manage-user-accounts").click()
-    })
-
-    function validateEmail(email) {
-        var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
-        return reg.test(email);
-    }
-
-    $("#btn-delete-account").click(function () {
-        var row = getSelectedRow(user_accounts_table)
-        if (row == null) { return }
-        account_name = row.account_name
-        $.ajax({
-                 url: "/admin/delete-account/" + account_name,
-                 contentType: 'application/json;charset=UTF-8',
-                 beforeSend: function(request) {
-                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
-                 },
-                 success: function(data) {
-                    if (data === 'OK'){
-                        user_accounts_table.bootstrapTable('remove', {
-                            field: 'account_name',
-                            values: [row.account_name]
-                        });
-                    }
-                 },
-                 error: function(err) {
-                    console.log(err.responseText)
-                 }
-        });
-    })
-
-    $("#btn-save-account").click(function (e) {
-        account_config = {}
-        data_valid = true
-
-        if ( !validateEmail($("#username").val()) ){
-            document.getElementById('accounts-footer').innerHTML = "Invalid Email for Username"
-            data_valid = false
-        }
-        if ( $("#account").val() == '' ){
-            document.getElementById('accounts-footer').innerHTML = "All Fields Are Mandatory"
-            data_valid = false
-        }
-
-
-        if (data_valid === true ){
-            account_config.account = $("#account").val()
-            account_config.username = $("#username").val()
-            console.log(account_config)
-            $.ajax({
-                 url: "/admin/create-account",
-                 method: "POST",
-                 data: JSON.stringify(account_config),
-                 contentType: 'application/json;charset=UTF-8',
-                 beforeSend: function(request) {
-                     request.setRequestHeader("X-CSRFToken", g_csrf_token)
-                 },
-                 success: function(data) {
-                    document.getElementById('accounts-footer').innerHTML = "Account Successfully Created!"
-                    $('#accounts-footer').fadeOut(2000, function(){$("#btn-manage-user-accounts").click()})
-                 },
-                 error: function(err) {
-//                         TODO: handle the error here
-                 }
-            })
-        }
-
-    })
+    $("#alertModal").on('show.bs.modal', function(){
+        var myModal = $(this);
+        clearTimeout(myModal.data('hideInterval'));
+        myModal.data('hideInterval', setTimeout(function(){
+            myModal.modal('hide');
+        }, g_timeout));
+    });
 });

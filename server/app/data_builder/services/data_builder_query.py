@@ -12,17 +12,12 @@ SYNC_MAP = {
     "8": "Annually"
 }
 
-
 class DataBuilderQuery(object):
-    def __init__(self, client_instance, user_config=None):
-        self._db = client_instance
+    def __init__(self, client_instance):
         self._primary_key = 'name'
         self._collection_name = 'data_builder_qs'
 
-        user_account = user_config and user_config.get('account_name')
-        if user_account:
-            self._collection_name = self._collection_name + '_' + user_account
-
+        self._db = client_instance
         self._collection = self._db[self._collection_name]
 
     @staticmethod
@@ -38,6 +33,7 @@ class DataBuilderQuery(object):
                 else:
                     a_query['frequency'] = str(SYNC_MAP[a_query['periodic_sync']])
 
+
     @staticmethod
     def date_to_iso(current_date):
         iso_date = current_date.replace(' at ', 'T') + '0'*5
@@ -49,8 +45,6 @@ class DataBuilderQuery(object):
             filter_func = lambda q: 'preset' in q
         elif type == 'all':
             filter_func = None
-        elif type == 'auto_sync':
-            filter_func = lambda q: q.get('auto_sync') is True
         else:
             filter_func = lambda q: 'preset' not in q
 
@@ -92,5 +86,5 @@ class DataBuilderQuery(object):
         import datetime
         status, query = self.get_query_by_name(query_name)
         last_sync = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
-        query['last_run'] = last_sync
+        query['last_sync'] = last_sync
         return self.save_query(query_name, query)

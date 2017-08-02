@@ -3,14 +3,13 @@ from sqlalchemy import or_, and_
 from sqlalchemy.sql.operators import ColumnOperators, \
     like_op, notcontains_op, notbetween_op, notendswith_op, notstartswith_op
 
-from ....common.models.user_models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, \
-    WebTrackingEcomm, WebTrackingPageView, WebTrackingEvent
+from ....common.models import Customer, Purchase, EmlOpen, EmlClick, EmlSend, WebTrackingEcomm, WebTrackingPageView, WebTrackingEvent
 
 
 class SqlQueryConstructor(object):
 
-    def __init__(self, db_session, rules_query, customer_only=False):
-        self.db_session = db_session
+    def __init__(self, db, rules_query, customer_only=False):
+        self.db = db
         self.rules_query = rules_query
         self.customer_only = customer_only
 
@@ -20,9 +19,9 @@ class SqlQueryConstructor(object):
             final_query = joined_query_obj.filter(filter_expression)
         elif self.rules_query.get('custom_sql') is not None:
             from sqlalchemy import func
-            final_query = eval('self.db_session.' + self.rules_query['custom_sql'])
+            final_query = eval('self.db.session.' + self.rules_query['custom_sql'])
         else:
-            final_query = self.db_session.query(Customer)
+            final_query = self.db.session.query(Customer)
 
         return final_query
 
@@ -39,7 +38,7 @@ class SqlQueryConstructor(object):
                 query_tables.insert(0, models_map['Customer']['class'])
             tables = list(reversed(query_tables))
 
-        basic_customer_query = self.db_session.query(*tables)
+        basic_customer_query = self.db.session.query(*tables)
 
         for a_relation in uniq_models:
             model = a_relation.split('.')[0]

@@ -5,21 +5,27 @@
 {% block head %}
 {{ super() }}
 
-{% assets "data-manager-css" %}
-<link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
-{% endassets %}
-
-{% assets "data-manager-js" %}
-<script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{% endassets %}
-
-
 <script type="text/javascript">
-    var g_csrf_token = '{{ csrf_token() }}';
-    //for (i = 0; i < g_vendors.length; i++){
-    //    console.log(g_vendors[i])
-    //}
+$(document).ready(function(){
 
+    $("#data_source").on('change', function() {
+        source_types = $("[class$='well form-well']")
+
+        if (this.value === "all") {
+            for (i = 0; i < source_types.length; i++){
+                source_types.eq(i).show()
+            }
+        }
+        else {
+            for (i = 0; i < source_types.length; i++){
+                if (source_types[i].id.includes(this.value)){
+                    source_types.eq(i).show()
+                }
+                else { source_types.eq(i).hide() }
+            }
+        }
+    })
+})
 </script>
 
 {% endblock %}
@@ -42,18 +48,16 @@
     <div class="row">
         <div class="col-md-6 center-block">
             <div class="well form-well signup-info">
-                <select class="selectpicker show-tick" data-width="100%" id="data_source">
+                <strong>Select Data Source :</strong>
+                <select id="data_source" title="Data Source" style="width: 100%">
                     <option value="all" title="All Sources">All Sources</option>
                     <option value="shopify" title="Shopify">Shopify</option>
                     <option value="magento" title="Magento">Magento</option>
                     <option value="bigcommerce" title="BigCommerce">BigCommerce</option>
                     <option value="other" title="Other">Other Sources</option>
                     <option value="extra" title="Extra">Extra Tools</option>
-                    <option value="raw_data" title="Raw Data">Load Tables To MC</option>
                 </select>
             </div>
-            <button id="btn-sched-frequency" style="width: 100%" class="btn btn-info btn-default navbar-btn"><span class="glyphicon glyphicon-time"></span> Schedule Data Load</button>
-            <button id="btn-manage-data-sources" style="width: 100%" class="btn btn-success btn-default navbar-btn"><span class="glyphicon glyphicon-download"></span> Manage Data Sources</button>
             <div id="shopify_tasks" class="well form-well">
                 <strong>Shopify :</strong>
                 <ul>
@@ -79,7 +83,6 @@
                 <strong>Other Sources:</strong>
                 <ul>
                     <li><a href="{{ url_for('stats.load', action='x2crm_customers') }}">Load X2CRM Customers</a></li>
-                    <li><a href="{{ url_for('stats.load', action='zoho_customers') }}">Load Zoho Customers</a></li>
                     <li><a href="{{ url_for('stats.load', action='stripe_customers') }}">Load Stripe Customers</a></li>
                     <li><a href="{{ url_for('stats.load', action='mc-email-data') }}">Load Marketing Cloud Email Data</a></li>
                     <li><a href="{{ url_for('stats.load', action='mc-journeys') }}">Load Journeys</a></li>
@@ -93,123 +96,6 @@
                     <li><a href="{{ url_for('stats.load', action='add-fips-location-emlclick') }}">Append FIPS location codes to Email Click Data</a></li>
                 </ul>
             </div>
-            <div id="raw_data" class="well form-well">
-                <strong>Load Raw Tables to MC:</strong>
-                <ul>
-                    <li><a href="{{ url_for('stats.load', action='customer_table') }}">Sync Customer Table to MC</a></li>
-                    <li><a href="{{ url_for('stats.load', action='purchase_table') }}">Sync Purchase Table to MC</a></li>
-                </ul>
-            </div>
         </div>
     </div>
-
-    <!-- Modal Table For Data Load Frequency -->
-    <div id="frequencyModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="padding:25px 50px;">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span></button>
-                    <h4 id="data-load-jobs"> <span class="glyphicon glyphicon-menu-hamburger"></span> Data Load Jobs</h4>
-                </div>
-                <div class="modal-body">
-                    <table id="data-load-frequency-table"></table>
-                    <div class="row" id="frequency-selector" style="display: none">
-                        <th>Repeats:</th>
-                        <select id="frequency" title="Repeats Weekly">
-                            <option value="0" title="Never">Never</option>
-                            <option value="1" title="Every X Hours">Every X Hours</option>
-                            <option value="2" title="Daily">Daily</option>
-                            <option value="3" title="Every weekday (Monday to Friday)">Every weekday (Monday to Friday)</option>
-                            <option value="4" title="Every Monday, Wednesday and Friday">Every Monday, Wednesday and Friday</option>
-                            <option value="5" title="Every Tuesday and Thursday">Every Tuesday and Thursday</option>
-                            <option value="6" title="Weekly">Weekly</option>
-                            <option value="7" title="Monthly">Monthly</option>
-                            <option value="8" title="Yearly">Yearly</option>
-                        </select>
-                        <div id="every-x-hours-block" style="display: none">
-                            <input id="every-x-hours" type="number" name="quantity" min="1" max="23">
-                        </div>
-                        <div></div>
-                        <!--<th>Starts On:</th>-->
-                        <!--<input id="frequency-start" type="datetime-local">-->
-                        <!--<div></div>-->
-                        <!--<th>Ends On  : </th>-->
-                        <!--<input id="frequency-end" type="datetime-local">-->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <div class="row" id="saved-freqs-buttons">
-                        <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
-                        <button type="submit" id="btn-change-freq" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-ok"></span> Change Frequency</button>
-                    </div>
-                    <div class="row" id="frequency-buttons" style="display: none">
-                        <button id="btn-save-periodic-load" class="btn btn-success btn-default pull-right"><span class="glyphicon glyphicon-ok"></span> Save</button>
-                        <button type="submit" id="btn-return-to-available-load-jobs" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
-                        <h4 id="freq-footer" style="text-align: center"></h4>
-                    </div>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
-
-    <!-- Modal Table For Data Load Sources -->
-    <div id="sourcesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="padding:25px 50px;">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span></button>
-                    <h4 id="data-sources"> <span class="glyphicon glyphicon-menu-hamburger"></span> Data Sources</h4>
-                </div>
-                <div class="modal-body">
-                    <table id="data-load-sources-table"></table>
-                    <div class="row" id="source-selector" style="display: none">
-                        <select id="add-source" title="Sources" style="width: 100%">>
-                            <option value="select" title="select">-- Select Data Source --</option>
-                            <option value="bigcommerce" title="shopify">BigCommerce</option>
-                            <option value="magento" title="shopify">Magento</option>
-                            <option value="shopify" title="shopify">Shopify</option>
-                            <option value="stripe" title="stripe">Stripe</option>
-                            <option value="x2crm" title="x2crm">X2 CRM</option>
-                            <option value="zoho" title="zoho">Zoho</option>
-                        </select>
-                        <div></div>
-                    </div> <br>
-                    <div id="data-info-block" style="display: none">
-                        <div class="form-group" id="domain">
-                            <label for="domain">Domain:</label>
-                            <input type="text" class="form-control" id="domain_val" placeholder="Domain Name, e.g. https://www.mybigcommerce.com">
-                        </div>
-                        <div class="form-group" id="id">
-                            <label for="domain">UserName:</label>
-                            <input type="text" class="form-control" id="id_val" placeholder="Username or Id">
-                        </div>
-                        <div class="form-group" id="secret">
-                            <label for="secret">Password:</label>
-                            <input type="password" class="form-control" id="secret_val" placeholder="Password or Secret">
-                        </div>
-                        <div class="form-group" id="token">
-                            <label for="token">Token:</label>
-                            <input type="text" class="form-control" id="token_val" placeholder="API Token">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <div class="row" id="saved-sources-buttons">
-                        <button type="cancel" class="btn btn-warning btn-default pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
-                        <button type="submit" id="btn-edit-source" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-pencil"></span> Edit Data Source</button>
-                        <button type="submit" id="btn-add-source" class="btn btn-success btn-default pull-left"><span class="glyphicon glyphicon-plus"></span> Add Source</button>
-                        <button type="submit" id="btn-delete-source" class="btn btn-danger btn-default pull-left"><span class="glyphicon glyphicon-trash"></span> Delete Source</button>
-                    </div>
-                    <div class="row" id="change-source-buttons" style="display: none">
-                        <button id="btn-save-source" class="btn btn-success btn-default pull-right"><span class="glyphicon glyphicon-ok"></span> Save</button>
-                        <button type="submit" id="btn-return-to-available-sources" class="btn btn-info btn-default pull-left"><span class="glyphicon glyphicon-arrow-left"></span> Back</button>
-                        <h4 id="source-footer" style="text-align: center"></h4>
-                    </div>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
-
 {% endblock %}

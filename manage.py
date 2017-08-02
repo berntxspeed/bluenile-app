@@ -42,12 +42,11 @@ manager.add_command('runserver', Server(host='0.0.0.0', port=5000, extra_files=[
 
 @manager.command
 def init_db():
-    from server.app.common.models.system_models import system_db
-    from server.app.task_admin.services.account_creation_service import AccountCreationService
+    from server.app.common.models import KeyValue, User
 
-    # creates the system database
-    AccountCreationService.create_postgres('bluenile', system_db)
-    AccountCreationService('test-account', 'vitalik301@gmail.com').execute()
+    KeyValue.insert_keyvalues()
+
+    User.insert_users()
 
 
 if __name__ == '__main__':

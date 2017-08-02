@@ -1,7 +1,5 @@
 {% extends 'base_auth.html' %}
 
-<script type="text/javascript">
-
 {% block title %}Log In{% endblock %}
 
 {% block body_content %}
@@ -9,18 +7,6 @@
           <div class="col-md-6 center-block">
               <h1>&nbsp;</h1>
               <h1>Hello {{ user.nickname }},<br><br> Welcome to the BlueNile Application</h1>
-              <h2>You are logged in for account {{user.account}}</h2>
-              <select class="selectpicker show-tick" id="option" data-width="auto" onchange="leaveChange()">
-                  {% for x in session.accounts %}
-                     <option value="{{ x }}" {% if x == session.user_params.account_name %} SELECTED {% endif %}>{{ x }}</option>
-                  {% endfor %}
-              </select>
-              <script>
-                  function leaveChange() {
-                        new_account = document.getElementById("option").value
-                        window.location.href = "/change-account/" + new_account;
-                   }
-              </script>
           </div>
       </div>
 {% endblock %}
