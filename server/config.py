@@ -39,6 +39,8 @@ class Config(object):
 
     REDIS_URI = os.getenv('REDIS_URL')
     CELERY_BROKER_URL = REDIS_URI
+
+    # Used by Flask-Session
     SESSION_REDIS = redis.from_url(REDIS_URI)
 
     # Cache
