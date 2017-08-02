@@ -1,5 +1,6 @@
-from contextlib import contextmanager
+import os
 
+from contextlib import contextmanager
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 
@@ -23,11 +24,12 @@ system_db = SQLAlchemy(session_options={
 # resources
 
 # TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
-engine = create_engine('postgresql://localhost/bluenile')
+system_db_uri = os.getenv('ACCOUNTS_DB_URL')
 
 # Create a configured "Session" class, i.e. session factory, to create a session, call system_session()
 # Never import system_session directly
 # Always use contextmanager instead
+engine = create_engine(system_db_uri)
 system_session = scoped_session(sessionmaker(bind=engine))
 
 
@@ -43,7 +45,6 @@ def session_scope():
         raise
     finally:
         session.close()
-
 
 
 class User(UserMixin, system_db.Model):

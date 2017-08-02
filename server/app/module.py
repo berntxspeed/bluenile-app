@@ -8,6 +8,7 @@ from injector import provides
 from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB, UserSessionConfig, DBSession
 
 import logging
+import os
 import sys
 
 
@@ -30,14 +31,18 @@ class AppModule(Module):
         from flask import session
         return session.get('user_params')
 
-    @inject(app=Flask, config=UserSessionConfig)
+    @inject(user_config=UserSessionConfig, app_config=Config)
     @provides(DBSession)
-    def provides_sqlalchemy_session(self, app, config):
+    def provides_sqlalchemy_session(self, app_config, user_config):
         from sqlalchemy import create_engine
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
 
-        engine = create_engine(config.get('postgres_uri'))
+        db_uri = os.getenv(user_config.get('postgres_uri'))\
+                 or app_config.get(user_config.get('postgres_uri'))\
+                 or user_config.get('postgres_uri')
+
+        engine = create_engine(db_uri)
         session = scoped_session(sessionmaker(bind=engine))
 
         return session
