@@ -34,9 +34,6 @@ class OktaUser(UserMixin):
     def get_id(self):
         return self.id
 
-    def get_postgres_uri_from_account_name(self):
-        return "postgresql://localhost/" + self.account
-
 
 class AuthService(object):
     def __init__(self, config, logger):

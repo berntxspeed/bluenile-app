@@ -4,6 +4,7 @@ from ...common.models.user_models import Customer, Purchase, EmlOpen, EmlClick, 
     WebTrackingPageView, WebTrackingEvent
 from server.app.data_builder.services.classes.sql_query_construct import SqlQueryConstructor
 
+import os
 
 class DataPushService(DbService):
     def __init__(self, config, db, logger):
@@ -83,7 +84,13 @@ class UserDataPushService(DataPushService):
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
 
-        db_uri = user_params.get('postgres_uri')
-        if db_uri:
-            engine = create_engine(db_uri)
+        postgres_uri = os.getenv(user_params.get('postgres_uri')) \
+                       or self.config.get(user_params.get('postgres_uri')) \
+                       or user_params.get('postgres_uri')
+
+        print(postgres_uri)
+        if postgres_uri:
+            engine = create_engine(postgres_uri)
             self.db_session = scoped_session(sessionmaker(autoflush=False, bind=engine))
+        else:
+            raise Exception('Could not init user db')
