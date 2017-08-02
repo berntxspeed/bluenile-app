@@ -45,7 +45,6 @@ def init_db():
     from server.app.common.models import KeyValue, User
 
     KeyValue.insert_keyvalues()
-
     User.insert_users()
 
 
