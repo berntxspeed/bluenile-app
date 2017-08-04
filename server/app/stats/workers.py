@@ -54,7 +54,8 @@ class BaseTask(celery.Task):
 
 
 celery.conf.beat_schedule = {
-    """ 'every-1-hours_lead_perfection': {
+    """
+    'every-1-hours_lead_perfection': {
         'task': 'server.app.stats.workers.load_lead_perfection',
         'schedule': crontab(minute=0, hour='*/1'),
         'kwargs': {'task_type': 'lead_perfection'}
@@ -64,16 +65,6 @@ celery.conf.beat_schedule = {
         'schedule': crontab(minute=0, hour='*/4'),
         'kwargs': {'task_type': 'web-tracking'}
     },
-    'every-4-hours_mc_journeys': {
-        'task': 'server.app.stats.workers.load_mc_journeys',
-        'schedule': crontab(minute=0, hour='*/4'),
-        'kwargs': {'task_type': 'mc-journeys'}
-    },
-    'every-4-hours_mc_email_data': {
-        'task': 'server.app.stats.workers.load_mc_email_data',
-        'schedule': crontab(minute=0, hour='*/4'),
-        'kwargs': {'task_type': 'mc-email-data'}
-    },"""
     'every-hour_schedule_sync_jobs': {
         'task': 'server.app.stats.workers.schedule_sync_jobs',
         'schedule': crontab(minute=0, hour='*'),
@@ -83,6 +74,17 @@ celery.conf.beat_schedule = {
         'task': 'server.app.stats.workers.schedule_load_jobs',
         'schedule': crontab(minute=30, hour='*'),
         'kwargs': {'task_type': 'schedule-load-jobs', 'user_params': {'account_name': 'bluenile'}}
+    }
+    """
+    'every-4-hours_mc_journeys': {
+        'task': 'server.app.stats.workers.load_mc_journeys',
+        'schedule': crontab(minute=0, hour='*/4'),
+        'kwargs': {'task_type': 'mc-journeys', 'user_params': {'account_name': 'Galileo', 'postgres_uri': 'HEROKU_POSTGRESQL_JADE_URL'}}
+    },
+    'every-4-hours_mc_email_data': {
+        'task': 'server.app.stats.workers.load_mc_email_data',
+        'schedule': crontab(minute=0, hour='*/4'),
+        'kwargs': {'task_type': 'mc-email-data', 'user_params': {'account_name': 'Galileo', 'postgres_uri': 'HEROKU_POSTGRESQL_JADE_URL'}}
     }
 }
 
@@ -113,7 +115,7 @@ def load_mc_journeys(**kwargs):
     if user_params:
         with app.app_context():
             service = injector.get(UserDataLoadServ)
-            service.init_user_db(user_params, postgres=False)
+            service.init_user_db(user_params, postgres_required=False)
             service.exec_safe_session(service.load_mc_journeys)
 
 
@@ -172,44 +174,48 @@ def sync_all_queries_to_mc(**kwargs):
 def schedule_sync_jobs(**kwargs):
     from server.app.data_builder.services.data_builder_query import DataBuilderQuery
     from .services.classes.stats_utils import find_relevant_periodic_tasks
+    from server.app.common.models.system_models import ClientAccount, session_scope
 
     #Find all the active client accounts
-    from server.app.common.models.system_models import ClientAccount, session_scope
+    user_configs = []
     with session_scope() as session:
         client_accounts_result = session.query(ClientAccount).all()
+        for an_account in client_accounts_result:
+            print('account name: ', an_account.account_name)
+            user_configs.append(dict(account_name=an_account.account_name, postgres_uri=an_account.database_uri))
 
-    for an_account in client_accounts_result:
-        print('account name: ', an_account.account_name)
-        user_config = dict(account_name=an_account.account_name, postgres_uri=an_account.database_uri)
+    for a_user_config in user_configs:
         with app.app_context():
             mongo = injector.get(MongoDB)
-            status, all_queries = DataBuilderQuery(mongo.db, user_config).get_all_queries()
+            status, all_queries = DataBuilderQuery(mongo.db, a_user_config).get_all_queries()
             relevant_queries = find_relevant_periodic_tasks(all_queries)
 
             if len(relevant_queries):
                 from ..data.workers import sync_query_to_mc
                 for a_query in relevant_queries:
                     print('query name: ', a_query.get('name'))
-                    sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'), user_params=user_config)
+                    sync_query_to_mc.delay(a_query, task_type='data-push', query_name=a_query.get('name'), user_params=a_user_config)
 
 
 @celery.task(base=BaseTask)
 def schedule_load_jobs(**kwargs):
     from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
     from .services.classes.stats_utils import find_relevant_periodic_tasks
+    from server.app.common.models.system_models import ClientAccount, session_scope
 
     #Find all the active client accounts
-    from server.app.common.models.system_models import ClientAccount, session_scope
+    user_configs = []
     with session_scope() as session:
         client_accounts_result = session.query(ClientAccount).all()
+        for an_account in client_accounts_result:
+            print('account name: ', an_account.account_name)
+            user_configs.append(dict(account_name=an_account.account_name, postgres_uri=an_account.database_uri))
 
-    for an_account in client_accounts_result:
-        print('account name: ', an_account.account_name)
-        user_config = dict(account_name=an_account.account_name, postgres_uri=an_account.database_uri)
-
+    for a_user_config in user_configs:
+        print ('user_config', a_user_config)
         with app.app_context():
             mongo = injector.get(MongoDB)
-            status, dl_jobs = MongoDataJobConfigLoader(mongo.db, user_config).get_data_load_jobs()
+            status, dl_jobs = MongoDataJobConfigLoader(mongo.db, a_user_config).get_data_load_jobs()
             relevant_load_jobs = find_relevant_periodic_tasks(dl_jobs)
 
             if len(relevant_load_jobs):
@@ -269,12 +275,14 @@ def schedule_load_jobs(**kwargs):
                         if 'table_name' in task:
                             task['load_func'].delay(task['table_name'],
                                                     task_type='load_' + a_job['job_type'],
-                                                    table_name=task['table_name'])
+                                                    table_name=task['table_name'],
+                                                    user_params=a_user_config)
                         else:
                             task['load_func'].delay(task_type='load_' + a_job['job_type'],
                                                     data_source=task['data_source'],
                                                     data_type=task['data_type'],
-                                                    sync_queries=sync_queries)
+                                                    sync_queries=sync_queries,
+                                                    user_params=a_user_config)
 
                         sleep(60)
 
