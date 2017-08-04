@@ -992,7 +992,7 @@ class UserDataLoadService(DataLoadService):
         self.api_config_file = 'api_config.yml'
         self.data_load_config = self.load_config()
 
-    def init_user_db(self, user_params, postgres=True):
+    def init_user_db(self, user_params, postgres_required=True):
         self.user_params = user_params
 
         postgres_uri = os.getenv(user_params.get('postgres_uri')) \
@@ -1000,14 +1000,15 @@ class UserDataLoadService(DataLoadService):
                        or user_params.get('postgres_uri')
         print(postgres_uri)
 
-        if postgres_uri and postgres:
-            from sqlalchemy import create_engine
-            from sqlalchemy.orm import scoped_session
-            from sqlalchemy.orm import sessionmaker
+        if postgres_required:
+            if postgres_uri:
+                from sqlalchemy import create_engine
+                from sqlalchemy.orm import scoped_session
+                from sqlalchemy.orm import sessionmaker
 
-            engine = create_engine(postgres_uri)
-            self.db_session = scoped_session(sessionmaker(autoflush=False, bind=engine))
-        else:
-            raise Exception('Could not init user db')
+                engine = create_engine(postgres_uri)
+                self.db_session = scoped_session(sessionmaker(autoflush=False, bind=engine))
+            else:
+                raise Exception('Could not init user db')
 
         self.user_api_config = MongoUserApiConfigLoader(self.mongo.db, user_params).get_user_api_config()

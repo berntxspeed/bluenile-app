@@ -1,4 +1,5 @@
 from flask import flash
+import requests
 from flask import redirect, session
 from flask import url_for
 from flask_login import login_user, logout_user, UserMixin
@@ -16,17 +17,21 @@ class OktaUsersClient(UsersClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def get_user(self, uid):
+        response = requests.get(url='https://dev-198609.oktapreview.com/api/v1/users/' + uid,
+                                headers={'Authorization': 'SSWS 00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z', 'Content-Type': 'application/json'})
+        return response.json()
+
 
 class OktaUser(UserMixin):
     def __init__(self, okta_user):
-        self.id = okta_user.id
-        self.status = okta_user.status
-        self.login = okta_user.profile.login
-        self.email = okta_user.profile.email
-        self.firstname = okta_user.profile.firstName
-        self.lastname = okta_user.profile.lastName
-        # not possible outside ApiClient, and now irrelevant
-        self.account = 'None'
+        self.id = okta_user.get('id')
+        self.status = okta_user.get('status')
+        self.login = okta_user.get('profile', {}).get('login')
+        self.email = okta_user.get('profile', {}).get('email')
+        self.firstname = okta_user.get('profile', {}).get('firstName')
+        self.lastname = okta_user.get('profile', {}).get('lastName')
+        self.account = okta_user.get('profile', {}).get('account_name')
 
     def get_id(self):
         return self.id
