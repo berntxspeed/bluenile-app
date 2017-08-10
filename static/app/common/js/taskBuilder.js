@@ -258,7 +258,7 @@ $(document).ready(function() {
                     $('#accounts-footer').fadeOut(2000, function(){$("#btn-manage-user-accounts").click()})
                  },
                  error: function(err) {
-//                         TODO: handle the error here
+                    console.log(err.responseText)
                  }
             })
         }
