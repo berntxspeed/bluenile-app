@@ -84,8 +84,7 @@ class UserDataPushService(DataPushService):
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
 
-        postgres_uri = os.getenv(user_params.get('postgres_uri')) \
-                       or self.config.get(user_params.get('postgres_uri')) \
+        postgres_uri = self.config.get(user_params.get('postgres_uri')) \
                        or user_params.get('postgres_uri')
 
         print(postgres_uri)
