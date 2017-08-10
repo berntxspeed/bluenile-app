@@ -997,7 +997,6 @@ class UserDataLoadService(DataLoadService):
 
         postgres_uri = self.config.get(user_params.get('postgres_uri')) \
                        or user_params.get('postgres_uri')
-        print(postgres_uri)
 
         if postgres_required:
             if postgres_uri:

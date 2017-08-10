@@ -23,11 +23,9 @@ class AccountCreationService:
         with session_scope() as db_session:
             account = db_session.query(ClientAccount).filter(ClientAccount.account_name == self.account_name).first()
             db_session.delete(account)
-            db_session.commit()
-            db_session.close()
 
         # Demolish postgres
-        db_uri, db_uri_env = AccountCreationService.get_postgres_uri(self.account_name)
+        db_uri = AccountCreationService.get_postgres_uri(self.account_name)
         if sqlalchemy_utils.database_exists(db_uri):
             # TODO: reinstate drop_database call
             pass
@@ -41,42 +39,34 @@ class AccountCreationService:
                     mongo.db[a_collection_name].drop()
 
     @staticmethod
-    def init_system_entries(name, uri_env, username='vitalik301@gmail.com'):
+    def init_system_entries(name, db_uri, username='vitalik301@gmail.com'):
 
         with session_scope() as db_session:
-            account = ClientAccount(account_name=name, database_uri=uri_env)
+            account = ClientAccount(account_name=name, database_uri=db_uri)
             user = UserPermissions(username=username, role='admin')
             account.permissions.append(user)
 
             db_session.add(user)
             db_session.add(account)
-            db_session.commit()
 
-
-# TODO: support on heroku devbox... current version only supports local version
     def create_postgres(self, name, db_model):
         try:
             import sqlalchemy_utils
             from sqlalchemy import create_engine
 
-            db_uri, db_uri_env = AccountCreationService.get_postgres_uri(name)
+            db_uri = AccountCreationService.get_postgres_uri(name)
 
             # create default db
-            # TODO: rewrite this logic for heroku --> db_uri format not supported on sqlalchemy
             if sqlalchemy_utils.database_exists(db_uri):
                 # Drop database call could be more appropriate
-                # However, it could lead to accidental data loss of the entire catalog
+                # However, it could lead to (accidental) data loss of an entire catalog
                 return None
             sqlalchemy_utils.create_database(db_uri)
-            #TODO: create env var
-            self.config[db_uri_env] = db_uri
 
             # create tables
-            # TODO: rewrite this logic for heroku --> db_uri format not supported on sqlalchemy
             engine = create_engine(db_uri)
             db_model.metadata.create_all(engine)
-
-            return db_uri_env
+            return db_uri
 
         except Exception as ex:
             print(str(ex))
@@ -88,6 +78,5 @@ class AccountCreationService:
 
     @staticmethod
     def get_postgres_uri(account_name):
-        db_uri_env = account_name.upper() + '_URL'
-        db_uri = 'postgresql://localhost/' + account_name
-        return db_uri, db_uri_env
+        return 'postgresql://bluenilesw:BlueNileSW123!@postgres-dev.cdwkdjoq5xbu.us-east-2.rds.amazonaws.com:5432/' \
+               + account_name
