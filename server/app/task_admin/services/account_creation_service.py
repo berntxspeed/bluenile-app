@@ -4,10 +4,10 @@ from server.app.common.models.user_models import user_db
 
 
 class AccountCreationService:
-    def __init__(self, account_name, admin_user, config):
-        self.config = config
+    def __init__(self, account_name, admin_user, config=None):
         self.admin_user = admin_user
         self.account_name = account_name
+        self.config = config
 
     def execute(self):
         userdb_uri = self.create_postgres(self.account_name, user_db)
@@ -27,9 +27,7 @@ class AccountCreationService:
         # Demolish postgres
         db_uri = AccountCreationService.get_postgres_uri(self.account_name)
         if sqlalchemy_utils.database_exists(db_uri):
-            # TODO: reinstate drop_database call
-            pass
-            # sqlalchemy_utils.drop_database(db_uri)
+            sqlalchemy_utils.drop_database(db_uri)
 
         # Eradicate mongo collections
         if mongo is not None:

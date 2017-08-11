@@ -26,7 +26,6 @@ class Config(object):
     SESSION_TYPE = 'redis'
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     # SQLALCHEMY_BINDS = {
     #     'user_data':    'postgresql://localhost/simple_di_flask_dev',
     #     'appmeta':      'postgresql://localhost/bluenile',
