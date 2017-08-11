@@ -24,7 +24,7 @@ system_db = SQLAlchemy(session_options={
 # resources
 
 # TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
-system_db_uri = 'postgresql://bluenilesw:BlueNileSW123!@postgres-dev.cdwkdjoq5xbu.us-east-2.rds.amazonaws.com:5432/system_db'
+system_db_uri = os.getenv('SYSTEM_DB_URI')
 
 # Create a configured "Session" class, i.e. session factory, to create a session, call system_session()
 # Never import system_session directly

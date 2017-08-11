@@ -25,7 +25,7 @@ class AccountCreationService:
             db_session.delete(account)
 
         # Demolish postgres
-        db_uri = AccountCreationService.get_postgres_uri(self.account_name)
+        db_uri = self.get_postgres_uri(self.account_name)
         if sqlalchemy_utils.database_exists(db_uri):
             sqlalchemy_utils.drop_database(db_uri)
 
@@ -52,7 +52,7 @@ class AccountCreationService:
             import sqlalchemy_utils
             from sqlalchemy import create_engine
 
-            db_uri = AccountCreationService.get_postgres_uri(name)
+            db_uri = self.get_postgres_uri(name)
 
             # create default db
             if sqlalchemy_utils.database_exists(db_uri):
@@ -74,7 +74,5 @@ class AccountCreationService:
     def create_mongo(name):
         return True
 
-    @staticmethod
-    def get_postgres_uri(account_name):
-        return 'postgresql://bluenilesw:BlueNileSW123!@postgres-dev.cdwkdjoq5xbu.us-east-2.rds.amazonaws.com:5432/' \
-               + account_name
+    def get_postgres_uri(self, account_name):
+        return self.config.get('AWS_DB_URI_PREFIX') + account_name
