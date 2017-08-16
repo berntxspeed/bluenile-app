@@ -47,6 +47,7 @@ def session_scope():
         session.close()
 
 
+#TODO: deprecate this table
 class User(UserMixin, system_db.Model):
     __tablename__ = 'users'
     id = system_db.Column(system_db.Integer, primary_key=True)

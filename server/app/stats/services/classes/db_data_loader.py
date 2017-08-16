@@ -39,7 +39,7 @@ class SqlDataLoader(object):
             for pk in self._primary_keys[1:]:
                 model_composite_key = model_composite_key.concat(getattr(self._db_model, pk))
 
-            for each in self._db_model.query.filter(model_composite_key.in_(composite_key_list)):
+            for each in self._db_session.query(self._db_model).filter(model_composite_key.in_(composite_key_list)):
                 # use composite key to reference records on the items dict
                 composite_key = ''
                 for pk in self._primary_keys:
