@@ -8,6 +8,7 @@ from injector import inject
 
 from . import emails
 from .injector_keys import EmailServ
+from server.app.injector_keys import DBSession
 from ..common.views.decorators import templated
 from ..common.models.user_models import Template
 
@@ -27,10 +28,11 @@ def before_request():
         return redirect(url, code=code)
 
 
+@inject(db_session=DBSession)
 @emails.route('/mosaico-index')
 @templated('mosaico_index')
-def mosaico_index():
-    return dict(templates=Template.query.all())
+def mosaico_index(db_session):
+    return dict(templates=db_session.query(Template).all())
 
 
 @emails.route('/editor')

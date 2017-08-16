@@ -10,8 +10,9 @@ from ....stats.services.classes.api_data import ApiData
 
 class EmlPush(object):
 
-    def __init__(self, key):
+    def __init__(self, db_session, key):
 
+        self._db_session = db_session
         self._key = key
         self._id = None
 
@@ -22,7 +23,7 @@ class EmlPush(object):
     def sync_to_ems(self):
 
         # grab email from db
-        template = Template.query.filter_by(key=self._key).first()
+        template = self._db_session.query(Template).filter_by(key=self._key).first()
         if template is None:
             raise ValueError('no template at specified key exists: ' + self._key)
 
@@ -138,7 +139,7 @@ class ImgPush(object):
         return resp, http_status_code
 
     def _is_already_uploaded_to_esp(self):
-        upload = Upload.query.filter_by(name=self._filename).first()
+        upload = self._db_session.query(Upload).filter_by(name=self._filename).first()
         if upload is not None:
             if upload.esp_hosted_key is not None:
                 self._esp_hosted_key = upload.esp_hosted_key
@@ -151,7 +152,7 @@ class ImgPush(object):
 
     def _save_to_db(self):
         # insert or update
-        upload = Upload.query.filter_by(name=self._filename).first()
+        upload = self._db_session.query(Upload).filter_by(name=self._filename).first()
         if upload is not None:
             self._file.seek(0)
             upload.image = self._file.read()
