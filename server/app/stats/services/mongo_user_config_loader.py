@@ -28,6 +28,7 @@ VENDOR_API_TO_TABLES_MAP = {
     'bigcommerce': ['customer', 'purchase'],
     'stripe': ['customer'],
     'x2crm': ['customer'],
+    'mc_email_data': ['mc_email_data'],
     'zoho': ['customer']
 }
 

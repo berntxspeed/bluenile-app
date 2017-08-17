@@ -194,7 +194,7 @@ class DataLoadService(DbService):
         self.data_type_map = {'customer': Customer,
                               'purchase': Purchase
                               }
-        self.api_config_file = 'api_config.yml'
+        self.api_config_file = os.path.abspath(os.path.join(self.config['PROJECT_ROOT'], 'api_config.yml'))
         self.data_load_config = self.load_config()
         self.user_api_config = MongoUserApiConfigLoader(self.mongo.db).get_user_api_config()
 
@@ -222,7 +222,6 @@ class DataLoadService(DbService):
         api_args = copy.copy(vendor_config.get(data_type, {}))
 
         user_config = None
-
         # TODO: check for False status, log error
         status, vendor_configs = self.user_api_config
         if status is True:
@@ -255,6 +254,30 @@ class DataLoadService(DbService):
         api_args['db_session'] = self.db_session
 
         return api_args
+
+    def get_mc_email_data_args(self, data_source):
+
+        vendor_config = self.data_load_config.get(data_source, {})
+        mc_api_args = copy.copy(vendor_config)
+
+        user_config = None
+        # TODO: check for False status, log error
+        status, vendor_configs = self.user_api_config
+        if status is True:
+            for vendor_user_config in vendor_configs:
+                if vendor_user_config.get('data_source') == data_source:
+                    user_config = vendor_user_config
+                    break
+        else:
+            raise Exception(vendor_configs)
+
+        if not vendor_configs or not user_config:
+            raise Exception('Vendor {0} is not supported'.format(data_source))
+
+        for a_key in ['ftp_url', 'id', 'secret']:
+            mc_api_args[a_key] = user_config[a_key]
+
+        return mc_api_args
 
     def simple_data_load(self, **kwargs):
         api_call_config = self.get_api_args(kwargs['data_source'], kwargs['data_type'])
@@ -299,11 +322,15 @@ class DataLoadService(DbService):
 
     def load_mc_email_data(self):
         config = self.config
-        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('EMAIL_DATA_SOURCE'))
+
+
+        # mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('EMAIL_DATA_SOURCE'))
+        # TODO derive data_source from kwargs
+        mc_data_creds = self.get_mc_email_data_args('mc_email_data')
         cfg = {
             'host': mc_data_creds.get('ftp_url'),
-            'username': mc_data_creds.get('ftp_user'),
-            'password': mc_data_creds.get('ftp_pass')
+            'username': mc_data_creds.get('id'),
+            'password': mc_data_creds.get('secret')
         }
         filename = mc_data_creds.get('filename')
         filepath = mc_data_creds.get('filepath')
@@ -994,6 +1021,7 @@ class UserDataLoadService(DataLoadService):
 
     def init_user_db(self, user_params, postgres_required=True):
         self.user_params = user_params
+        print(user_params)
 
         postgres_uri = self.config.get(user_params.get('postgres_uri')) \
                        or user_params.get('postgres_uri')

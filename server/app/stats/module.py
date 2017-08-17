@@ -4,7 +4,7 @@ from injector import provides
 from injector import singleton
 
 from .injector_keys import JbStatsServ, GetStatsServ, UserDataLoadServ
-from ..injector_keys import Config, Logging, SQLAlchemy, MongoDB, DBSession
+from ..injector_keys import Config, Logging, MongoDB, DBSession
 from .services.jb_stats import JbStatsService
 from .services.get_stats import GetStatsService
 from .services.data_load import UserDataLoadService

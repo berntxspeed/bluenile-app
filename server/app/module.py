@@ -19,12 +19,6 @@ class AppModule(Module):
     def provide_app_config(self, app):
         return app.config
 
-    @singleton
-    @provides(SQLAlchemy)
-    def provides_sqlalchemy(self):
-        from .common.models.user_models import user_db
-        return user_db
-
     @inject(app=Flask)
     @provides(UserSessionConfig)
     def provides_user_session_config(self, app):

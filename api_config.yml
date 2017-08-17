@@ -157,5 +157,9 @@
                             }
 
         }
+    },
+    'mc_email_data': {
+        'filename': 'tracking_extract.zip',
+        'filepath': '/Export/',
     }
 }

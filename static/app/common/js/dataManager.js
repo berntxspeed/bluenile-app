@@ -1,15 +1,16 @@
 $(document).ready(function(){
 
     var g_sources_map = {
-                          shopify:      ['domain', 'id', 'secret'],
-                          bigcommerce:  ['domain', 'id', 'secret'],
-                          x2crm:        ['domain', 'token'],
-                          magento:      ['domain', 'token'],
-                          stripe:       ['domain', 'id'],
-                          zoho:         ['domain', 'token'],
+                          shopify:          ['domain', 'id', 'secret'],
+                          bigcommerce:      ['domain', 'id', 'secret'],
+                          x2crm:            ['domain', 'token'],
+                          magento:          ['domain', 'token'],
+                          zoho:             ['domain', 'token'],
+                          stripe:           ['domain', 'id'],
+                          mc_email_data:    ['ftp_url', 'id', 'secret'],
 
                         }
-    var g_account_atts = ['domain', 'id', 'secret', 'token']
+    var g_account_atts = ['domain', 'id', 'secret', 'token', 'ftp_url']
 
     var g_current_load_job = null
     var g_current_source = null
