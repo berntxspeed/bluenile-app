@@ -93,3 +93,12 @@ BTW, i used this install of flask-sqlalchemy https://github.com/mitsuhiko/flask-
 
 ---CHANGES to GA and Site to use GA tracking linkage to EmailAddress:
 add this tracking code
+
+
+
+----------after multiuser transition ---------
+to get app working on local - need to manage records in /bluenile db with tables client_account and user_permissions
+also in manage.py for the server command add option ssl_context='adhoc'
+
+Use this MONGO URI on local
+MONGODB_URI=mongodb://heroku_9d6hx8t9:pil9ikmod150rjdeuu2obnnf6j@ds137197.mlab.com:37197/heroku_9d6hx8t9

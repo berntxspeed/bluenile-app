@@ -79,7 +79,6 @@ class MapGraph {
                 .data(topojson.feature(us, us.objects.counties).features)
                 .enter().append("path")
                   .attr("fill", function(d) { return color(d.rate = findCounty(d.id)); })
-                  //.attr("fill", function(d) { return color(d.rate = unemployment.get(d.id)); })
                   .attr("d", path)
                 .append("title")
                   .text(function(d) { return d.rate; });
