@@ -24,7 +24,7 @@ system_db = SQLAlchemy(session_options={
 # resources
 
 # TODO: this will be injected once the old SQLAlchemy session creation is refactored per user
-system_db_uri = os.getenv('ACCOUNTS_DB_URL')
+system_db_uri = os.getenv('SYSTEM_DB_URI')
 
 # Create a configured "Session" class, i.e. session factory, to create a session, call system_session()
 # Never import system_session directly
@@ -47,6 +47,7 @@ def session_scope():
         session.close()
 
 
+#TODO: deprecate this table
 class User(UserMixin, system_db.Model):
     __tablename__ = 'users'
     id = system_db.Column(system_db.Integer, primary_key=True)

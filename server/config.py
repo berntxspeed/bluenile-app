@@ -26,7 +26,6 @@ class Config(object):
     SESSION_TYPE = 'redis'
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     # SQLALCHEMY_BINDS = {
     #     'user_data':    'postgresql://localhost/simple_di_flask_dev',
     #     'appmeta':      'postgresql://localhost/bluenile',
@@ -42,6 +41,8 @@ class Config(object):
 
     # Used by Flask-Session
     SESSION_REDIS = redis.from_url(REDIS_URI)
+    SYSTEM_DB_URI = os.getenv('SYSTEM_DB_URI')
+    AWS_DB_URI_PREFIX = os.getenv('AWS_DB_URI_PREFIX')
 
     # Cache
     CACHE_TYPE = 'simple'

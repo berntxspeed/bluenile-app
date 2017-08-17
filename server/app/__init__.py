@@ -82,6 +82,7 @@ def init_login_manager(app):
     def load_user(user_id):
         users_client = OktaUsersClient('https://dev-198609.oktapreview.com',
                                        '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z')
+
         okta_user = users_client.get_user(user_id)
         return OktaUser(okta_user)
 

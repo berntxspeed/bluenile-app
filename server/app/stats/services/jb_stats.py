@@ -15,6 +15,7 @@ class JbStatsService(object):
     def validate_on_submit(self, request, form):
         return request.method == 'POST' and form.validate()
 
+    # TODO: integrate OR eliminate facebook_id
     @staticmethod
     def special_logged_in_page(request, session):
         facebook_id = session.get('facebook_id')

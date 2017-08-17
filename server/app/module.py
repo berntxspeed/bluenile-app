@@ -38,9 +38,8 @@ class AppModule(Module):
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
 
-        db_uri = os.getenv(user_config.get('postgres_uri'))\
-                 or app_config.get(user_config.get('postgres_uri'))\
-                 or user_config.get('postgres_uri')
+        db_uri = user_config.get('postgres_uri')\
+                 or app_config.get(user_config.get('postgres_uri'))
 
         engine = create_engine(db_uri)
         session = scoped_session(sessionmaker(bind=engine))

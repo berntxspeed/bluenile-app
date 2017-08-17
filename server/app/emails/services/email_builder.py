@@ -77,7 +77,7 @@ class EmailService(object):
             elif method == 'cover':
                 src = request.args.get('src', None)
                 width, height = [self.__size(p) for p in params]
-                upload = Upload.query.filter_by(esp_hosted_url=src).first()
+                upload = self.db_session.query(Upload).filter_by(esp_hosted_url=src).first()
                 if upload is None:
                     raise ValueError('no matching image found in db')
                 image = Image.open(BytesIO(upload.image))
@@ -86,7 +86,7 @@ class EmailService(object):
             elif method == 'resize':
                 src = request.args.get('src', None)
                 width, height = [self.__size(p) for p in params]
-                upload = Upload.query.filter_by(esp_hosted_url=src).first()
+                upload = self.db_session.query(Upload).filter_by(esp_hosted_url=src).first()
                 if upload is None:
                     raise ValueError('no matching image found in db')
                 image = Image.open(BytesIO(upload.image))
@@ -111,9 +111,9 @@ class EmailService(object):
             meta_data = json.loads(request.form.get('meta_data', None))
 
             if key is not None:
-                template = Template.query.filter_by(key=key).first()
+                template = self.db_session.query(Template).filter_by(key=key).first()
             else:
-                template = Template.query.filter_by(name=name).first()
+                template = self.db_session.query(Template).filter_by(name=name).first()
             if template is None:
                 template = Template()
 
@@ -130,7 +130,7 @@ class EmailService(object):
             key = request.form.get('key', None)
             if key is None:
                 raise ValueError('key cannot be empty')
-            template = Template.query.filter_by(key=key).first()
+            template = self.db_session.query(Template).filter_by(key=key).first()
             if template is not None:
                 return jsonify(content=template.template_data, meta_data=template.meta_data)
             else:
@@ -141,7 +141,7 @@ class EmailService(object):
             if key is None:
                 raise ValueError('name cannot be empty')
             print('pushing email with key: ' + key + ' to SFMC...')
-            eml = EmlPush(key)
+            eml = EmlPush(self.db_session, key)
             resp = eml.sync_to_ems()
             return jsonify(results=resp.message), resp.code
         else:

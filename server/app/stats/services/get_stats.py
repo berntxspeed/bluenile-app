@@ -80,9 +80,9 @@ class GetStatsService(object):
     def report_view(self):
         tables = self._acceptable_tables.keys()
 
-        reports = Report.query.all()
+        reports = self.db_session.query(Report).all()
 
-        sends = SendJob.query.all()
+        sends = self.db_session.query(SendJob).all()
 
         sends_by_emailname = {}
         sends_by_sendid = []
@@ -128,13 +128,13 @@ class GetStatsService(object):
                 if option == 'send-id':
                     if sendid[0] == '[':
                         sendid = sendid[1: len(sendid) - 1]
-                    send = SendJob.query.filter(SendJob.SendID == sendid).first()
+                    send = self.db_session.query(SendJob).filter(SendJob.SendID == sendid).first()
                 elif option == 'trig-send-id':
-                    eml_send = EmlSend.query.filter(EmlSend.TriggeredSendExternalKey == sendid).first()
+                    eml_send = self.db_session.query(EmlSend).filter(EmlSend.TriggeredSendExternalKey == sendid).first()
                     if eml_send is None:
                         raise ValueError('no emails sent with that TriggeredSendExternalKey')
                     xsendid = eml_send.SendID
-                    send = SendJob.query.filter(SendJob.SendID == xsendid).first()
+                    send = self.db_session.query(SendJob).filter(SendJob.SendID == xsendid).first()
                     # TODO: add check that a record was yielded from SendJob before proceeding
                     send.num_sends = \
                     self.db.session.query(func.count('*')).filter(EmlSend.TriggeredSendExternalKey == sendid).first()[0]
@@ -145,7 +145,7 @@ class GetStatsService(object):
                     self.db.session.query(func.count('*')).filter(EmlClick.TriggeredSendExternalKey == sendid).filter(
                         EmlClick.IsUnique == True).first()[0]
                 elif option == 'mult-send-id':
-                    sends = SendJob.query.filter(SendJob.SendID.in_(sendid[1: len(sendid) - 1].split(', '))).all()
+                    sends = self.db_session.query(SendJob).filter(SendJob.SendID.in_(sendid[1: len(sendid) - 1].split(', '))).all()
                     send = sends[0]
                     for xsend in sends[1:]:
                         send.num_sends += xsend.num_sends
@@ -180,7 +180,7 @@ class GetStatsService(object):
         rpt = None
 
         if rpt_id is not None:
-            rpt = Report.query.filter(Report.id == rpt_id).first()
+            rpt = self.db_session.query(Report).filter(Report.id == rpt_id).first()
 
         if rpt is None:
             db_op = 'add'
@@ -213,7 +213,7 @@ class GetStatsService(object):
 
     def get_report(self, rpt_id):
 
-        rpt = Report.query.filter(Report.id == rpt_id).first()
+        rpt = self.db_session.query(Report).filter(Report.id == rpt_id).first()
 
         if rpt is not None:
             report = dict(table=rpt.table,
@@ -233,7 +233,7 @@ class GetStatsService(object):
 
     def delete_report(self, rpt_id):
 
-        rpt = Report.query.filter(Report.id == rpt_id).first()
+        rpt = self.db_session.query(Report).filter(Report.id == rpt_id).first()
 
         if rpt is not None:
             try:

@@ -79,12 +79,14 @@ celery.conf.beat_schedule = {
     'every-4-hours_mc_journeys': {
         'task': 'server.app.stats.workers.load_mc_journeys',
         'schedule': crontab(minute=0, hour='*/4'),
-        'kwargs': {'task_type': 'mc-journeys', 'user_params': {'account_name': 'Galileo', 'postgres_uri': 'HEROKU_POSTGRESQL_JADE_URL'}}
+        'kwargs': {'task_type': 'mc-journeys', 'user_params': {'account_name': 'Galileo', 'postgres_uri': 'irrelevant'}}
     },
     'every-4-hours_mc_email_data': {
         'task': 'server.app.stats.workers.load_mc_email_data',
         'schedule': crontab(minute=0, hour='*/4'),
-        'kwargs': {'task_type': 'mc-email-data', 'user_params': {'account_name': 'Galileo', 'postgres_uri': 'HEROKU_POSTGRESQL_JADE_URL'}}
+        'kwargs': {'task_type': 'mc-email-data', 'user_params': {'account_name': 'Galileo',
+                                                                 'postgres_uri': 'postgresql://bluenilesw:BlueNileSW123!@postgres-dev.cdwkdjoq5xbu.us-east-2.rds.amazonaws.com:5432/galileo'}
+                   }
     }
 }
 

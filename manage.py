@@ -19,7 +19,7 @@ mongo = injector.get(MongoDB)
 manager = Manager(app)
 celery = provide_celery(app)
 migrate = Migrate(app, db)
-event_mgr = create_event_mgr(app)
+# event_mgr = create_event_mgr(app)
 
 
 def make_shell_context():
@@ -31,7 +31,7 @@ def make_shell_context():
         'injector': injector,
         'models': models,
         'celery': celery,
-        'event_mgr': event_mgr
+        # 'event_mgr': event_mgr
     }
 
 

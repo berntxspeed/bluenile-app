@@ -995,10 +995,8 @@ class UserDataLoadService(DataLoadService):
     def init_user_db(self, user_params, postgres_required=True):
         self.user_params = user_params
 
-        postgres_uri = os.getenv(user_params.get('postgres_uri')) \
-                       or self.config.get(user_params.get('postgres_uri')) \
+        postgres_uri = self.config.get(user_params.get('postgres_uri')) \
                        or user_params.get('postgres_uri')
-        print(postgres_uri)
 
         if postgres_required:
             if postgres_uri:
