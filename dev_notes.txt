@@ -102,3 +102,13 @@ also in manage.py for the server command add option ssl_context='adhoc'
 
 Use this MONGO URI on local
 MONGODB_URI=mongodb://heroku_9d6hx8t9:pil9ikmod150rjdeuu2obnnf6j@ds137197.mlab.com:37197/heroku_9d6hx8t9
+
+
+-----------to do shell testing with multi-account db model---------------
+from sqlalchemy import create_engine
+from sqlalchemy.orm imoprt scoped_session, sessionmaker
+target_db_engine = create_engine('postgresql://localhost/simple_di_flask_dev')
+target_session = scoped_session(sessionmaker(bind=target_db_engine))()
+from server.app.common.models.user_models import EmlSend .......
+records = target_session.query(EmlSend).all()
+

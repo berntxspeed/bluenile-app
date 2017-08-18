@@ -253,9 +253,9 @@ def get_columns(get_stats_service, tbl):
     return get_stats_service.get_columns(tbl)
 
 
-@stats.route('/metrics-grouped-by/<tbl>/<grp_by>/<agg_op>/<agg_field>', methods=['GET', 'POST'])
+@stats.route('/metrics-grouped-by/<tbl>/<grp_by>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
-def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
+def metrics_grouped_by(get_stats_service, tbl, grp_by):
     """
     tbl = 'EmlOpen' # a table to query
     grp_by = 'Device' # a db field name to group by
@@ -286,10 +286,11 @@ def metrics_grouped_by(get_stats_service, tbl, grp_by, agg_op, agg_field):
     if q:
         q = loads(q)
         filters = q.get('filters')
+        calculate = q.get('calculate')
         print(filters)
-    if agg_field == 'none':
-        agg_field = None
-    return get_stats_service.get_grouping_counts(tbl, grp_by, agg_op, agg_field, filters)
+        print(calculate)
+
+    return get_stats_service.get_grouping_counts(tbl, grp_by, calculate, filters)
 
 
 @stats.route('/map-graph')
@@ -298,7 +299,7 @@ def map_graph():
     return {}
 
 
-@stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>/<agg_op>/<agg_field>', methods=['GET', 'POST'])
+@stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
 def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field):
     if rpt_id == 'null':
@@ -311,10 +312,9 @@ def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, ag
     if q:
         q = loads(q)
         filters = q.get('filters')
+        calculate = q.get('calculate')
         print(filters)
-    if agg_field == 'none':
-        agg_field = None
-    return get_stats_service.save_report(rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field, filters)
+    return get_stats_service.save_report(rpt_id, rpt_name, graph_type, tbl, grp_by, calculate, filters)
 
 
 @stats.route('/report/<rpt_id>')

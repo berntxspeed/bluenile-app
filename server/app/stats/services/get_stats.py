@@ -40,11 +40,11 @@ class GetStatsService(object):
                              tbl=tbl,
                              acceptable_tbls=self._acceptable_tables)
         except ValueError as exc:
-            return jsonify(error=exc)
+            return jsonify(error=str(exc)), 404
 
         return jsonify(columns=st.get_columns())
 
-    def get_grouping_counts(self, tbl, grp_by, aggregate_op, aggregate_field, filters=None):
+    def get_grouping_counts(self, tbl, grp_by, calculate, filters=None):
         """
         tbl = 'EmlOpen' # a table to query
         grp_by = 'Device' # a db field name to group by
@@ -64,14 +64,22 @@ class GetStatsService(object):
                 'val': '23421'
             }
         ]
+        calculate = {
+            'left-operand-field': aggregateField,
+            'left-operand-agg-op': aggregateOp,
+            'right-operand-field': aggregateField2,
+            'right-operand-agg-op': aggregateOp2,
+            'math-op': mathOp
+        }
         """
         try:
             st = StatsGetter(db_session=self.db_session,
                              tbl=tbl,
                              acceptable_tbls=self._acceptable_tables,
                              grp_by=grp_by,
+                             calculate=calculate,
                              filters=filters)
-            results = st.get(aggregate_op, aggregate_field)
+            results = st.get()
         except ValueError as exc:
             return jsonify(error=str(exc)), 400
 
@@ -174,7 +182,7 @@ class GetStatsService(object):
         except Exception as exc:
             return jsonify(error=str(exc)), 400
 
-    def save_report(self, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field, filters=None):
+    def save_report(self, rpt_id, rpt_name, graph_type, tbl, grp_by, calculate, filters=None):
 
         db_op = 'update'
         rpt = None
@@ -195,8 +203,11 @@ class GetStatsService(object):
         except:
             pass
 
-        rpt.aggregate_op = agg_op
-        rpt.aggregate_field = agg_field
+        rpt.aggregate_op = calculate.get('left-operand-agg-op', None)
+        rpt.aggregate_field = calculate.get('left-operand-field', None)
+        rpt.aggregate_op_2 = calculate.get('right-operand-agg-op', None)
+        rpt.aggregate_field_2 = calculate.get('right-operand-field', None)
+        rpt.math_op = calculate.get('math-op', None)
 
         rpt.filters_json = filters
 
@@ -223,6 +234,9 @@ class GetStatsService(object):
                           grp_by_second=rpt.grp_by_second,
                           aggregate_op=rpt.aggregate_op,
                           aggregate_field=rpt.aggregate_field,
+                          aggregate_op_2=rpt.aggregate_op_2,
+                          aggregate_field_2=rpt.aggregate_field_2,
+                          math_op=rpt.math_op,
                           graph_type=rpt.graph_type,
                           filters_json=rpt.filters_json,
                           created=rpt.created,

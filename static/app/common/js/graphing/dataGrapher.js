@@ -11,6 +11,9 @@ var bindings = {
             dataGrouping2: '#data-grouping2',
             aggregateOp: '#aggregate-op',
             aggregateField: '#aggregate-field',
+            aggregateOp2: '#aggregate-op-2',
+            aggregateField2: '#aggregate-field-2',
+            mathOp: '#math-op',
             graphType: '#graph-type',
             drillDownButton: '.drill-down-button',
             limitByAdd: '#limit-by-add',
@@ -60,6 +63,24 @@ class DataGrapher {
             var elAggregateField = bindTo + ' ' + bindings.aggregateField;
         } else {
             return console.error('missing aggregateField in bindings');
+        }
+
+        if (bindings.aggregateOp2) {
+            var elAggregateOp2 = bindTo + ' ' + bindings.aggregateOp2;
+        } else {
+            return console.error('missing aggregateOp2 in bindings');
+        }
+
+        if (bindings.aggregateField2) {
+            var elAggregateField2 = bindTo + ' ' + bindings.aggregateField2;
+        } else {
+            return console.error('missing aggregateField2 in bindings');
+        }
+
+        if (bindings.mathOp) {
+            var elMathOp = bindTo + ' ' + bindings.mathOp;
+        } else {
+            return console.error('missing mathOp in bindings');
         }
 
         if (bindings.graphType) {
@@ -347,8 +368,15 @@ class DataGrapher {
             $(elAggregateField).removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- optional --</option>');
+            $(elAggregateField2).removeAttr('disabled')
+                .find('option').remove().end()
+                .append('<option value="">-- optional --</option>');
 
             $(elAggregateOp).val('count');
+            $(elAggregateOp2).val('');
+
+            // clear math op option
+            $(elMathOp).val('');
 
             // get columns and add data grouping options (one for each column)
             $.ajax({
@@ -376,6 +404,7 @@ class DataGrapher {
                       // only add the numeric / datetime / boolean fields to the aggregate-field options
                       if (columnType == 'numeric' || columnType == 'datetime' || columnType == 'boolean') {
                           $(elAggregateField).append('<option value"'+column.name+'">'+column.name+'</option>');
+                          $(elAggregateField2).append('<option value"'+column.name+'">'+column.name+'</option>');
                       }
                   });
 
@@ -654,6 +683,12 @@ class DataGrapher {
             if (aggregateOp == 'count' && !aggregateField) {
                 aggregateField = 'none';
             }
+            var aggregateOp2 = $(elAggregateOp2).val();
+            var aggregateField2 = $(elAggregateField2).val();
+            var mathOp = $(elMathOp).val();
+            if (aggregateOp2 == 'count' && !aggregateField2) {
+                aggregateField2 = 'none';
+            }
 
             // ensure all options have values
             if (!dataSelect) {
@@ -662,11 +697,21 @@ class DataGrapher {
                 return alert('must select from "Group Data By"');
             } else if (!graphType) {
                 return alert('must select from "Graph Type"');
-            } else if (aggregateOp != 'count') {
-                if (!aggregateField) {
-                    return alert('must select a field to aggregate by if aggregate operation is NOT count');
-                }
+            } else if (aggregateOp != 'count' && !aggregateField) {
+                return alert('must select a field to aggregate by if aggregate operation is NOT count');
+            } else if ( (aggregateOp2 && !mathOp) || (!aggregateOp2 && mathOp) ) {
+                return alert('must select a math operation and a second aggregation');
+            } else if (aggregateOp2 != 'count' && !aggregateField2) {
+                return alert('must select a field to aggregate by if second aggregate operation is NOT count');
             }
+
+            var calculate = {
+                'left-operand-field': aggregateField,
+                'left-operand-agg-op': aggregateOp,
+                'right-operand-field': aggregateField2,
+                'right-operand-agg-op': aggregateOp2,
+                'math-op': mathOp
+            };
 
             // get all filters and add them to filters variable
             var filters = [];
@@ -736,9 +781,9 @@ class DataGrapher {
 
             if (action == 'update') {
                 requestMethod = 'POST';
-                endpoint = '/metrics-grouped-by'+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
+                endpoint = '/metrics-grouped-by'+'/'+dataSelect+'/'+dataGrouping;
                 successFunc = function(data) {
-                    self.renderGraph(self, elDrillDownGraph, graphType, data.results, dataGrouping, aggregateOp, aggregateField);
+                    self.renderGraph(self, elDrillDownGraph, graphType, data.results, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2);
                 }
             } else if (action == 'save') {
                 requestMethod = 'POST';
@@ -746,7 +791,7 @@ class DataGrapher {
                     reportName = prompt('name of report: ');
                     reportId = 'null';
                 }
-                endpoint = '/save-report/'+reportId+'/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
+                endpoint = '/save-report/'+reportId+'/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping;
                 successFunc = function(data) {
                     reportId = data.reportId;
                     alert('saved report');
@@ -754,7 +799,7 @@ class DataGrapher {
             } else if (action == 'save-as') {
                 requestMethod = 'POST';
                 reportName = prompt('enter new report name: ');
-                endpoint = '/save-report/null/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
+                endpoint = '/save-report/null/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping;
                 successFunc = function(data) {
                     reportId = data.reportId;
                     alert('saved report');
@@ -774,7 +819,11 @@ class DataGrapher {
                 type: requestMethod,
                 url: endpoint,
                 data: {
-                    q: JSON.stringify({'filters': filters}),
+                    q: JSON.stringify({
+                        'filters': filters,
+                        //'groupings': groupings,
+                        'calculate': calculate
+                    }),
                     csrf: $('#csrf-token').text()
                 },
                 success: successFunc
@@ -805,6 +854,9 @@ class DataGrapher {
 
                         $(elAggregateOp).val(report.aggregate_op);
                         $(elAggregateField).val(report.aggregate_field);
+                        $(elAggregateOp2).val(report.aggregate_op_2);
+                        $(elAggregateField2).val(report.aggregate_field_2);
+                        $(elMathOp).val(report.math_op);
                         $(elGraphType).val(report.graph_type);
 
                         report.filters_json.forEach(function(filter){
@@ -912,7 +964,7 @@ class DataGrapher {
         return fdata;
     }
 
-    renderGraph(self, bindTo, graphType, data, dataGrouping, aggregateOp, aggregateField) {
+    renderGraph(self, bindTo, graphType, data, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2) {
         // if it's map-graph, render custom map graph instead
         if(graphType == 'map-graph') {
             $(bindTo).html('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="960" height="600"></svg>\n<p>MAP GRAPH!</p>');
@@ -977,7 +1029,7 @@ class DataGrapher {
                     },
                     y: {
                         label: {
-                            text: aggregateOp + ' ' + aggregateField,
+                            text: aggregateOp + ' ' + aggregateField + ' ' + mathOp + ' ' + aggregateOp2 + ' ' + aggregateField2 ,
                             position: 'outer-middle'
                         }
                     }
@@ -1040,7 +1092,7 @@ class DataGrapher {
                     },
                     y: {
                         label: {
-                            text: aggregateOp + ' ' + aggregateField,
+                            text: aggregateOp + ' ' + aggregateField + ' ' + mathOp + ' ' + aggregateOp2 + ' ' + aggregateField2,
                             position: 'outer-middle'
                         }
                     }
