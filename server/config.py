@@ -78,6 +78,7 @@ class Config(object):
         'spotify': {
             'endpoint': os.getenv('SPOTIFY_API_ENDPOINT')
         },
+        #TODO: get rid of _ftp and _api entries
         'marketingcloud_ftp': {
             'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
             'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),

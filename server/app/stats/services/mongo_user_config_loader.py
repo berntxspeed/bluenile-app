@@ -28,8 +28,10 @@ VENDOR_API_TO_TABLES_MAP = {
     'bigcommerce': ['customer', 'purchase'],
     'stripe': ['customer'],
     'x2crm': ['customer'],
-    'mc_email_data': ['mc_email_data'],
-    'zoho': ['customer']
+    'zoho': ['customer'],
+    # generic name for a db record
+    'mc_email_data': ['record'],
+    'mc_journeys': ['record']
 }
 
 
@@ -117,6 +119,7 @@ class MongoUserApiConfigLoader(object):
         self._collection_name = 'user_api_config'
         self._primary_key = 'data_source'
         self._user_config = user_config
+        self._encrypted_fields = ['domain', 'token', 'secret', 'id']
 
         user_account = self._user_config and self._user_config.get('account_name')
         if user_account:
@@ -144,7 +147,7 @@ class MongoUserApiConfigLoader(object):
         try:
             for vendor_config in self._collection.find({}, {'_id': 0}).sort('timestamp', -1):
                 for k, v in vendor_config.items():
-                    if k in ['domain', 'token', 'secret', 'id']:
+                    if k in self._encrypted_fields:
                         vendor_config[k] = MongoUserApiConfigLoader.decrypt(v)
                 all_vendors.append(vendor_config)
 
@@ -158,7 +161,7 @@ class MongoUserApiConfigLoader(object):
             return False, 'Cannot Save Empty Api Config'
         if not update:
             for k, v in vendor_config.items():
-                if k in ['domain', 'token', 'secret', 'id']:
+                if k in self._encrypted_fields:
                     vendor_config[k] = MongoUserApiConfigLoader.encrypt(v)
 
             vendor_config['timestamp'] = str(datetime.datetime.now())

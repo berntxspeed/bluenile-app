@@ -255,8 +255,7 @@ class DataLoadService(DbService):
 
         return api_args
 
-    def get_mc_email_data_args(self, data_source):
-
+    def get_mc_data_args(self, data_source):
         vendor_config = self.data_load_config.get(data_source, {})
         mc_api_args = copy.copy(vendor_config)
 
@@ -272,9 +271,9 @@ class DataLoadService(DbService):
             raise Exception(vendor_configs)
 
         if not vendor_configs or not user_config:
-            raise Exception('Vendor {0} is not supported'.format(data_source))
+            raise Exception(f'Vendor {data_source} is not supported')
 
-        for a_key in ['ftp_url', 'id', 'secret']:
+        for a_key in user_config.keys():
             mc_api_args[a_key] = user_config[a_key]
 
         return mc_api_args
@@ -320,13 +319,8 @@ class DataLoadService(DbService):
         # load lead perfection data to db
         csv.load_data()
 
-    def load_mc_email_data(self):
-        config = self.config
-
-
-        # mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('EMAIL_DATA_SOURCE'))
-        # TODO derive data_source from kwargs
-        mc_data_creds = self.get_mc_email_data_args('mc_email_data')
+    def load_mc_email_data(self, **kwargs):
+        mc_data_creds = self.get_mc_data_args('mc_email_data')
         cfg = {
             'host': mc_data_creds.get('ftp_url'),
             'username': mc_data_creds.get('id'),
@@ -649,8 +643,9 @@ class DataLoadService(DbService):
 
     def __get_mc_auth(self):
         # TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
-        config = self.config
-        mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('EMAIL_DATA_DEST'))
+
+        mc_data_creds = self.get_mc_data_args('mc_journeys')
+
         # get auth token
         url = mc_data_creds.get('auth_url')  # was 'https://auth.exacttargetapis.com/v1/requestToken'
         body = dict(clientId=mc_data_creds.get('id'),  # was '3t1ch44ej7pb4p117oyr7m4g',
@@ -716,7 +711,7 @@ class DataLoadService(DbService):
 
         http = credentials.authorize(httplib2.Http())
 
-        # Build the service object.
+        # Build the service object
         analytics = build('analytics', 'v4', http=http, discoveryServiceUrl=DISCOVERY_URI)
 
         def load_web_tracking_data(model, dims, metrics, db_field_map):

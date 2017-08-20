@@ -108,7 +108,7 @@ def load_mc_email_data(**kwargs):
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params)
-            service.exec_safe_session(service.load_mc_email_data)
+            service.exec_safe_session(service.load_mc_email_data, **kwargs)
 
 
 @celery.task(base=BaseTask)

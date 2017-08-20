@@ -7,10 +7,11 @@ $(document).ready(function(){
                           magento:          ['domain', 'token'],
                           zoho:             ['domain', 'token'],
                           stripe:           ['domain', 'id'],
-                          mc_email_data:    ['ftp_url', 'id', 'secret'],
+                          mc_email_data:    ['id', 'secret'],
+                          mc_journeys:      ['id', 'secret'],
 
                         }
-    var g_account_atts = ['domain', 'id', 'secret', 'token', 'ftp_url']
+    var g_account_atts = ['domain', 'id', 'secret', 'token']
 
     var g_current_load_job = null
     var g_current_source = null
@@ -247,6 +248,7 @@ $(document).ready(function(){
         $("#add-source").val('select')
         for (var i in g_account_atts){
             element = $("#"+g_account_atts[i])
+            console.log(element)
             hideElement(element)
         }
     })
@@ -279,12 +281,12 @@ $(document).ready(function(){
     $("#btn-edit-source").click(function () {
         var row = getSelectedRow(data_load_sources_table)
         if (row == null || !(row.data_source in g_sources_map)) { return }
-        destroyTable(data_load_sources_table)
         console.log(row)
         changeModalHeader('data-sources', row.data_source)
         document.getElementById('source-footer').innerHTML = ""
         hideElement($("#saved-sources-buttons"))
         showElement($("#change-source-buttons"), $("#data-info-block"))
+        destroyTable(data_load_sources_table)
         g_current_source = row
         account_atts = g_sources_map[row.data_source]
 
@@ -310,7 +312,7 @@ $(document).ready(function(){
         }
         else { source = g_current_source.data_source }
 
-        api_config = { 'data_source': source}
+        api_config = {'data_source': source}
         fields_to_validate = g_sources_map[source]
 
         // TODO: data validation only on empty fields

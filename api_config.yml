@@ -161,5 +161,9 @@
     'mc_email_data': {
         'filename': 'tracking_extract.zip',
         'filepath': '/Export/',
+        'ftp_url': 'ftp.s7.exacttarget.com'
+    },
+    'mc_journeys': {
+        'auth_url': 'https://auth.exacttargetapis.com/v1/requestToken?legacy=1'
     }
 }
