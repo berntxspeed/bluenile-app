@@ -24,7 +24,7 @@ class BaseTask(celery.Task):
                 }
         with app.app_context():
             mongo = injector.get(MongoDB)
-            from server.app.task_admin.services.mongo_task_loader import MongoTaskLoader
+            from server.app.admin.services.mongo_task_loader import MongoTaskLoader
             success, error = MongoTaskLoader(mongo.db, kwargs.get('user_params')).save_task(task)
 
             if kwargs.get('task_type') == 'data-push':

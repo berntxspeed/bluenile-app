@@ -12,19 +12,19 @@ from injector import inject
 from server.app.common.views.decorators import templated
 from server.app.data_builder.services.query_service import SqlQueryService
 from server.app.injector_keys import MongoDB, UserSessionConfig, Config
-from server.app.task_admin.services.account_creation_service import AccountCreationService
-from . import taskadmin
+from server.app.admin.services.account_creation_service import AccountCreationService
+from . import admin
 from .services.mongo_task_loader import MongoTaskLoader
 from ..auth.injector_keys import AuthServ
 
 
-@taskadmin.before_request
+@admin.before_request
 @login_required
 def before_request():
     pass
 
 
-@taskadmin.before_request
+@admin.before_request
 def before_request():
     if request.url.startswith('http://'):
         url = request.url.replace('http://', 'https://', 1)
@@ -32,7 +32,16 @@ def before_request():
         return redirect(url, code=code)
 
 
-@taskadmin.route('/task-admin/')
+@admin.route('/admin-panel/')
+@inject(mongo=MongoDB, user_config=UserSessionConfig)
+@templated('admin_panel')
+def admin_panel(mongo, user_config):
+    status, tasks = MongoTaskLoader(mongo.db, user_config).get_all_tasks()
+    user = dict(account=session.get('user_params', {}).get('account_name'))
+    return dict(status=status, tasks=tasks, user=user)
+
+
+@admin.route('/task-admin/')
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
 @templated('task_admin')
 def task_admin(mongo, user_config):
@@ -42,7 +51,7 @@ def task_admin(mongo, user_config):
 
 
 @inject(config=Config)
-@taskadmin.route('/create-account', methods=['POST'])
+@admin.route('/create-account', methods=['POST'])
 def create_account(config):
     account_config = request.json
     service = AccountCreationService(account_config['account'], account_config['username'], config)
@@ -56,7 +65,7 @@ def create_account(config):
 
 
 @inject(mongo=MongoDB)
-@taskadmin.route('/delete-account/<account_name>')
+@admin.route('/delete-account/<account_name>')
 def delete_account(account_name, mongo):
     # TODO: enable account deletion
     # Account deletion disabled to prevent accidental data loss
@@ -77,7 +86,7 @@ def delete_account(account_name, mongo):
 
 
 @inject(auth_service=AuthServ)
-@taskadmin.route('/get-all-accounts')
+@admin.route('/get-all-accounts')
 def get_all_existing_accounts(auth_service):
 
     accounts = auth_service.get_all_accounts()

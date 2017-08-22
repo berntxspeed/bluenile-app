@@ -37,13 +37,14 @@ def make_shell_context():
 
 manager.add_command('shell', Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
-manager.add_command('runserver', Server(host='0.0.0.0', port=5000, extra_files=['server/asset-config.yaml']))
+manager.add_command('runserver', Server(host='0.0.0.0', port=5000, extra_files=['server/asset-config.yaml'],
+                                        ssl_context=('cert.pem', 'key.pem')))
 
 
 @manager.command
 def init_db():
     from server.app.common.models.system_models import system_db
-    from server.app.task_admin.services.account_creation_service import AccountCreationService
+    from server.app.admin.services.account_creation_service import AccountCreationService
 
     # creates the system database
     account_service = AccountCreationService('test-account2', 'vitalik301@gmail.com', config)

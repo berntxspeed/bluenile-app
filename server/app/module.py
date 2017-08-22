@@ -97,7 +97,7 @@ def get_blueprints():
     from .stats import stats as stats_blueprint
     from .data import data as data_blueprint
     from .data_builder import databuilder as data_builder_blueprint
-    from .task_admin import taskadmin as task_admin_blueprint
+    from .admin import admin as admin_blueprint
     from .emails import emails as emails_blueprint
     return [
         main_blueprint,
@@ -105,6 +105,6 @@ def get_blueprints():
         stats_blueprint,
         data_blueprint,
         data_builder_blueprint,
-        task_admin_blueprint,
+        admin_blueprint,
         emails_blueprint
     ]
