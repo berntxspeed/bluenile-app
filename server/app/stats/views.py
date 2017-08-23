@@ -301,7 +301,7 @@ def map_graph():
 
 @stats.route('/save-report/<rpt_id>/<rpt_name>/<graph_type>/<tbl>/<grp_by>', methods=['GET', 'POST'])
 @inject(get_stats_service=GetStatsServ)
-def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by, agg_op, agg_field):
+def save_report(get_stats_service, rpt_id, rpt_name, graph_type, tbl, grp_by):
     if rpt_id == 'null':
         rpt_id = None
     filters = None

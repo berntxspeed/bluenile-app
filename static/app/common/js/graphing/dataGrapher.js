@@ -181,6 +181,10 @@ class DataGrapher {
             EmlClick: [
                 { grouping1: '_day', grouping2: '_hour' },
                 { grouping1: 'AreaCode', grouping2: null }
+            ],
+            SendJob: [
+                { grouping1: 'SentTime:date', grouping2: null },
+                { grouping1: 'SchedTime:date', grouping2: null }
             ]
         };
 
@@ -218,6 +222,12 @@ class DataGrapher {
                 ],
                 '_day_hour': [
                     { name: 'Day Hour Heatmap', value: 'day-hour' }
+                ],
+                'SentTime:date': [
+                    { name: 'Calendar Graph', value: 'calendar' }
+                ],
+                'SchedTime:date': [
+                    { name: 'Calendar Graph', value: 'calendar' }
                 ]
             }
         };
@@ -975,6 +985,11 @@ class DataGrapher {
             $(bindTo).html('<style>\n  rect.bordered {\n    stroke: #E6E6E6;\n    stroke-width:2px;   \n  }\n\n  text.mono {\n    font-size: 9pt;\n    font-family: Consolas, courier;\n    fill: #aaa;\n  }\n\n  text.axis-workweek {\n    fill: #000;\n  }\n\n  text.axis-worktime {\n    fill: #000;\n  }\n</style>\n<div class="day-hour"></div>\n<p>HEAT MAP!</p>');
             var dayHourPlot = new DayHourPlot();
             dayHourPlot.init(bindTo + ' .day-hour', data);
+            return;
+        } else if(graphType == 'calendar'){
+            $(bindTo).html('');
+            var calendarGraph = new CalendarGraph();
+            calendarGraph.init(bindTo + '', data);
             return;
         } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar' || graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar'){
             var secondGrouping = dataGrouping;

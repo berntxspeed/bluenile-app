@@ -214,11 +214,11 @@ class GetStatsService(object):
         rpt.graph_type = graph_type
 
         if db_op == 'add':
-            self.db.session.add(rpt)
+            self.db_session.add(rpt)
         elif db_op == 'update':
-            self.db.session.merge(rpt)
+            self.db_session.merge(rpt)
 
-        self.db.session.commit()
+        self.db_session.commit()
 
         return jsonify(reportId=rpt.id)
 
@@ -251,8 +251,8 @@ class GetStatsService(object):
 
         if rpt is not None:
             try:
-                self.db.session.delete(rpt)
-                self.db.session.commit()
+                self.db_session.delete(rpt)
+                self.db_session.commit()
                 return jsonify(status='deleted')
             except Exception as exc:
                 return jsonify(error='problem deleting report'), 500

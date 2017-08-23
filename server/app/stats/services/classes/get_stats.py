@@ -1,4 +1,4 @@
-from sqlalchemy import func, cast, extract, Float
+from sqlalchemy import func, cast, extract, Float, Date
 from ....common.utils.db_datatype_handler import convert_to_attr_datatype
 
 
@@ -36,6 +36,15 @@ class StatsGetter(object):
             'count': lambda field: func.count(field)
         }
 
+        self._allowable_field_operations = {
+            'day': lambda field: extract('day', field),
+            'month': lambda field: extract('month', field),
+            'year': lambda field: extract('year', field),
+            'hour': lambda field: extract('hour', field),
+            'minute': lambda field: extract('minute', field),
+            'date': lambda field: cast(field, Date)
+        }
+
         self._db_session = db_session
         self._tbl = tbl
         self._acceptable_tables = acceptable_tbls
@@ -63,9 +72,12 @@ class StatsGetter(object):
 
     def _get_column(self, col_request):
         if ':' in col_request:
-            extract_op = col_request.split(':')[1]
-            extract_field = col_request.split(':')[0]
-            return extract(extract_op, getattr(self._model, extract_field))
+            field_op = col_request.split(':')[1]
+            field = col_request.split(':')[0]
+            if field_op in self._allowable_field_operations.keys():
+                return self._allowable_field_operations.get(field_op)(getattr(self._model, field))
+            else:
+                raise ValueError('invalid field operation for field: ' + field)
         else:
             return getattr(self._model, col_request)
 
@@ -175,6 +187,8 @@ class StatsGetter(object):
                 # add type-specific functions to columns
                 if 'TIMESTAMP' in col_type:
                     # add day/month/year/hour/min options
+                    cols.append(dict(name=column + ':date',
+                                     type='TIMESTAMP'))
                     cols.append(dict(name=column+':day',
                                      type='INTEGER'))
                     cols.append(dict(name=column + ':month',
