@@ -62,20 +62,6 @@ class CalendarGraph {
           .append("title")
             .text(function(d) { return d + ": " + formatPercent(data[d]); });
 
-        /*d3.csv("dji.csv", function(error, csv) {
-          if (error) throw error;
-
-          var data = d3.nest()
-              .key(function(d) { return d.Date; })
-              .rollup(function(d) { return (d[0].Close - d[0].Open) / d[0].Open; })
-            .object(csv);
-
-          rect.filter(function(d) { return d in data; })
-              .attr("fill", function(d) { return color(data[d]); })
-            .append("title")
-              .text(function(d) { return d + ": " + formatPercent(data[d]); });
-        });*/
-
         function pathMonth(t0) {
           var t1 = new Date(t0.getFullYear(), t0.getMonth() + 1, 0),
               d0 = t0.getDay(), w0 = d3v4.timeWeek.count(d3v4.timeYear(t0), t0),
