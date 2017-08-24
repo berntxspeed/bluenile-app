@@ -13,3 +13,8 @@ DB MIGRATION STEPS:
 In the case of adding another client and a corresponding database (which does not contain the alembic_version table),
 one can perform alembic_version table reset for all accounts by running:
     "python manage.py reset_alembic_version"
+
+
+Notes:
+db migrate will once in a while omit the following dependency which has to be added manually:
+from sqlalchemy.types import Text
