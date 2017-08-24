@@ -1,0 +1,15 @@
+*** BLUENILE PRODUCTIONS ***
+Almost Generic multi-database migration configuration
+
+DB MIGRATION STEPS:
+1. Define SYSTEM_DB_URI in your env: this will determine which tables to migrate
+    by default, any database in the client_accounts table will be migrated
+2. Make sure that the "migrations" folder contains the modified version of env.py
+3. DB migration needs to be initialized only once and is available as part of the application package under "migrations" folder
+    Generally, running "python manage.py db init --multidb" is not required
+4. Run "python manage.py db migrate"
+5. Run "python manage.py db upgrade"
+
+In the case of adding another client and a corresponding database (which does not contain the alembic_version table),
+one can perform alembic_version table reset for all accounts by running:
+    "python manage.py reset_alembic_version"
