@@ -987,9 +987,9 @@ class DataGrapher {
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
         } else if(graphType == 'calendar'){
-            $(bindTo).html('');
+            $(bindTo).html('<style>\n\nbody {\n  font: 10px sans-serif;\n}\n\n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n\n</style>\n<svg class="legend" width="960" height="200"></svg>\n<svg class="canvas" width="960" height="600"></svg>');
             var calendarGraph = new CalendarGraph();
-            calendarGraph.init(bindTo + '', data);
+            calendarGraph.init(bindTo, data);
             return;
         } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar' || graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar'){
             var secondGrouping = dataGrouping;
