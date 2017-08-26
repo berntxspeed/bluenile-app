@@ -30,8 +30,8 @@ VENDOR_API_TO_TABLES_MAP = {
     'x2crm': ['customer'],
     'zoho': ['customer'],
     # generic name for a db record
-    'mc_email_data': ['record'],
-    'mc_journeys': ['record']
+    'mc_email_data': [''],
+    'mc_journeys': ['']
 }
 
 
@@ -106,11 +106,16 @@ class MongoDataJobConfigLoader(object):
         return self.save_data_load_config(load_job_config, update=True)
 
     def create_default_config(self, data_source):
-        for a_data_type in VENDOR_API_TO_TABLES_MAP.get(data_source, []):
+        if data_source.startswith('mc_'):
             default_config = dict(data_source=data_source)
-            default_config['data_type'] = a_data_type
-            default_config['job_type'] = '{0}_{1}s'.format(data_source, a_data_type)
+            default_config['job_type'] = data_source
             self.save_data_load_config(default_config)
+        else:
+            for a_data_type in VENDOR_API_TO_TABLES_MAP.get(data_source, []):
+                default_config = dict(data_source=data_source)
+                default_config['data_type'] = a_data_type
+                default_config['job_type'] = '{0}_{1}s'.format(data_source, a_data_type)
+                self.save_data_load_config(default_config)
 
 
 class MongoUserApiConfigLoader(object):

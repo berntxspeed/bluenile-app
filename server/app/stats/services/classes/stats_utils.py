@@ -13,6 +13,74 @@ SYNC_SCHED_MAP = {
 }
 
 
+from server.app.stats.workers import basic_load_task, load_mc_email_data, load_mc_journeys, \
+    load_web_tracking, load_lead_perfection, add_fips_location_emlopen, add_fips_location_emlclick
+from server.app.data.workers import sync_data_to_mc
+
+DATA_JOBS_LOAD_MAP = {'x2crm_customers': {
+                                            'load_func': basic_load_task,
+                                            'data_source': 'x2crm',
+                                            'data_type': 'customer'
+                                         },
+                      'zoho_customers': {
+                                            'load_func': basic_load_task,
+                                            'data_source': 'zoho',
+                                            'data_type': 'customer'
+                                        },
+                      'magento_customers': {
+                                            'load_func': basic_load_task,
+                                            'data_source': 'magento',
+                                            'data_type': 'customer'
+                                            },
+                      'magento_purchases': {
+                                            'load_func': basic_load_task,
+                                            'data_source': 'magento',
+                                            'data_type': 'purchase'
+                                            },
+                      'shopify_customers': {
+                                            'load_func': basic_load_task,
+                                            'data_source': 'shopify',
+                                            'data_type': 'customer'
+                                            },
+                      'shopify_purchases': {
+                                            'load_func': basic_load_task,
+                                            'data_source': 'shopify',
+                                            'data_type': 'purchase'
+                                            },
+                      'bigcommerce_customers': {
+                                                'load_func': basic_load_task,
+                                                'data_source': 'bigcommerce',
+                                                'data_type': 'customer'
+                                                },
+                      'bigcommerce_purchases': {
+                                                'load_func': basic_load_task,
+                                                'data_source': 'bigcommerce',
+                                                'data_type': 'purchase'
+                                                },
+                      'stripe_customers': {
+                                            'load_func': basic_load_task,
+                                            'data_source': 'stripe',
+                                            'data_type': 'customer'
+                                          },
+                      'mc_email_data': load_mc_email_data,
+                      'mc_journeys': load_mc_journeys,
+                      'web_tracking': load_web_tracking,
+                      'add_fips_location_emlopen': add_fips_location_emlopen,
+                      'add_fips_location_emlclick': add_fips_location_emlclick,
+                      'lead_perfection': load_lead_perfection,
+
+                      # Sync Data Tables to MC
+                      'customer_table': {
+                                            'load_func': sync_data_to_mc,
+                                            'table_name': 'customer',
+                                         },
+                      'purchase_table': {
+                                            'load_func': sync_data_to_mc,
+                                            'table_name': 'purchase',
+                                         },
+                      }
+
+
 def find_relevant_periodic_tasks(task_items):
     today = datetime.datetime.today()
     first_run_today = today.hour == 0

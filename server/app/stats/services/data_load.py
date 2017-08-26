@@ -320,7 +320,7 @@ class DataLoadService(DbService):
         csv.load_data()
 
     def load_mc_email_data(self, **kwargs):
-        mc_data_creds = self.get_mc_data_args('mc_email_data')
+        mc_data_creds = self.get_mc_data_args(kwargs['data_source'])
         cfg = {
             'host': mc_data_creds.get('ftp_url'),
             'username': mc_data_creds.get('id'),
@@ -636,15 +636,15 @@ class DataLoadService(DbService):
         for send in sends:
             send._get_stats()
 
-    def load_mc_journeys(self):
-        token = self.__get_mc_auth()
+    def load_mc_journeys(self, **kwargs):
+        token = self.__get_mc_auth(kwargs['data_source'])
         journeys = self.__get_mc_journeys(token)
         self.__load_mc_journeys_to_mongo(journeys, token)
 
-    def __get_mc_auth(self):
+    def __get_mc_auth(self, data_source):
         # TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
 
-        mc_data_creds = self.get_mc_data_args('mc_journeys')
+        mc_data_creds = self.get_mc_data_args(data_source)
 
         # get auth token
         url = mc_data_creds.get('auth_url')  # was 'https://auth.exacttargetapis.com/v1/requestToken'
@@ -659,7 +659,6 @@ class DataLoadService(DbService):
         return token
 
     def __get_mc_journeys(self, token):
-
         ad = ApiData(endpoint='https://www.exacttargetapis.com/interaction/v1/interactions',
                      auth=None,
                      headers={'Content-Type': 'application/json',
@@ -958,9 +957,8 @@ class DataLoadService(DbService):
         # - and if it finds some, it throws the FIPS code on the field specified and saves back the records
         # - then moves on to the next
 
-
+        # TODO: move this section to api_config
         filename = 'static/data/fips_codes_website.csv'
-        db_session = self.db_session
         if city_field is None:
             city_field = 'City'
         if state_field is None:
@@ -970,12 +968,15 @@ class DataLoadService(DbService):
 
         table_map = {'EmlOpen': EmlOpen,
                      'EmlClick': EmlClick}
-        model = table_map.get(table, None)
+        data_model = table_map.get(table, None)
         if table is None:
-            return Exception('table not recognized or authorized to apply fips location code data to.')
+            return Exception('table not recognized or authorized to apply FIPS location code data to.')
+        if self.db_session.query(data_model).count() == 0:
+            print(f'No records in {table} Table. Append FIPS data terminated')
+            return
 
-        city = getattr(model, city_field)
-        state = getattr(model, state_field)
+        city = getattr(data_model, city_field)
+        state = getattr(data_model, state_field)
 
         import csv
         with open(filename, 'r') as csvfile:
@@ -990,15 +991,15 @@ class DataLoadService(DbService):
 
                 already_processed.append((row['GU Name'], row['State Abbreviation']))
 
-                recs = db_session.query(model).filter(city == row['GU Name'].replace(' ', '').upper(),
+                recs = self.db_session.query(data_model).filter(city == row['GU Name'].replace(' ', '').upper(),
                                           state == row['State Abbreviation']).all()
                 # print('*', end='', flush=True)
                 if len(recs) > 0:
                     print('found ' + str(len(recs)) + ' records with city ' + row['GU Name'].replace(' ', ''))
                     for rec in recs:
                         rec.__setattr__(fips_field, str(row['State FIPS Code'] + row['County FIPS Code']))
-                        db_session.add(rec)
-                    db_session.commit()
+                        self.db_session.add(rec)
+                    self.db_session.commit()
 
 
 class UserDataLoadService(DataLoadService):

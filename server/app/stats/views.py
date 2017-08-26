@@ -62,7 +62,7 @@ def get_data_sources(mongo, user_config):
 
     status, data_load_jobs = MongoUserApiConfigLoader(mongo.db, user_config).get_user_api_config()
     columns = [{
-            'field': 'data_source',
+            'field': 'data_source_full_name',
             'title': 'Data Source'
         },
         {
@@ -176,73 +176,31 @@ def devpage_joint():
 @stats.route('/load/<action>')
 @templated('data_manager')
 def load(action):
-    from .workers import basic_load_task, load_mc_email_data, load_mc_journeys, \
-                         load_web_tracking, load_lead_perfection
-    from .workers import add_fips_location_emlopen, add_fips_location_emlclick
-    from ..data.workers import sync_data_to_mc
+    from server.app.stats.services.classes.stats_utils import DATA_JOBS_LOAD_MAP
 
-    user = dict(account=session.get('user_params', {}).get('account_name'))
-    load_map = {'x2crm_customers': {'load_func': basic_load_task,
-                                    'data_source': 'x2crm',
-                                    'data_type': 'customer'},
-                'zoho_customers': {'load_func': basic_load_task,
-                                   'data_source': 'zoho',
-                                   'data_type': 'customer'},
-                'magento_customers': {'load_func': basic_load_task,
-                                      'data_source': 'magento',
-                                      'data_type': 'customer'},
-                'magento_purchases': {'load_func': basic_load_task,
-                                      'data_source': 'magento',
-                                      'data_type': 'purchase'},
-                'shopify_customers': {'load_func': basic_load_task,
-                                      'data_source': 'shopify',
-                                      'data_type': 'customer'},
-                'shopify_purchases': {'load_func': basic_load_task,
-                                      'data_source': 'shopify',
-                                      'data_type': 'purchase'},
-                'bigcommerce_customers': {'load_func': basic_load_task,
-                                          'data_source': 'bigcommerce',
-                                          'data_type': 'customer'},
-                'bigcommerce_purchases': {'load_func': basic_load_task,
-                                          'data_source': 'bigcommerce',
-                                          'data_type': 'purchase'},
-                'stripe_customers': {'load_func': basic_load_task,
-                                     'data_source': 'stripe',
-                                     'data_type': 'customer'},
-                'mc-email-data': load_mc_email_data,
-                'mc-journeys': load_mc_journeys,
-                'web-tracking': load_web_tracking,
-                'add-fips-location-emlopen': add_fips_location_emlopen,
-                'add-fips-location-emlclick': add_fips_location_emlclick,
-                'lead-perfection': load_lead_perfection,
-                'customer_table': {'load_func': sync_data_to_mc,
-                                   'table_name': 'customer',
-                                   },
-                'purchase_table': {'load_func': sync_data_to_mc,
-                                   'table_name': 'purchase',
-                                    },
-                }
-
-    task = load_map.get(action, None)
+    task = DATA_JOBS_LOAD_MAP.get(action, None)
     if task is None:
         return Exception('No such action is available')
 
+    user = dict(account=session.get('user_params', {}).get('account_name'))
     user_params = session.get('user_params')
 
     if isinstance(task, dict):
         if 'table_name' in task:
             result = task['load_func'].delay(task['table_name'],
-                                             task_type='load_'+action,
+                                             task_type='load_' + action,
                                              table_name=task['table_name'],
                                              user_params=user_params)
-        elif 'data_source' in task:
-            result = task['load_func'].delay(task_type='load_'+action,
+        else:
+            result = task['load_func'].delay(task_type='load_' + action,
                                              data_source=task['data_source'],
                                              data_type=task['data_type'],
                                              sync_queries=True,
                                              user_params=user_params)
     else:
-        result = task.delay(task_type=action, user_params=user_params)
+        result = task.delay(task_type=action,
+                            data_source=action,
+                            user_params=user_params)
 
     return dict(task_id=result.id, user=user)
 

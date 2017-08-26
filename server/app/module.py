@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from flask import Flask
 from flask_cache import Cache
 from injector import Module
@@ -7,10 +10,6 @@ from injector import provides
 
 from .injector_keys import Config, SimpleCache, Logging, SQLAlchemy, MongoDB, UserSessionConfig, DBSession
 
-import logging
-import os
-import sys
-
 
 class AppModule(Module):
     @singleton
@@ -18,6 +17,12 @@ class AppModule(Module):
     @provides(Config)
     def provide_app_config(self, app):
         return app.config
+
+    @singleton
+    @provides(SQLAlchemy)
+    def provides_sqlalchemy(self):
+        from .common.models.user_models import user_db
+        return user_db
 
     @inject(app=Flask)
     @provides(UserSessionConfig)

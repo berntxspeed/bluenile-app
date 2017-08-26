@@ -118,7 +118,7 @@ def load_mc_journeys(**kwargs):
         with app.app_context():
             service = injector.get(UserDataLoadServ)
             service.init_user_db(user_params, postgres_required=False)
-            service.exec_safe_session(service.load_mc_journeys)
+            service.exec_safe_session(service.load_mc_journeys, **kwargs)
 
 
 @celery.task(base=BaseTask)
@@ -201,9 +201,9 @@ def schedule_sync_jobs(**kwargs):
 
 @celery.task(base=BaseTask)
 def schedule_load_jobs(**kwargs):
-    from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
-    from .services.classes.stats_utils import find_relevant_periodic_tasks
     from server.app.common.models.system_models import ClientAccount, session_scope
+    from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
+    from server.app.stats.services.classes.stats_utils import find_relevant_periodic_tasks, DATA_JOBS_LOAD_MAP
 
     #Find all the active client accounts
     user_configs = []
@@ -214,78 +214,35 @@ def schedule_load_jobs(**kwargs):
             user_configs.append(dict(account_name=an_account.account_name, postgres_uri=an_account.database_uri))
 
     for a_user_config in user_configs:
-        print ('user_config', a_user_config)
+        print(f'User_config: {a_user_config}')
         with app.app_context():
             mongo = injector.get(MongoDB)
             status, dl_jobs = MongoDataJobConfigLoader(mongo.db, a_user_config).get_data_load_jobs()
             relevant_load_jobs = find_relevant_periodic_tasks(dl_jobs)
 
             if len(relevant_load_jobs):
-                    from .workers import basic_load_task, load_mc_journeys, \
-                        load_web_tracking, load_lead_perfection
-                    from .workers import add_fips_location_emlopen, add_fips_location_emlclick
-                    from ..data.workers import sync_data_to_mc
-
-                    load_map = {'x2crm_customers': {'load_func': basic_load_task,
-                                                    'data_source': 'x2crm',
-                                                    'data_type': 'customer'},
-                                'zoho_customers': {'load_func': basic_load_task,
-                                                   'data_source': 'zoho',
-                                                   'data_type': 'customer'},
-                                'magento_customers': {'load_func': basic_load_task,
-                                                      'data_source': 'magento',
-                                                      'data_type': 'customer'},
-                                'magento_purchases': {'load_func': basic_load_task,
-                                                      'data_source': 'magento',
-                                                      'data_type': 'purchase'},
-                                'shopify_customers': {'load_func': basic_load_task,
-                                                      'data_source': 'shopify',
-                                                      'data_type': 'customer'},
-                                'shopify_purchases': {'load_func': basic_load_task,
-                                                      'data_source': 'shopify',
-                                                      'data_type': 'purchase'},
-                                'bigcommerce_customers': {'load_func': basic_load_task,
-                                                          'data_source': 'bigcommerce',
-                                                          'data_type': 'customer'},
-                                'bigcommerce_purchases': {'load_func': basic_load_task,
-                                                          'data_source': 'bigcommerce',
-                                                          'data_type': 'purchase'},
-                                'stripe_customers': {'load_func': basic_load_task,
-                                                     'data_source': 'stripe',
-                                                     'data_type': 'customer'},
-                                # 'artists': load_artists,
-                                'mc-email-data': load_mc_email_data,
-                                'mc-journeys': load_mc_journeys,
-                                'web-tracking': load_web_tracking,
-                                'add-fips-location-emlopen': add_fips_location_emlopen,
-                                'add-fips-location-emlclick': add_fips_location_emlclick,
-                                'lead-perfection': load_lead_perfection,
-                                'customer_table': {'load_func': sync_data_to_mc,
-                                                   'table_name': 'customer',
-                                                   },
-                                'purchase_table': {'load_func': sync_data_to_mc,
-                                                   'table_name': 'purchase',
-                                                   }
-                                }
-
                     while len(relevant_load_jobs):
                         a_job = relevant_load_jobs.pop()
-                        task = load_map.get(a_job.get('job_type'))
+                        task = DATA_JOBS_LOAD_MAP.get(a_job.get('job_type'))
                         if not task:
                             continue
                         sync_queries = (len(relevant_load_jobs) == 0)
-                        if 'table_name' in task:
-                            task['load_func'].delay(task['table_name'],
-                                                    task_type='load_' + a_job['job_type'],
-                                                    table_name=task['table_name'],
-                                                    user_params=a_user_config)
+                        if isinstance(task, dict):
+                            if 'table_name' in task:
+                                task['load_func'].delay(task['table_name'],
+                                                        task_type='load_' + a_job['job_type'],
+                                                        table_name=task['table_name'],
+                                                        user_params=a_user_config)
+                            else:
+                                task['load_func'].delay(task_type='load_' + a_job['job_type'],
+                                                        data_source=task['data_source'],
+                                                        data_type=task['data_type'],
+                                                        sync_queries=sync_queries,
+                                                        user_params=a_user_config)
                         else:
-                            task['load_func'].delay(task_type='load_' + a_job['job_type'],
-                                                    data_source=task['data_source'],
-                                                    data_type=task['data_type'],
-                                                    sync_queries=sync_queries,
-                                                    user_params=a_user_config)
-
+                            task.delay(task_type=a_job['job_type'],
+                                       data_source=a_job['job_type'],
+                                       user_params=a_user_config)
                         sleep(60)
 
 

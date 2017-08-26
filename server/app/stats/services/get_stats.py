@@ -1,7 +1,7 @@
 from flask import jsonify
 from sqlalchemy import func
 
-from ...common.models.user_models import Artist, Customer, Purchase, EmlSend, EmlOpen, EmlClick, SendJob, Event, \
+from ...common.models.user_models import Customer, Purchase, EmlSend, EmlOpen, EmlClick, SendJob, Event, \
     WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm, Report
 from .classes.get_stats import StatsGetter
 
@@ -15,7 +15,6 @@ class GetStatsService(object):
         self._acceptable_tables = {
             'Customer': Customer,
             'Purchase': Purchase,
-            'Artist': Artist,
             'EmlSend': EmlSend,
             'EmlOpen': EmlOpen,
             'EmlClick': EmlClick,

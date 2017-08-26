@@ -55,14 +55,14 @@ def create_account(config):
         return repr(ex), 409
 
 
-@inject(mongo=MongoDB)
+@inject(mongo=MongoDB, config=Config)
 @taskadmin.route('/delete-account/<account_name>')
-def delete_account(account_name, mongo):
+def delete_account(account_name, mongo, config):
     # TODO: enable account deletion
     # Account deletion disabled to prevent accidental data loss
     return 'Account deletion temporarily disabled', 401
     """
-    service = AccountCreationService(account_name, '')
+    service = AccountCreationService(account_name, '', config)
     try:
         # TODO: prevent deleting currently active account
         if account_name == session['user_params']['account_name']:

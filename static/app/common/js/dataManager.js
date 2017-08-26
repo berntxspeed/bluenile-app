@@ -309,10 +309,17 @@ $(document).ready(function(){
     $("#btn-save-source").click(function (e) {
         if ( $("#source-selector").is(":visible") ){
             source = $("#add-source").val()
+            source_full_name = $("#add-source").find(":selected").text()
         }
-        else { source = g_current_source.data_source }
+        else {
+            source = g_current_source.data_source
+            source_full_name = g_current_source.data_source
+        }
 
-        api_config = {'data_source': source}
+        api_config = {
+                        'data_source': source,
+                        'data_source_full_name': source_full_name
+                     }
         fields_to_validate = g_sources_map[source]
 
         // TODO: data validation only on empty fields
