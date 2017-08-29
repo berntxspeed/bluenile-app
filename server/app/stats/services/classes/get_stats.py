@@ -116,13 +116,13 @@ class StatsGetter(object):
                 and right_op_field is None:
             raise ValueError('must supply a field to aggregate by if second agg operation is not count')
 
-        if (math_op is not None and right_op_agg_op is None) \
-                or (math_op is None and right_op_agg_op is not None):
+        if (math_op is not None and math_op != '' and (right_op_agg_op is None or right_op_agg_op == '') ) \
+                or ( (math_op is None or math_op == '') and right_op_agg_op is not None and right_op_agg_op != ''):
             raise ValueError('must supply both math operation AND a second aggregate operation if a calculation is desired')
 
         if left_op_agg_op is not None:
             if left_op_agg_op in self._allowable_aggregate_ops.keys():
-                if left_op_field is not None:
+                if left_op_field is not None and left_op_field != '':
                     left_op_field = self._get_column(left_op_field)
                 else:
                     left_op_field = '*'
@@ -132,9 +132,9 @@ class StatsGetter(object):
         else:
             raise ValueError('must specify an aggregate operation')
 
-        if right_op_agg_op is not None:
+        if right_op_agg_op is not None and right_op_agg_op != '':
             if right_op_agg_op in self._allowable_aggregate_ops.keys():
-                if right_op_field is not None:
+                if right_op_field is not None and right_op_field != '':
                     right_op_field = self._get_column(right_op_field)
                 else:
                     right_op_field = '*'
@@ -142,7 +142,7 @@ class StatsGetter(object):
             else:
                 raise ValueError('invalid aggregate operation specified for second aggregate op')
 
-        if math_op is not None:
+        if math_op is not None and math_op != '':
             if left_op is not None and right_op is not None:
                 if math_op in self._allowable_math_ops.keys():
                     q = self._allowable_math_ops.get(math_op)(q, left_op, right_op)

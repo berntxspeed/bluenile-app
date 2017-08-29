@@ -176,16 +176,19 @@ class DataGrapher {
             ],
             EmlOpen: [
                 { grouping1: '_day', grouping2: '_hour' },
-                { grouping1: 'AreaCode', grouping2: null }
+                { grouping1: 'AreaCode', grouping2: null },
+                { grouping1: 'Region', grouping2: 'City' }
             ],
             EmlClick: [
                 { grouping1: '_day', grouping2: '_hour' },
-                { grouping1: 'AreaCode', grouping2: null }
+                { grouping1: 'AreaCode', grouping2: null },
+                { grouping1: 'Region', grouping2: 'City' }
             ],
             SendJob: [
                 { grouping1: 'SentTime:date', grouping2: null },
                 { grouping1: 'SchedTime:date', grouping2: null }
             ]
+
         };
 
         var graphTypes = {
@@ -228,6 +231,9 @@ class DataGrapher {
                 ],
                 'SchedTime:date': [
                     { name: 'Calendar Graph', value: 'calendar' }
+                ],
+                'RegionCity': [
+                    { name: 'Circles Graph', value: 'circle-pack' }
                 ]
             }
         };
@@ -691,13 +697,13 @@ class DataGrapher {
             var aggregateOp = $(elAggregateOp).val();
             var aggregateField = $(elAggregateField).val();
             if (aggregateOp == 'count' && !aggregateField) {
-                aggregateField = 'none';
+                aggregateField = '';
             }
             var aggregateOp2 = $(elAggregateOp2).val();
             var aggregateField2 = $(elAggregateField2).val();
             var mathOp = $(elMathOp).val();
             if (aggregateOp2 == 'count' && !aggregateField2) {
-                aggregateField2 = 'none';
+                aggregateField2 = '';
             }
 
             // ensure all options have values
@@ -711,7 +717,7 @@ class DataGrapher {
                 return alert('must select a field to aggregate by if aggregate operation is NOT count');
             } else if ( (aggregateOp2 && !mathOp) || (!aggregateOp2 && mathOp) ) {
                 return alert('must select a math operation and a second aggregation');
-            } else if (aggregateOp2 != 'count' && !aggregateField2) {
+            } else if (aggregateOp2 && aggregateOp2 != 'count' && !aggregateField2) {
                 return alert('must select a field to aggregate by if second aggregate operation is NOT count');
             }
 
@@ -987,9 +993,39 @@ class DataGrapher {
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
         } else if(graphType == 'calendar'){
-            $(bindTo).html('<style>\n\nbody {\n  font: 10px sans-serif;\n}\n\n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n\n</style>\n<svg class="legend" width="960" height="200"></svg>\n<svg class="canvas" width="960" height="600"></svg>');
+            $(bindTo).html('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n\n</style>\n<svg class="legend" width="960" height="200"></svg>\n<svg class="canvas" width="960" height="600"></svg>');
             var calendarGraph = new CalendarGraph();
             calendarGraph.init(bindTo, data);
+            return;
+        } else if(graphType == 'circle-pack'){
+            $(bindTo).html('<style type="text/css">\n    text {\n      font-size: 11px;\n      pointer-events: none;\n    }\n    \n    text.parent {\n      fill: #c61d1b;\n      font-size: 25px;\n      font-weight: bold;\n    }\n    \n    circle {\n      fill: #ccc;\n      stroke: #999;\n      pointer-events: all;\n    }\n    \n    circle.parent {\n      fill: #1f77b4;\n      fill-opacity: .1;\n      stroke: steelblue;\n    }\n    \n    circle.parent:hover {\n      stroke: #ff7f0e;\n      stroke-width: .5px;\n    }\n    \n    circle.child {\n      pointer-events: none;\n    }\n    \n    a:link, a:visited {\n      color: #777;\n      text-decoration: none;\n    }\n    \n    a:hover {\n      color: #666;\n    }\n    \n    blockquote {\n      margin: 0;\n    }\n    \n    blockquote:before {\n      content: "“";\n      position: absolute;\n      left: -.4em;\n    }\n    \n    blockquote:after {\n      content: "”";\n      position: absolute;\n    }\n    \n    body > ul {\n      margin: 0;\n      padding: 0;\n    }\n    \n    h1 {\n      font-size: 64px;\n    }\n    \n    h1, h2, h3 {\n      font-weight: inherit;\n      margin: 0;\n    }\n    \n    h2, h3 {\n      text-align: right;\n      font-size: inherit;\n      position: absolute;\n      bottom: 0;\n      right: 0;\n    }\n    \n    h2 {\n      font-size: 24px;\n      position: absolute;\n    }\n    \n    h3 {\n      bottom: -20px;\n      font-size: 18px;\n    }\n    \n    .invert {\n      background: #1f1f1f;\n      color: #dcdccc;\n    }\n    \n    .invert h2, .invert h3 {\n      color: #7f9f7f;\n    }\n    \n    .string, .regexp {\n      color: #f39;\n    }\n    \n    .keyword {\n      color: #00c;\n    }\n    \n    .comment {\n      color: #777;\n      font-style: oblique;\n    }\n    \n    .number {\n      color: #369;\n    }\n    \n    .class, .special {\n      color: #1181B8;\n    }\n    \n    body > svg {\n      position: absolute;\n      top: -80px;\n      //left: -160px;\n    }\n\n</style>');
+            var circlePackGraph = new CirclePackGraph();
+
+            // restructure data to feed into graph: {name:'', children: [{name:'', size:x}, ...]}
+            window.d = data;
+            var formattedData = {
+                'name': '',
+                'children': []
+            };
+            var tempData = {}; // will collect a key for each outer grouping, and have an array of inner groupings
+            data.forEach(function(item){
+                var outerGrouping = item[0],
+                    innerGrouping = item[1],
+                    value = item[2];
+                if (!tempData.hasOwnProperty(outerGrouping)) {
+                    // new group, make new key and instantiate array with first subgrouping
+                    tempData[outerGrouping] = [{'name': innerGrouping, 'size': value}];
+                } else {
+                    // existing group, add next subgrouping to existing array
+                    tempData[outerGrouping] = tempData[outerGrouping].concat({'name': innerGrouping, 'size': value});
+                }
+            });
+            Object.keys(tempData).forEach(function(key){
+                var children = tempData[key];
+                formattedData.children = formattedData.children.concat({'name': key, 'children': children});
+            });
+
+            circlePackGraph.init(bindTo, formattedData);
             return;
         } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar' || graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar'){
             var secondGrouping = dataGrouping;
