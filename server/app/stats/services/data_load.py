@@ -952,31 +952,39 @@ class DataLoadService(DbService):
         if table is None:
             return Exception('table not recognized or authorized to apply fips location code data to.')
 
-        city = getattr(model, city_field)
-        state = getattr(model, state_field)
-
         import csv
         with open(filename, 'r') as csvfile:
             csvfile_reader = csv.DictReader(csvfile, delimiter=',')
-            already_processed = []
 
-            # using city names without spaces
+            fips_codes = {}
             for row in csvfile_reader:
+                state = row['State Abbreviation']
+                city = row['GU Name'].replace(' ', '').upper()
+                fips_code = str(row['State FIPS Code'] + row['County FIPS Code'])
 
-                if (row['GU Name'], row['State Abbreviation']) in already_processed:
-                    continue
+                updated_state_fips = fips_codes.get(state, {})
+                updated_state_fips[city] = fips_code
+                fips_codes[state] = updated_state_fips
 
-                already_processed.append((row['GU Name'], row['State Abbreviation']))
+            recs_processed = 0
+            batch_size = 10000
+            while True:
+                keep_going = False
 
-                recs = db_session.query(model).filter(city == row['GU Name'].replace(' ', '').upper(),
-                                          state == row['State Abbreviation']).all()
-                # print('*', end='', flush=True)
-                if len(recs) > 0:
-                    print('found ' + str(len(recs)) + ' records with city ' + row['GU Name'].replace(' ', ''))
-                    for rec in recs:
-                        rec.__setattr__(fips_field, str(row['State FIPS Code'] + row['County FIPS Code']))
-                        db_session.add(rec)
-                    db_session.commit()
+                recs = db_session.query(model).filter(getattr(model, fips_field) == None).limit(batch_size).all()
+
+                for rec in recs:
+                    rec.__setattr__(fips_field, fips_codes.get(getattr(rec, state_field), {}).get(getattr(rec, city_field), 'n/a'))
+                    db_session.add(rec)
+                    keep_going = True
+
+                if not keep_going:
+                    break
+
+                db_session.commit()
+                recs_processed += batch_size
+                print(str(recs_processed) + ' records processed so far')
+            print('done processing total of ' + str(recs_processed))
 
 
 class UserDataLoadService(DataLoadService):

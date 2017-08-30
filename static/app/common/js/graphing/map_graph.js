@@ -4,6 +4,16 @@ class MapGraph {
     constructor(){}
 
     init(bindTo, data){
+        window.d = data;
+        var dataMin = d3.min(data, function(d) { return d[1]; }),
+            dataMax = d3.max(data, function(d) { return d[1]; });
+        var dataRange = [dataMin];
+        for (var i = 1; i < 11; i++) {
+            dataRange = dataRange.concat(Math.round(dataMin + (((dataMax - dataMin)/10)*i)));
+        }
+        window.drange = dataRange;
+        window.dataMax = dataMax;
+        window.dataMin = dataMin;
 
         var svg = d3v4.select(bindTo),
             width = +svg.attr("width"),
@@ -12,12 +22,12 @@ class MapGraph {
         var path = d3v4.geoPath();
 
         var x = d3v4.scaleLinear()
-            .domain([1, 1500])
-            .rangeRound([600, 860]);
+            .domain([dataMin, dataMax])
+            .rangeRound([500, 860]);
 
         var color = d3v4.scaleThreshold()
-            .domain([1, 100, 300, 500, 800, 1000, 1500])
-            .range(d3v4.schemeBlues[7]);
+            .domain(dataRange)
+            .range(["#006837", "#1a9850", "#66bd63", "#a6d96a", "#d9ef8b", "#ffffbf", "#fee08b", "#fdae61", "#f46d43", "#d73027", "#a50026"]);//d3v4.schemeBlues[8]);
 
         var g = svg.append("g")
             .attr("class", "key")

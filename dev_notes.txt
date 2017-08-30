@@ -106,9 +106,12 @@ MONGODB_URI=mongodb://heroku_9d6hx8t9:pil9ikmod150rjdeuu2obnnf6j@ds137197.mlab.c
 
 -----------to do shell testing with multi-account db model---------------
 from sqlalchemy import create_engine
-from sqlalchemy.orm imoprt scoped_session, sessionmaker
-target_db_engine = create_engine('postgresql://localhost/simple_di_flask_dev')
+from sqlalchemy.orm import scoped_session, sessionmaker
+target_db_engine = create_engine('postgresql://bluenilesw:BlueNileSW123!@postgres-dev.cdwkdjoq5xbu.us-east-2.rds.amazonaws.com:5432/galileo')
 target_session = scoped_session(sessionmaker(bind=target_db_engine))()
-from server.app.common.models.user_models import EmlSend .......
+from server.app.common.models.user_models import EmlSend
 records = target_session.query(EmlSend).all()
 
+-----------to connect to AWS postgres-------------
+>psql "host=postgres-dev.cdwkdjoq5xbu.us-east-2.rds.amazonaws.com port=5432 user=bluenilesw dbname=galileo"
+enter password BlueNileSW123!
