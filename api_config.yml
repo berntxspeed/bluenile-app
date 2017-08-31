@@ -76,7 +76,6 @@
         'headers': {'Content-Type': 'application/json'},
         'params': null,
         'purchase': {
-            # os.getenv('SHOPIFY_PURCHASE_API_ENDPOINT'),
             'pagination': {
               'endpoint': '/admin/orders.json?limit=250=&page=',
               'count_endpoint': '/admin/orders/count.json',

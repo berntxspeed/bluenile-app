@@ -66,7 +66,7 @@ class MongoDataJobConfigLoader(object):
             if a_dl_job.get('periodic_sync'):
                 if a_dl_job['periodic_sync'] == '1':
                     a_dl_job['frequency'] = str(SYNC_MAP[a_dl_job['periodic_sync']]
-                                               .replace('X', a_dl_job.get('hourly_frequency', 'X')))
+                                                .replace('X', a_dl_job.get('hourly_frequency', 'X')))
                 else:
                     a_dl_job['frequency'] = str(SYNC_MAP[a_dl_job['periodic_sync']])
 
@@ -91,7 +91,7 @@ class MongoDataJobConfigLoader(object):
 
     def get_data_load_config_by_type(self, job_type):
         try:
-            data_load_config = self._collection.find( { self._primary_key: job_type } , { '_id': 0 } )[0]
+            data_load_config = self._collection.find({self._primary_key: job_type}, {'_id': 0})[0]
             return True, data_load_config
         except Exception as e:
             return False, 'Getting Data Load Config Failed: {0}'.format(str(e))
@@ -181,7 +181,7 @@ class MongoUserApiConfigLoader(object):
 
     def get_data_config_by_source(self, data_source):
         try:
-            data_config = self._collection.find( { self._primary_key: data_source } , { '_id': 0 } )[0]
+            data_config = self._collection.find({self._primary_key: data_source}, {'_id': 0})[0]
             return True, data_config
         except Exception as e:
             return False, 'Getting Data Config Failed: {0}'.format(str(e))
@@ -189,7 +189,8 @@ class MongoUserApiConfigLoader(object):
     def remove_api_config_by_source(self, data_source):
         try:
             self._collection.remove({self._primary_key: data_source})
-            return MongoDataJobConfigLoader(self._db, self._user_config).remove_data_load_config_by_data_source(data_source)
+            return MongoDataJobConfigLoader(self._db, self._user_config)\
+                .remove_data_load_config_by_data_source(data_source)
         except Exception as e:
             return False, 'Removing Data Load Config Failed: {0}'.format(str(e))
 

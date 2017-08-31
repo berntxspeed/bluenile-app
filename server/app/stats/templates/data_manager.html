@@ -44,46 +44,47 @@
             <div class="well form-well signup-info">
                 <select class="selectpicker show-tick" data-width="100%" id="data_source">
                     <option value="all" title="All Sources">All Sources</option>
-                    <option value="shopify" title="Shopify">Shopify</option>
-                    <option value="magento" title="Magento">Magento</option>
-                    <option value="bigcommerce" title="BigCommerce">BigCommerce</option>
-                    <option value="other" title="Other">Other Sources</option>
-                    <option value="extra" title="Extra">Extra Tools</option>
-                    <option value="raw_data" title="Raw Data">Load Tables To MC</option>
+                    <option id="shopify_option" value="shopify" title="Shopify">Shopify</option>
+                    <option id="magento_option" value="magento" title="Magento">Magento</option>
+                    <option id="bigcommerce_option" value="bigcommerce" title="BigCommerce">BigCommerce</option>
+                    <option id="other_option" value="other" title="Other Sources">Other Sources</option>
+                    <option id="extra_option" value="extra" title="Extra Tools">Extra Tools</option>
+                    <option id="raw_data_option" value="raw_data" title="Load Tables To MC">Load Tables To MC</option>
                 </select>
             </div>
             <button id="btn-sched-frequency" style="width: 100%" class="btn btn-info btn-default navbar-btn"><span class="glyphicon glyphicon-time"></span> Schedule Data Load</button>
             <button id="btn-manage-data-sources" style="width: 100%" class="btn btn-success btn-default navbar-btn"><span class="glyphicon glyphicon-download"></span> Manage Data Sources</button>
+            <button id="btn-refresh" style="width: 100%; display: none" class="btn btn-primary btn-default navbar-btn"><span class="glyphicon glyphicon-download"></span> Refresh View</button>
             <div id="shopify_tasks" class="well form-well">
                 <strong>Shopify :</strong>
                 <ul>
-                    <li><a href="{{ url_for('stats.load', action='shopify_customers') }}">Load Shopify Customers</a></li>
-                    <li><a href="{{ url_for('stats.load', action='shopify_purchases') }}">Load Shopify Purchases</a></li>
+                    <li id="shopify_customers"><a href="{{ url_for('stats.load', action='shopify_customers') }}">Load Shopify Customers</a></li>
+                    <li id="shopify_purchases"><a href="{{ url_for('stats.load', action='shopify_purchases') }}">Load Shopify Purchases</a></li>
                 </ul>
             </div>
             <div id="magento_tasks" class="well form-well">
                 <strong>Magento :</strong>
                 <ul>
-                    <li><a href="{{ url_for('stats.load', action='magento_customers') }}">Load Magento Customers</a></li>
-                    <li><a href="{{ url_for('stats.load', action='magento_purchases') }}">Load Magento Purchases</a></li>
+                    <li id="magento_customers"><a href="{{ url_for('stats.load', action='magento_customers') }}">Load Magento Customers</a></li>
+                    <li id="magento_purchases"><a href="{{ url_for('stats.load', action='magento_purchases') }}">Load Magento Purchases</a></li>
                 </ul>
             </div>
             <div id="bigcommerce_tasks" class="well form-well">
                 <strong>BigCommerce :</strong>
                 <ul>
-                    <li><a href="{{ url_for('stats.load', action='bigcommerce_customers') }}">Load BigCommerce Customers</a></li>
-                    <li><a href="{{ url_for('stats.load', action='bigcommerce_purchases') }}">Load BigCommerce Purchases</a></li>
+                    <li id="bigcommerce_customers"><a href="{{ url_for('stats.load', action='bigcommerce_customers') }}">Load BigCommerce Customers</a></li>
+                    <li id="bigcommerce_purchases"><a href="{{ url_for('stats.load', action='bigcommerce_purchases') }}">Load BigCommerce Purchases</a></li>
                 </ul>
             </div>
             <div id="other_tasks" class="well form-well">
                 <strong>Other Sources:</strong>
                 <ul>
-                    <li><a href="{{ url_for('stats.load', action='x2crm_customers') }}">Load X2CRM Customers</a></li>
-                    <li><a href="{{ url_for('stats.load', action='zoho_customers') }}">Load Zoho Customers</a></li>
-                    <li><a href="{{ url_for('stats.load', action='stripe_customers') }}">Load Stripe Customers</a></li>
-                    <li><a href="{{ url_for('stats.load', action='mc_email_data') }}">Load Marketing Cloud Email Data</a></li>
-                    <li><a href="{{ url_for('stats.load', action='mc_journeys') }}">Load Journeys</a></li>
-                    <li><a href="{{ url_for('stats.load', action='web_tracking') }}">Load Web Tracking</a></li>
+                    <li id="x2crm_customers"><a href="{{ url_for('stats.load', action='x2crm_customers') }}">Load X2CRM Customers</a></li>
+                    <li id="zoho_customers"><a href="{{ url_for('stats.load', action='zoho_customers') }}">Load Zoho Customers</a></li>
+                    <li id="stripe_customers"><a href="{{ url_for('stats.load', action='stripe_customers') }}">Load Stripe Customers</a></li>
+                    <li id="mc_email_data"><a href="{{ url_for('stats.load', action='mc_email_data') }}">Load Marketing Cloud Email Data</a></li>
+                    <li id="mc_journeys"><a href="{{ url_for('stats.load', action='mc_journeys') }}">Load Journeys</a></li>
+                    <!--<li id="web_tracking"><a href="{{ url_for('stats.load', action='web_tracking') }}">Load Web Tracking</a></li>-->
                 </ul>
             </div>
             <div id="extra_tasks" class="well form-well">

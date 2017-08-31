@@ -11,19 +11,110 @@ $(document).ready(function(){
                           mc_journeys:      ['id', 'secret'],
 
                         }
+
     var g_account_atts = ['domain', 'id', 'secret', 'token']
 
     var g_current_load_job = null
     var g_current_source = null
+    var g_visible_groups = ['extra_tasks', 'raw_data']
+
+    all_load_job_types = [
+                                'shopify_customers',
+                                'shopify_purchases',
+                                'magento_customers',
+                                'magento_purchases',
+                                'bigcommerce_customers',
+                                'bigcommerce_purchases',
+                                'stripe_customers',
+                                'zoho_customers',
+                                'mc_email_data',
+                                'mc_journeys',
+                                'x2crm_customers'
+                         ]
+    all_task_groups = ['shopify', 'magento', 'bigcommerce', 'other']
+    sources_to_task_groups = {
+                                'shopify': 'shopify',
+                                'magento': 'magento',
+                                'stripe': 'other',
+                                'zoho': 'other',
+                                'x2crm': 'other',
+                                'bigcommerce': 'bigcommerce',
+                                'mc_email_data': 'other',
+                                'mc_journeys': 'other'
+                             }
+
     var data_load_frequency_table = $("#data-load-frequency-table")
     var data_load_sources_table = $("#data-load-sources-table")
+
+
+    var refreshDefinedSources = function(){
+        $.ajax({
+            url: "/data-manager/get-dl-jobs",
+            dataType: "json",
+            success: function(sources) {
+                // Figure out which load jobs to show/ hide
+                defined_sources = []
+                defined_jobs = []
+                for (var i in sources.data) {
+                    defined_jobs.push(sources.data[i].job_type)
+                    defined_sources.push(sources.data[i].data_source)
+                }
+                console.log(defined_jobs)
+                for (var i in all_load_job_types) {
+                    element = $("#" + all_load_job_types[i])
+                    if (defined_jobs.includes(all_load_job_types[i])) {
+                        showElement(element)
+                    }
+                    else {
+                        hideElement(element)
+                    }
+                }
+                // Figure out which task groups to show/ hide
+                available_groups = []
+                for (var i in defined_sources) {
+                    group_element = sources_to_task_groups[defined_sources[i]]
+                    if (!available_groups.includes(group_element)){
+                        available_groups.push(group_element)
+                    }
+                }
+                for (var i in all_task_groups) {
+                    tasks_element = $("#" + all_task_groups[i] + "_tasks")
+                    option_element = $("#" + all_task_groups[i] + "_option")
+//                    option_element = $("[title~=" + all_task_groups[i] + "]")
+                    if (available_groups.includes(all_task_groups[i])){
+                        showElementInline(option_element)
+                        showElement(tasks_element)
+                        g_visible_groups.push(tasks_element.attr("id"))
+                    }
+                    //TODO: delete element from g_visible_groups array if present
+                    else {
+                        hideElement(tasks_element, option_element)
+                    }
+                }
+                $('.show-tick').selectpicker('refresh')
+            },
+            error: function(err) {
+//                    TODO: handle the error or retry
+                console.log(err)
+            }
+        })
+    }
+
+    // Show only defined sources of data
+    refreshDefinedSources()
+
+    $("#btn-refresh").click(function () {
+       refreshDefinedSources()
+    })
 
     $("#data_source").on('change', function() {
         source_types = $("[class$='well form-well']")
 
         if (this.value === "all") {
             for (i = 0; i < source_types.length; i++){
-                source_types.eq(i).show()
+                if (g_visible_groups.includes(source_types.eq(i).attr("id"))) {
+                    source_types.eq(i).show()
+                }
             }
         }
         else {
@@ -44,10 +135,17 @@ $(document).ready(function(){
         document.getElementById(header).innerHTML = '<span class="glyphicon glyphicon-hand-down"></span> ' + title
     }
 
-    var showElement = function() {
+    var showElementInline = function() {
         var args = Array.prototype.slice.call(arguments)
         for (element in args){
             args[element].css('display', 'inline')
+        }
+    }
+
+    var showElement = function() {
+        var args = Array.prototype.slice.call(arguments)
+        for (element in args){
+            args[element].show()
         }
     }
 
@@ -97,14 +195,14 @@ $(document).ready(function(){
         document.getElementById('freq-footer').innerHTML = ""
         destroyTable(data_load_frequency_table)
         hideElement($("#saved-freqs-buttons"))
-        showElement($("#frequency-buttons"), $("#frequency-selector"))
+        showElementInline($("#frequency-buttons"), $("#frequency-selector"))
         g_current_load_job = row
 
         if (row.periodic_sync != null) {
             $("#frequency").val(row.periodic_sync)
             //TODO: fill in every_x_hours value
             if (row.periodic_sync === '1')  {
-                showElement($("#every-x-hours-block"))
+                showElementInline($("#every-x-hours-block"))
                 $("#every-x-hours").val(row.hourly_frequency)
             }
             else {
@@ -120,7 +218,7 @@ $(document).ready(function(){
 
     $("#frequency").on('change', function() {
         if (this.value === '1'){
-            showElement($("#every-x-hours-block"))
+            showElementInline($("#every-x-hours-block"))
             $("#every-x-hours").val("")
         }
         else {hideElement($("#every-x-hours-block"))}
@@ -191,7 +289,7 @@ $(document).ready(function(){
 //        destroyTable(explore_values_table)
         changeModalHeader('data-load-jobs', 'Data Load Jobs')
         hideElement($("#frequency-buttons"), $("#frequency-selector"))
-        showElement($("#saved-freqs-buttons"))
+        showElementInline($("#saved-freqs-buttons"))
         $("#frequencyModal").on('show.bs.modal', function () {
             $.ajax({
                 url: "/data-manager/get-dl-jobs",
@@ -219,7 +317,7 @@ $(document).ready(function(){
         destroyTable(data_load_sources_table)
         changeModalHeader('data-sources', 'Data Sources')
         hideElement($("#change-source-buttons"), $("#data-info-block"), $('#source-selector'))
-        showElement($("#saved-sources-buttons"))
+        showElementInline($("#saved-sources-buttons"))
         $("#sourcesModal").on('show.bs.modal', function () {
             $.ajax({
                 url: "/data-manager/get-data-sources",
@@ -244,7 +342,7 @@ $(document).ready(function(){
         changeModalHeader('data-sources', 'Select New Source Of Data')
         document.getElementById('source-footer').innerHTML = ""
         hideElement($("#saved-sources-buttons"))
-        showElement($("#change-source-buttons"), $("#data-info-block"), $("#source-selector"))
+        showElementInline($("#change-source-buttons"), $("#data-info-block"), $("#source-selector"))
         $("#add-source").val('select')
         for (var i in g_account_atts){
             element = $("#"+g_account_atts[i])
@@ -270,6 +368,7 @@ $(document).ready(function(){
                             field: 'data_source',
                             values: [row.data_source]
                         });
+                        refreshDefinedSources()
                     }
                  },
                  error: function(err) {
@@ -285,7 +384,7 @@ $(document).ready(function(){
         changeModalHeader('data-sources', row.data_source)
         document.getElementById('source-footer').innerHTML = ""
         hideElement($("#saved-sources-buttons"))
-        showElement($("#change-source-buttons"), $("#data-info-block"))
+        showElementInline($("#change-source-buttons"), $("#data-info-block"))
         destroyTable(data_load_sources_table)
         g_current_source = row
         account_atts = g_sources_map[row.data_source]
@@ -294,7 +393,7 @@ $(document).ready(function(){
             element = $("#"+g_account_atts[i])
             element_val = $("#"+g_account_atts[i]+"_val")
             if (g_account_atts[i] in row){
-                showElement(element)
+                showElementInline(element)
                 element_val.val(row[g_account_atts[i]])
             }
             else {hideElement(element)}
@@ -348,7 +447,10 @@ $(document).ready(function(){
                  },
                  success: function(data) {
                     document.getElementById('source-footer').innerHTML = "Data Source Update Successful"
-                    $('#source-footer').fadeOut(2000, function(){$("#btn-manage-data-sources").click()})
+                    $('#source-footer').fadeOut(2000, function(){
+                        $("#btn-manage-data-sources").click()
+                        refreshDefinedSources()
+                        })
                  },
                  error: function(err) {
 //                         TODO: handle the error here
@@ -372,7 +474,7 @@ $(document).ready(function(){
                 element = $("#"+g_account_atts[i])
                 element_val = $("#"+g_account_atts[i]+"_val")
                 if (account_atts.includes(g_account_atts[i])) {
-                    showElement(element)
+                    showElementInline(element)
                     element_val.val('')
                 }
                 else {hideElement(element)}

@@ -109,7 +109,6 @@ api_config = {
         'headers': {'Content-Type': 'application/json'},
         'params': None,
         'purchase': {
-            # os.getenv('SHOPIFY_PURCHASE_API_ENDPOINT'),
             'endpoint': "/admin/orders.json",
             'primary_keys': ['purchase_id'],
             'json_data_keys': 'orders',
@@ -320,14 +319,14 @@ class DataLoadService(DbService):
         csv.load_data()
 
     def load_mc_email_data(self, **kwargs):
-        mc_data_creds = self.get_mc_data_args(kwargs['data_source'])
+        mc_data_config_args = self.get_mc_data_args(kwargs['data_source'])
         cfg = {
-            'host': mc_data_creds.get('ftp_url'),
-            'username': mc_data_creds.get('id'),
-            'password': mc_data_creds.get('secret')
+            'host': mc_data_config_args.get('ftp_url'),
+            'username': mc_data_config_args.get('id'),
+            'password': mc_data_config_args.get('secret')
         }
-        filename = mc_data_creds.get('filename')
-        filepath = mc_data_creds.get('filepath')
+        filename = mc_data_config_args.get('filename')
+        filepath = mc_data_config_args.get('filepath')
         zf = ZipFile(file=filename,
                      ftp_path=filepath,
                      ftp_cfg=cfg)
@@ -644,12 +643,12 @@ class DataLoadService(DbService):
     def __get_mc_auth(self, data_source):
         # TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
 
-        mc_data_creds = self.get_mc_data_args(data_source)
+        mc_data_config_args = self.get_mc_data_args(data_source)
 
         # get auth token
-        url = mc_data_creds.get('auth_url')  # was 'https://auth.exacttargetapis.com/v1/requestToken'
-        body = dict(clientId=mc_data_creds.get('id'),  # was '3t1ch44ej7pb4p117oyr7m4g',
-                    clientSecret=mc_data_creds.get('secret'))  # was '2Cegvz6Oe9qTmc8HMUn2RWKh')
+        url = mc_data_config_args.get('auth_url')  # was 'https://auth.exacttargetapis.com/v1/requestToken'
+        body = dict(clientId=mc_data_config_args.get('id'),  # was '3t1ch44ej7pb4p117oyr7m4g',
+                    clientSecret=mc_data_config_args.get('secret'))  # was '2Cegvz6Oe9qTmc8HMUn2RWKh')
         r = requests.post(url, data=body)
         if r.status_code != 200:
             raise PermissionError('ET auth code retrieval: failed to get auth token')

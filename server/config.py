@@ -54,9 +54,6 @@ class Config(object):
     GOOGLE_APP_SECRET = os.getenv('GOOGLE_APP_SECRET')
 
     # External Data Sources
-    CUSTOMER_DATA_SOURCE = os.getenv('CUSTOMER_DATA_SOURCE')
-    PURCHASE_DATA_SOURCE = os.getenv('PURCHASE_DATA_SOURCE')
-    ARTIST_DATA_SOURCE = os.getenv('ARTIST_DATA_SOURCE')
     EMAIL_DATA_SOURCE = os.getenv('EMAIL_DATA_SOURCE')
     EMAIL_DATA_DEST = os.getenv('EMAIL_DATA_DEST')
 
@@ -65,27 +62,6 @@ class Config(object):
     OKTA_API_KEY = '00lKRIDx7J6jlox9LwftcKfqKqkoRSKwY5dhslMs9z'
 
     EXT_DATA_CREDS = {
-        'shopify-customers': {
-            'endpoint': os.getenv('SHOPIFY_API_ENDPOINT'),
-            'id': os.getenv('SHOPIFY_API_APP_ID'),
-            'secret': os.getenv('SHOPIFY_API_APP_SECRET')
-        },
-        'shopify-purchases': {
-            'endpoint': os.getenv('SHOPIFY_PURCHASE_API_ENDPOINT'),
-            'id': os.getenv('SHOPIFY_API_APP_ID'),
-            'secret': os.getenv('SHOPIFY_API_APP_SECRET')
-        },
-        'spotify': {
-            'endpoint': os.getenv('SPOTIFY_API_ENDPOINT')
-        },
-        #TODO: get rid of _ftp and _api entries
-        'marketingcloud_ftp': {
-            'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
-            'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
-            'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
-            'filename': os.getenv('MARKETING_CLOUD_FTP_FILENAME'),
-            'filepath': os.getenv('MARKETING_CLOUD_FTP_FILEPATH')
-        },
         'marketingcloud_api': {
             'id': os.getenv('FUELSDK_CLIENT_ID'),
             'secret': os.getenv('FUELSDK_CLIENT_SECRET'),
@@ -93,13 +69,13 @@ class Config(object):
             'wsdl': os.getenv('FUELSDK_DEFAULT_WSDL'),
             'auth_url': os.getenv('FUELSDK_AUTH_URL'),
             # for later 'endpoint': os.getenv('FUELSDK_RAW_ENDPOINT')
-        },
-        'lead-perfection': {
-            'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
-            'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
-            'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
-            'filename': os.getenv('LEAD_PERFECTION_FILENAME'),
-            'filepath': os.getenv('LEAD_PERFECTION_FILEPATH')
+        # },
+        # 'lead-perfection': {
+        #     'ftp_url': os.getenv('MARKETING_CLOUD_FTP_URL'),
+        #     'ftp_user': os.getenv('MARKETING_CLOUD_FTP_USER'),
+        #     'ftp_pass': os.getenv('MARKETING_CLOUD_FTP_PASS'),
+        #     'filename': os.getenv('LEAD_PERFECTION_FILENAME'),
+        #     'filepath': os.getenv('LEAD_PERFECTION_FILEPATH')
         }
     }
 
