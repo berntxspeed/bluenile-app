@@ -833,6 +833,7 @@ class DataGrapher {
                 successFunc = function(data) {
                     reportId = data.reportId;
                     alert('saved report');
+                    $(bindTo + ' #report-title').text(reportName);
                 }
             } else if (action == 'save-as') {
                 requestMethod = 'POST';
@@ -841,6 +842,7 @@ class DataGrapher {
                 successFunc = function(data) {
                     reportId = data.reportId;
                     alert('saved report');
+                    $(bindTo + ' #report-title').text(reportName);
                 }
             } else if (action == 'delete') {
                 requestMethod = 'GET';
@@ -1004,7 +1006,8 @@ class DataGrapher {
 
     renderGraph(self, bindTo, reportTitle, graphType, data, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2) {
         // clear out html in report area, and replace with just the report title
-        $(bindTo).html('<h1>'+reportTitle+'</h1>');
+        if(!reportTitle){ reportTitle = 'Unnamed Report'; }
+        $(bindTo).html('<h1 id="report-title" style="text-align: center;">'+reportTitle+'</h1>');
 
         // if it's map-graph, render custom map graph instead
         if(graphType == 'map-graph') {
@@ -1066,6 +1069,7 @@ class DataGrapher {
             circlePackGraph.init(bindTo, formattedData);
             return;
         } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar' || graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar'){
+            $(bindTo).append('<div id="c3-area"></div>');
             var secondGrouping = dataGrouping;
             var firstGrouping = '';
             var xAxisKey = 'x';
@@ -1083,8 +1087,8 @@ class DataGrapher {
                 data = self.formatDualGroupedData(data, secondGrouping);
                 window.data = data;
                 xAxisKey = secondGrouping;
-                if(data[0].length > 10){ legendShow = false; }
-                if(data.length > 30){ xAxisShow = false; }
+                if(data[0].length > 10){ legendShow = true; }
+                if(data.length > 30){ xAxisShow = true; }
                 //if(!isNaN(data[1][data[1].length-1])){ xAxisType = 'indexed'; }
             } else {
                 // single grouping
@@ -1094,7 +1098,12 @@ class DataGrapher {
             }
 
             c3.generate({
-                bindto: bindTo,
+                bindto: bindTo + ' #c3-area',
+                padding: {
+                    top: 30,
+                    bottom: 30,
+                    right: 150
+                },
                 data: {
                     x: xAxisKey,
                     rows: data,
@@ -1105,7 +1114,7 @@ class DataGrapher {
                 },
                 legend: {
                     show: legendShow,
-                    position: 'bottom'
+                    position: 'right'
                 },
                 axis: {
                     x: {
@@ -1126,10 +1135,20 @@ class DataGrapher {
                 grid: { x: { show: true }, y: { show: true } }
             });
 
+            // add title to legend
+            var firstLegend = d3.select(bindTo + ' .c3-legend-item');
+            var legendCon = d3.select(firstLegend.node().parentNode);
+            var legendY = parseInt(firstLegend.select('text').attr('y'));
+            legendCon.append('text')
+                .text(firstGrouping)
+                .attr('y', legendY - 20)
+                .attr('font-size', 15);
+            legendCon.attr("transform", "translate(950, 20)");
             $(bindTo + ' .c3-circle').attr('r', '4');
-            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 18px;\n    }\n</style>');
+            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 15px;\n    }\n</style>');
             return;
         } else if(graphType == 'dateline' || graphType == 'datescatter' || graphType == 'datespline' || graphType == 'datebar'){
+            $(bindTo).append('<div id="c3-area"></div>');
             var secondGrouping = dataGrouping;
             var firstGrouping = dataGrouping;
             var xAxisKey = 'x';
@@ -1143,8 +1162,8 @@ class DataGrapher {
                 data = self.formatDualGroupedData(data, secondGrouping);
                 xAxisKey = secondGrouping;
                 if(data.length > 30){
-                    xAxisShow = false;
-                    legendShow = false;
+                    xAxisShow = true;
+                    legendShow = true;
                 }
             } else {
                 // single grouping
@@ -1153,7 +1172,12 @@ class DataGrapher {
             }
 
             window.graph = c3.generate({
-                bindto: bindTo,
+                bindto: bindTo + ' #c3-area',
+                padding: {
+                    top: 30,
+                    bottom: 30,
+                    right: 150
+                },
                 data: {
                     x: xAxisKey,
                     xFormat: '%a, %d %b %Y %H:%M:%S GMT',
@@ -1164,7 +1188,7 @@ class DataGrapher {
                     r: '4'
                 },
                 legend: {
-                    position: 'bottom',
+                    position: 'right',
                     show: legendShow
                 },
                 axis: {
@@ -1189,22 +1213,46 @@ class DataGrapher {
                 grid: { x: { show: true }, y: { show: true } }
             });
 
+            // add title to legend
+            var firstLegend = d3.select(bindTo + ' .c3-legend-item');
+            var legendCon = d3.select(firstLegend.node().parentNode);
+            var legendY = parseInt(firstLegend.select('text').attr('y'));
+            legendCon.append('text')
+                .text(firstGrouping)
+                .attr('y', legendY - 20)
+                .attr('font-size', 15);
+            legendCon.attr("transform", "translate(950, 20)");
             $(bindTo + ' .c3-circle').attr('r', '4');
-            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 18px;\n    }\n</style>');
+            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 15px;\n    }\n</style>');
             return;
         } else if(graphType == 'pie' || graphType == 'donut') {
+            $(bindTo).append('<div id="c3-area"></div>');
             c3.generate({
-                bindto: bindTo,
+                bindto: bindTo + ' #c3-area',
                 data: {
                     columns: data,
                     type: graphType
                 },
-                legend: { hide: true }
+                legend: {
+                    show: true,
+                    position: 'right'
+                }
             });
+
+            // add title to legend
+            var firstLegend = d3.select(bindTo + ' .c3-legend-item');
+            var legendCon = d3.select(firstLegend.node().parentNode);
+            var legendY = parseInt(firstLegend.select('text').attr('y'));
+            legendCon.append('text')
+                .text(dataGrouping)
+                .attr('y', legendY - 20)
+                .attr('font-size', 15);
+            legendCon.attr("transform", "translate(700, 10)");
         } else {
+            $(bindTo).append('<div id="c3-area"></div>');
             // render C3 graph here
             c3.generate({
-                bindto: bindTo,
+                bindto: bindTo + ' #c3-area',
                 data: {
                     columns: data,
                     type: graphType
