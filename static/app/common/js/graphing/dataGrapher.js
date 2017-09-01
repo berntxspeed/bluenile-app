@@ -821,7 +821,7 @@ class DataGrapher {
                 requestMethod = 'POST';
                 endpoint = '/metrics-grouped-by'+'/'+dataSelect+'/'+dataGrouping;
                 successFunc = function(data) {
-                    self.renderGraph(self, elDrillDownGraph, graphType, data.results, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2);
+                    self.renderGraph(self, elDrillDownGraph, reportName, graphType, data.results, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2);
                 }
             } else if (action == 'save') {
                 requestMethod = 'POST';
@@ -1002,25 +1002,28 @@ class DataGrapher {
         return fdata;
     }
 
-    renderGraph(self, bindTo, graphType, data, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2) {
+    renderGraph(self, bindTo, reportTitle, graphType, data, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2) {
+        // clear out html in report area, and replace with just the report title
+        $(bindTo).html('<h1>'+reportTitle+'</h1>');
+
         // if it's map-graph, render custom map graph instead
         if(graphType == 'map-graph') {
-            $(bindTo).html('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="960" height="600"></svg>\n<p>MAP GRAPH!</p>');
+            $(bindTo).append('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="960" height="600"></svg>\n<p>MAP GRAPH!</p>');
             var mapGraph = new MapGraph();
             mapGraph.init(bindTo + ' svg', data);
             return;
         } else if(graphType == 'day-hour'){
-            $(bindTo).html('<style>\n  rect.bordered {\n    stroke: #E6E6E6;\n    stroke-width:2px;   \n  }\n\n  text.mono {\n    font-size: 9pt;\n    font-family: Consolas, courier;\n    fill: #aaa;\n  }\n\n  text.axis-workweek {\n    fill: #000;\n  }\n\n  text.axis-worktime {\n    fill: #000;\n  }\n</style>\n<div class="day-hour"></div>\n<p>HEAT MAP!</p>');
+            $(bindTo).append('<style>\n  rect.bordered {\n    stroke: #E6E6E6;\n    stroke-width:2px;   \n  }\n\n  text.mono {\n    font-size: 9pt;\n    font-family: Consolas, courier;\n    fill: #aaa;\n  }\n\n  text.axis-workweek {\n    fill: #000;\n  }\n\n  text.axis-worktime {\n    fill: #000;\n  }\n</style>\n<div class="day-hour"></div>\n<p>HEAT MAP!</p>');
             var dayHourPlot = new DayHourPlot();
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
         } else if(graphType == 'calendar'){
-            $(bindTo).html('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n\n</style>\n<svg class="legend" width="960" height="200"></svg>\n<svg class="canvas" width="960" height="600"></svg>');
+            $(bindTo).append('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n\n</style>\n<svg class="legend" width="960" height="200"></svg>\n<svg class="canvas" width="960" height="600"></svg>');
             var calendarGraph = new CalendarGraph();
             calendarGraph.init(bindTo, data);
             return;
         } else if(graphType == 'circle-pack'){
-            $(bindTo).html('<style type="text/css">\n    text {\n      font-size: 11px;\n      pointer-events: none;\n    }\n    \n    text.parent {\n      fill: #c61d1b;\n      font-size: 25px;\n      font-weight: bold;\n    }\n    \n    circle {\n      fill: #ccc;\n      stroke: #999;\n      pointer-events: all;\n    }\n    \n    circle.parent {\n      fill: #1f77b4;\n      fill-opacity: .1;\n      stroke: steelblue;\n    }\n    \n    circle.parent:hover {\n      stroke: #ff7f0e;\n      stroke-width: .5px;\n    }\n    \n    circle.child {\n      pointer-events: none;\n    }\n    \n    a:link, a:visited {\n      color: #777;\n      text-decoration: none;\n    }\n    \n    a:hover {\n      color: #666;\n    }\n    \n    blockquote {\n      margin: 0;\n    }\n    \n    blockquote:before {\n      content: "“";\n      position: absolute;\n      left: -.4em;\n    }\n    \n    blockquote:after {\n      content: "”";\n      position: absolute;\n    }\n    \n    body > ul {\n      margin: 0;\n      padding: 0;\n    }\n    \n    h1 {\n      font-size: 64px;\n    }\n    \n    h1, h2, h3 {\n      font-weight: inherit;\n      margin: 0;\n    }\n    \n    h2, h3 {\n      text-align: right;\n      font-size: inherit;\n      position: absolute;\n      bottom: 0;\n      right: 0;\n    }\n    \n    h2 {\n      font-size: 24px;\n      position: absolute;\n    }\n    \n    h3 {\n      bottom: -20px;\n      font-size: 18px;\n    }\n    \n    .invert {\n      background: #1f1f1f;\n      color: #dcdccc;\n    }\n    \n    .invert h2, .invert h3 {\n      color: #7f9f7f;\n    }\n    \n    .string, .regexp {\n      color: #f39;\n    }\n    \n    .keyword {\n      color: #00c;\n    }\n    \n    .comment {\n      color: #777;\n      font-style: oblique;\n    }\n    \n    .number {\n      color: #369;\n    }\n    \n    .class, .special {\n      color: #1181B8;\n    }\n    \n    body > svg {\n      position: absolute;\n      top: -80px;\n      //left: -160px;\n    }\n\n</style>');
+            $(bindTo).append('<style type="text/css">\n    text {\n      font-size: 11px;\n      pointer-events: none;\n    }\n    \n    text.parent {\n      fill: #c61d1b;\n      font-size: 25px;\n      font-weight: bold;\n    }\n    \n    circle {\n      fill: #ccc;\n      stroke: #999;\n      pointer-events: all;\n    }\n    \n    circle.parent {\n      fill: #1f77b4;\n      fill-opacity: .1;\n      stroke: steelblue;\n    }\n    \n    circle.parent:hover {\n      stroke: #ff7f0e;\n      stroke-width: .5px;\n    }\n    \n    circle.child {\n      pointer-events: none;\n    }\n    \n    a:link, a:visited {\n      color: #777;\n      text-decoration: none;\n    }\n    \n    a:hover {\n      color: #666;\n    }\n    \n    blockquote {\n      margin: 0;\n    }\n    \n    blockquote:before {\n      content: "“";\n      position: absolute;\n      left: -.4em;\n    }\n    \n    blockquote:after {\n      content: "”";\n      position: absolute;\n    }\n    \n    body > ul {\n      margin: 0;\n      padding: 0;\n    }\n    \n    h1 {\n      font-size: 64px;\n    }\n    \n    h1, h2, h3 {\n      font-weight: inherit;\n      margin: 0;\n    }\n    \n    h2, h3 {\n      text-align: right;\n      font-size: inherit;\n      position: absolute;\n      bottom: 0;\n      right: 0;\n    }\n    \n    h2 {\n      font-size: 24px;\n      position: absolute;\n    }\n    \n    h3 {\n      bottom: -20px;\n      font-size: 18px;\n    }\n    \n    .invert {\n      background: #1f1f1f;\n      color: #dcdccc;\n    }\n    \n    .invert h2, .invert h3 {\n      color: #7f9f7f;\n    }\n    \n    .string, .regexp {\n      color: #f39;\n    }\n    \n    .keyword {\n      color: #00c;\n    }\n    \n    .comment {\n      color: #777;\n      font-style: oblique;\n    }\n    \n    .number {\n      color: #369;\n    }\n    \n    .class, .special {\n      color: #1181B8;\n    }\n    \n    body > svg {\n      position: absolute;\n      top: -80px;\n      //left: -160px;\n    }\n\n</style>');
             var circlePackGraph = new CirclePackGraph();
 
             // restructure data to feed into graph: {name:'', children: [{name:'', size:x}, ...]}

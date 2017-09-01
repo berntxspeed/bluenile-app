@@ -8,7 +8,7 @@ class CalendarGraph {
             cellSize = 17,
             offset = 30,
             legendElementWidth = cellSize * 2,
-            title = ['open rates', 'in percentages'],
+            title = ['key', ''],
             lineheight = 14,
             titleheight = 24,
             boxmargin = 4,
