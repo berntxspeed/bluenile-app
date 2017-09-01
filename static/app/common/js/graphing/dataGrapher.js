@@ -176,17 +176,11 @@ class DataGrapher {
             ],
             EmlOpen: [
                 { grouping1: '_day', grouping2: '_hour' },
-                { grouping1: 'AreaCode', grouping2: null },
-                { grouping1: 'Region', grouping2: 'City' }
+                { grouping1: 'AreaCode', grouping2: null }
             ],
             EmlClick: [
                 { grouping1: '_day', grouping2: '_hour' },
-                { grouping1: 'AreaCode', grouping2: null },
-                { grouping1: 'Region', grouping2: 'City' }
-            ],
-            SendJob: [
-                { grouping1: 'SentTime:date', grouping2: null },
-                { grouping1: 'SchedTime:date', grouping2: null }
+                { grouping1: 'AreaCode', grouping2: null }
             ]
 
         };
@@ -198,7 +192,8 @@ class DataGrapher {
                 { name: 'Smoothed Line Graph', value: 'spline' },
                 { name: 'Scatter Plot', value: 'scatter' },
                 { name: 'Pie Chart', value: 'pie' },
-                { name: 'Donut Chart', value: 'donut' }
+                { name: 'Donut Chart', value: 'donut'},
+                { name: 'Bubble Graph', value: 'circle-pack'}
             ],
             numeric: [
                 { name: 'Bar Graph', value: 'numericbar' },
@@ -206,7 +201,8 @@ class DataGrapher {
                 { name: 'Smoothed Line Graph', value: 'numericspline' },
                 { name: 'Scatter Plot', value: 'numericscatter' },
                 { name: 'Pie Chart', value: 'pie' },
-                { name: 'Donut Chart', value: 'donut' }
+                { name: 'Donut Chart', value: 'donut' },
+                { name: 'Bubble Graph', value: 'circle-pack'}
             ],
             datetime: [
                 { name: 'Bar Graph', value: 'datebar' },
@@ -214,12 +210,27 @@ class DataGrapher {
                 { name: 'Smoothed Line Graph', value: 'datespline' },
                 { name: 'Scatter Plot', value: 'datescatter' }
             ],
+            date: [
+                { name: 'Bar Graph', value: 'datebar' },
+                { name: 'Line Graph', value: 'dateline' },
+                { name: 'Smoothed Line Graph', value: 'datespline' },
+                { name: 'Scatter Plot', value: 'datescatter' },
+                { name: 'Bubble Graph', value: 'circle-pack'}
+            ],
             boolean: [
                 { name: 'Bar Graph', value: 'bar' },
                 { name: 'Pie Chart', value: 'pie' },
                 { name: 'Donut Chart', value: 'donut' }
             ],
             special: {
+                'singleGrouping': {
+                    'date': [
+                        { name: 'Calendar Graph', value: 'calendar' }
+                    ]
+                },
+                'dualGrouping': {
+                    'tbd': []
+                },
                 'AreaCode': [
                     { name: 'Map Graph', value: 'map-graph' }
                 ],
@@ -231,9 +242,6 @@ class DataGrapher {
                 ],
                 'SchedTime:date': [
                     { name: 'Calendar Graph', value: 'calendar' }
-                ],
-                'RegionCity': [
-                    { name: 'Circles Graph', value: 'circle-pack' }
                 ]
             }
         };
@@ -411,6 +419,8 @@ class DataGrapher {
                           columnType = 'datetime';
                       } else if (column.type.indexOf('BOOLEAN') > -1) {
                           columnType = 'boolean';
+                      } else if (column.type.indexOf('DATE') > -1) {
+                          columnType = 'date';
                       }
                       columns[column.name] = { type: columnType, special: false };
                       $(elDataGrouping1).append('<option value="'+column.name+'">'+column.name+'</option>');
@@ -440,6 +450,11 @@ class DataGrapher {
                 el = $(this);
             }
 
+            if(!el.val() && $(elDataGrouping2).val()){
+                $(elDataGrouping1).val($(elDataGrouping2).val());
+                $(elDataGrouping2).val(null);
+            }
+
             if (el.val()) {
                 grouping.grouping1 = el.val();
                 grouping.type = columns[grouping.grouping1].type;
@@ -465,16 +480,23 @@ class DataGrapher {
                     graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[tempkey]);
                 }
 
+                if (!$(elDataGrouping2).val()){
+                    // single grouped data
+                    if (graphTypes.special.singleGrouping.hasOwnProperty(grouping.type)){
+                        graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special.singleGrouping[grouping.type]);
+                    }
+                } else {
+                    // double grouped data
+                    if (graphTypes.special.dualGrouping.hasOwnProperty(grouping.type)){
+                        graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special.dualGrouping[grouping.type]);
+                    }
+                }
+
                 graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
 
                 graphTypesToAdd.forEach(function(graphTypeToAdd){
                     $(elGraphType).append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
                 });
-            } else {
-                if ($(elDataGrouping2).val()) {
-                    $(elDataGrouping1).val($(elDataGrouping2).val());
-                    $(elDataGrouping2).val(null);
-                }
             }
 
         };
@@ -1007,23 +1029,36 @@ class DataGrapher {
                 'name': '',
                 'children': []
             };
-            var tempData = {}; // will collect a key for each outer grouping, and have an array of inner groupings
-            data.forEach(function(item){
-                var outerGrouping = item[0],
-                    innerGrouping = item[1],
-                    value = item[2];
-                if (!tempData.hasOwnProperty(outerGrouping)) {
-                    // new group, make new key and instantiate array with first subgrouping
-                    tempData[outerGrouping] = [{'name': innerGrouping, 'size': value}];
-                } else {
-                    // existing group, add next subgrouping to existing array
-                    tempData[outerGrouping] = tempData[outerGrouping].concat({'name': innerGrouping, 'size': value});
-                }
-            });
-            Object.keys(tempData).forEach(function(key){
-                var children = tempData[key];
-                formattedData.children = formattedData.children.concat({'name': key, 'children': children});
-            });
+            var tempData;
+            if (data[1][2]) {
+                // in the case of dual grouped data
+                tempData = {};
+                data.forEach(function(item){
+                    var outerGrouping = item[0],
+                        innerGrouping = item[1],
+                        value = item[2];
+                    if (!tempData.hasOwnProperty(outerGrouping)) {
+                        // new group, make new key and instantiate array with first subgrouping
+                        tempData[outerGrouping] = [{'name': innerGrouping, 'size': value}];
+                    } else {
+                        // existing group, add next subgrouping to existing array
+                        tempData[outerGrouping] = tempData[outerGrouping].concat({'name': innerGrouping, 'size': value});
+                    }
+                });
+                Object.keys(tempData).forEach(function(key){
+                    var children = tempData[key];
+                    formattedData.children = formattedData.children.concat({'name': key, 'children': children});
+                });
+            } else {
+                // in the case of single grouped data
+                tempData = [];
+                data.forEach(function(item){
+                    var grouping = item[0],
+                        value = item[1];
+                    tempData = tempData.concat({'name': grouping, 'size': value});
+                });
+                formattedData.children = tempData;
+            }
 
             circlePackGraph.init(bindTo, formattedData);
             return;

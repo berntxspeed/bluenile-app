@@ -188,7 +188,7 @@ class StatsGetter(object):
                 if 'TIMESTAMP' in col_type:
                     # add day/month/year/hour/min options
                     cols.append(dict(name=column + ':date',
-                                     type='TIMESTAMP'))
+                                     type='DATE'))
                     cols.append(dict(name=column+':day',
                                      type='INTEGER'))
                     cols.append(dict(name=column + ':month',

@@ -4,6 +4,7 @@ import requests
 import sys
 import traceback
 import yaml
+from sqlalchemy import and_
 
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile, CsvFile
@@ -927,6 +928,36 @@ class DataLoadService(DbService):
         except Exception as exc:
             print('failed one of the web tracking lookups: ' + str(exc))
 
+    def add_day_hour_to_data(self, table, day_field='_day', hour_field='_hour', timestamp_field='EventDate'):
+        db_session = self.db_session
+        table_map = {'EmlOpen': EmlOpen,
+                     'EmlClick': EmlClick}
+        model = table_map.get(table, None)
+        if table is None:
+            raise ValueError('table is not recognized or authorized to apply day/hour info to')
+
+        recs_processed = 0
+        batch_size = 10000
+        while True:
+            keep_going = False
+
+            recs = db_session.query(model).filter(and_(getattr(model, day_field) == None, getattr(model, hour_field) == None)).limit(batch_size).all()
+
+            for rec in recs:
+                rec.__setattr__(day_field, getattr(rec, timestamp_field).weekday())
+                rec.__setattr__(hour_field, getattr(rec, timestamp_field).hour)
+                db_session.add(rec)
+                keep_going = True
+
+            if not keep_going:
+                break
+
+            db_session.commit()
+            recs_processed += batch_size
+            print(str(recs_processed) + ' records processed so far')
+        print('done processing total of ' + str(recs_processed))
+
+
     # this works with the fips_codes_website.csv file - which has the right FIPS values to match
     # - up with the ids of the us-10m.v1.json data from D3
     def add_fips_location_data(self, table, city_field=None, state_field=None, dest_fips_code_field=None):
@@ -950,7 +981,7 @@ class DataLoadService(DbService):
                      'EmlClick': EmlClick}
         model = table_map.get(table, None)
         if table is None:
-            return Exception('table not recognized or authorized to apply fips location code data to.')
+            raise ValueError('table not recognized or authorized to apply fips location code data to.')
 
         import csv
         with open(filename, 'r') as csvfile:

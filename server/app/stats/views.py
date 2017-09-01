@@ -179,6 +179,7 @@ def load(action):
     from .workers import basic_load_task, load_mc_email_data, load_mc_journeys, \
                          load_web_tracking, load_lead_perfection
     from .workers import add_fips_location_emlopen, add_fips_location_emlclick
+    from .workers import add_day_hour_to_emlopen, add_day_hour_to_emlclick
     from ..data.workers import sync_data_to_mc
 
     user = dict(account=session.get('user_params', {}).get('account_name'))
@@ -214,6 +215,8 @@ def load(action):
                 'web-tracking': load_web_tracking,
                 'add-fips-location-emlopen': add_fips_location_emlopen,
                 'add-fips-location-emlclick': add_fips_location_emlclick,
+                'add-day-hour-to-emlopen': add_day_hour_to_emlopen,
+                'add-day-hour-to-emlclick': add_day_hour_to_emlclick,
                 'lead-perfection': load_lead_perfection,
                 'customer_table': {'load_func': sync_data_to_mc,
                                    'table_name': 'customer',
@@ -225,7 +228,7 @@ def load(action):
 
     task = load_map.get(action, None)
     if task is None:
-        return Exception('No such action is available')
+        raise Exception('No such action is available')
 
     user_params = session.get('user_params')
 

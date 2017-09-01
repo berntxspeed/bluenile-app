@@ -6,7 +6,7 @@ class CalendarGraph {
         var width = 960,
             height = 136,
             cellSize = 17,
-            offset = 0,
+            offset = 30,
             legendElementWidth = cellSize * 2,
             title = ['open rates', 'in percentages'],
             lineheight = 14,
@@ -17,9 +17,6 @@ class CalendarGraph {
             boxwidth = 2 * keywidth,
             colors = ["#006837", "#1a9850", "#66bd63", "#a6d96a", "#d9ef8b", "#ffffbf", "#fee08b", "#fdae61", "#f46d43", "#d73027", "#a50026"];
 
-        var formatPercent = d3v4.format(".1%");
-        var formatDate = d3v4.timeFormat("%Y-%m-%d");
-
         // return quantize thresholds for the key
         var qrange = function(max, num) {
             var a = [];
@@ -29,12 +26,22 @@ class CalendarGraph {
             return a;
         };
 
+        var dataMin = d3v4.min(rawData, function(d) { return d[1]; }),
+            dataMax = d3v4.max(rawData, function(d) { return d[1]; });
+
+        var formatValue;
+        var formatDate = d3v4.timeFormat("%Y-%m-%d");
+        if (dataMax <= 1) {
+            formatValue = d3v4.format(".1%");
+        } else {
+            formatValue = d3v4.format(".0f");
+        }
         var color = d3v4.scaleQuantize()
-            .domain([0.0, 1.0])
+            .domain([dataMin, dataMax])
             .range(colors);
         var ranges = color.range().length;
         var x = d3.scale.linear()
-            .domain([0, 1]);
+            .domain([dataMin, dataMax]);
 
         var svg = d3v4.select(bindTo + " svg.canvas")
           //.data(d3v4.range(2016, 2018)) //not inclusive of the high number
@@ -52,11 +59,31 @@ class CalendarGraph {
             .attr("transform", "translate(" + (offset + (width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")");
 
         svg.append("text")
-            .attr("transform", "translate(-6," + cellSize * 3.5 + ")rotate(-90)")
+            .attr("transform", "translate(-35," + cellSize * 3.5 + ")")//rotate(-90)")
             .attr("font-family", "sans-serif")
-            .attr("font-size", 10)
+            .attr("font-size", 15)
             .attr("text-anchor", "middle")
             .text(function(d) { return d; });
+
+        var days = ['Sa', 'Fr', 'Th', 'We', 'Tu', 'Mo', 'Su'];
+        for ( var i = 0; i < 7; i++ ) {
+            svg.append("text")
+                .attr("transform", "translate(-15," + ((cellSize * (7 - i))-5) + ")")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", 10)
+                .attr("text-anchor", "left")
+                .text(days[i]);
+        }
+
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        for ( var i = 0; i < 12; i++ ) {
+            svg.append("text")
+                .attr("transform", "translate(" + (20 + (i * 73)) + "," + cellSize * 8 + ")")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", 15)
+                .attr("text-anchor", "left")
+                .text(months[i]);
+        }
 
         var rect = svg.append("g")
             .attr("fill", "none")
@@ -87,7 +114,7 @@ class CalendarGraph {
         rect.filter(function(d) { return d in data; })
             .attr("fill", function(d) { return color(data[d]); })
           .append("title")
-            .text(function(d) { return d + ": " + formatPercent(data[d]); });
+            .text(function(d) { return d + ": " + formatValue(data[d]); });
 
         // make legend
         var legendSvg = d3v4.select(bindTo + " svg.legend");
@@ -133,7 +160,7 @@ class CalendarGraph {
             .enter().append("text")
             .attr("x", 48)
             .attr("y", function(d, i) { return (i+1)*lineheight-2; })
-            .text(function(d) { return formatPercent(d); });
+            .text(function(d) { return formatValue(d); });
 
 
         function pathMonth(t0) {

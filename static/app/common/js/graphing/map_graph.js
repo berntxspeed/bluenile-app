@@ -23,7 +23,7 @@ class MapGraph {
 
         var x = d3v4.scaleLinear()
             .domain([dataMin, dataMax])
-            .rangeRound([500, 860]);
+            .rangeRound([300, 860]);
 
         var color = d3v4.scaleThreshold()
             .domain(dataRange)
@@ -31,7 +31,7 @@ class MapGraph {
 
         var g = svg.append("g")
             .attr("class", "key")
-            .attr("transform", "translate(0,40)");
+            .attr("transform", "translate(0,20)");
 
         g.selectAll("rect")
           .data(color.range().map(function(d) {
