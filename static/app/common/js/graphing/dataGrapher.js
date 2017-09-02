@@ -1011,7 +1011,7 @@ class DataGrapher {
 
         // if it's map-graph, render custom map graph instead
         if(graphType == 'map-graph') {
-            $(bindTo).append('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="960" height="600"></svg>\n<p>MAP GRAPH!</p>');
+            $(bindTo).append('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="100%" height="600"></svg>\n<p>MAP GRAPH!</p>');
             var mapGraph = new MapGraph();
             mapGraph.init(bindTo + ' svg', data);
             return;
@@ -1021,12 +1021,12 @@ class DataGrapher {
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
         } else if(graphType == 'calendar'){
-            $(bindTo).append('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n\n</style>\n<svg class="legend" width="960" height="200"></svg>\n<svg class="canvas" width="960" height="600"></svg>');
+            $(bindTo).append('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n\n</style>\n<svg class="legend" width="100%" height="80"></svg>\n<svg class="canvas" width="100%" height="600"></svg>');
             var calendarGraph = new CalendarGraph();
             calendarGraph.init(bindTo, data);
             return;
         } else if(graphType == 'circle-pack'){
-            $(bindTo).append('<style type="text/css">\n    text {\n      font-size: 11px;\n      pointer-events: none;\n    }\n    \n    text.parent {\n      fill: #c61d1b;\n      font-size: 25px;\n      font-weight: bold;\n    }\n    \n    circle {\n      fill: #ccc;\n      stroke: #999;\n      pointer-events: all;\n    }\n    \n    circle.parent {\n      fill: #1f77b4;\n      fill-opacity: .1;\n      stroke: steelblue;\n    }\n    \n    circle.parent:hover {\n      stroke: #ff7f0e;\n      stroke-width: .5px;\n    }\n    \n    circle.child {\n      pointer-events: none;\n    }\n    \n    a:link, a:visited {\n      color: #777;\n      text-decoration: none;\n    }\n    \n    a:hover {\n      color: #666;\n    }\n    \n    blockquote {\n      margin: 0;\n    }\n    \n    blockquote:before {\n      content: "“";\n      position: absolute;\n      left: -.4em;\n    }\n    \n    blockquote:after {\n      content: "”";\n      position: absolute;\n    }\n    \n    body > ul {\n      margin: 0;\n      padding: 0;\n    }\n    \n    h1 {\n      font-size: 64px;\n    }\n    \n    h1, h2, h3 {\n      font-weight: inherit;\n      margin: 0;\n    }\n    \n    h2, h3 {\n      text-align: right;\n      font-size: inherit;\n      position: absolute;\n      bottom: 0;\n      right: 0;\n    }\n    \n    h2 {\n      font-size: 24px;\n      position: absolute;\n    }\n    \n    h3 {\n      bottom: -20px;\n      font-size: 18px;\n    }\n    \n    .invert {\n      background: #1f1f1f;\n      color: #dcdccc;\n    }\n    \n    .invert h2, .invert h3 {\n      color: #7f9f7f;\n    }\n    \n    .string, .regexp {\n      color: #f39;\n    }\n    \n    .keyword {\n      color: #00c;\n    }\n    \n    .comment {\n      color: #777;\n      font-style: oblique;\n    }\n    \n    .number {\n      color: #369;\n    }\n    \n    .class, .special {\n      color: #1181B8;\n    }\n    \n    body > svg {\n      position: absolute;\n      top: -80px;\n      //left: -160px;\n    }\n\n</style>');
+            $(bindTo).append('<style type="text/css">\n    svg text {\n      font-size: 11px;\n      pointer-events: none;\n    }\n    \n    svg text.parent {\n      fill: #c61d1b;\n      font-size: 25px;\n      font-weight: bold;\n    }\n    \n    svg circle {\n      fill: #ccc;\n      stroke: #999;\n      pointer-events: all;\n    }\n    \n    svg circle.parent {\n      fill: #1f77b4;\n      fill-opacity: .1;\n      stroke: steelblue;\n    }\n    \n    svg circle.parent:hover {\n      stroke: #ff7f0e;\n      stroke-width: .5px;\n    }\n    \n    svg circle.child {\n      pointer-events: none;\n    }\n    \n    svg a:link, svg a:visited {\n      color: #777;\n      text-decoration: none;\n    }\n    \n    svg a:hover {\n      color: #666;\n    }\n    \n    svg blockquote {\n      margin: 0;\n    }\n    \n    svg blockquote:before {\n      content: "“";\n      position: absolute;\n      left: -.4em;\n    }\n    \n    svg blockquote:after {\n      content: "”";\n      position: absolute;\n    }\n    \n    svg > ul {\n      margin: 0;\n      padding: 0;\n    }\n    \n    svg h1 {\n      font-size: 64px;\n    }\n    \n    h1, h2, h3 {\n      font-weight: inherit;\n      margin: 0;\n    }\n    \n    h2, h3 {\n      text-align: right;\n      font-size: inherit;\n      position: absolute;\n      bottom: 0;\n      right: 0;\n    }\n    \n    h2 {\n      font-size: 24px;\n      position: absolute;\n    }\n    \n    h3 {\n      bottom: -20px;\n      font-size: 18px;\n    }\n    \n    .invert {\n      background: #1f1f1f;\n      color: #dcdccc;\n    }\n    \n    .invert h2, .invert h3 {\n      color: #7f9f7f;\n    }\n    \n    .string, .regexp {\n      color: #f39;\n    }\n    \n    .keyword {\n      color: #00c;\n    }\n    \n    .comment {\n      color: #777;\n      font-style: oblique;\n    }\n    \n    .number {\n      color: #369;\n    }\n    \n    .class, .special {\n      color: #1181B8;\n    }\n    \n    body > svg {\n      position: absolute;\n      top: -80px;\n      //left: -160px;\n    }\n\n</style>');
             var circlePackGraph = new CirclePackGraph();
 
             // restructure data to feed into graph: {name:'', children: [{name:'', size:x}, ...]}
@@ -1074,6 +1074,7 @@ class DataGrapher {
             var firstGrouping = '';
             var xAxisKey = 'x';
             var xAxisType = 'category';
+            var padValue = { top: 20 };
             if (graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar') {
                 xAxisType = 'indexed';
                 graphType = graphType.substring(7);
@@ -1099,11 +1100,6 @@ class DataGrapher {
 
             c3.generate({
                 bindto: bindTo + ' #c3-area',
-                padding: {
-                    top: 30,
-                    bottom: 30,
-                    right: 150
-                },
                 data: {
                     x: xAxisKey,
                     rows: data,
@@ -1139,11 +1135,16 @@ class DataGrapher {
             var firstLegend = d3.select(bindTo + ' .c3-legend-item');
             var legendCon = d3.select(firstLegend.node().parentNode);
             var legendY = parseInt(firstLegend.select('text').attr('y'));
+            var legendX = parseInt(firstLegend.select('text').attr('x'));
             legendCon.append('text')
                 .text(firstGrouping)
                 .attr('y', legendY - 20)
+                .attr('x', legendX - 40)
                 .attr('font-size', 15);
-            legendCon.attr("transform", "translate(950, 20)");
+            if(dataGrouping.indexOf('-') > 0) {
+                var legendTxf = legendCon.attr("transform");
+                legendCon.attr("transform", legendTxf.substring(0, legendTxf.length-2) + " 20)");
+            }
             $(bindTo + ' .c3-circle').attr('r', '4');
             $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 15px;\n    }\n</style>');
             return;
@@ -1155,6 +1156,7 @@ class DataGrapher {
             var xAxisType = 'timeseries';
             var xAxisShow = true;
             var legendShow = true;
+            var padValue = { top: 20 };
             if (dataGrouping.indexOf('-') > 0){
                 // double grouping
                 firstGrouping = dataGrouping.substring(0, dataGrouping.indexOf('-'));
@@ -1173,11 +1175,6 @@ class DataGrapher {
 
             window.graph = c3.generate({
                 bindto: bindTo + ' #c3-area',
-                padding: {
-                    top: 30,
-                    bottom: 30,
-                    right: 150
-                },
                 data: {
                     x: xAxisKey,
                     xFormat: '%a, %d %b %Y %H:%M:%S GMT',
@@ -1217,11 +1214,16 @@ class DataGrapher {
             var firstLegend = d3.select(bindTo + ' .c3-legend-item');
             var legendCon = d3.select(firstLegend.node().parentNode);
             var legendY = parseInt(firstLegend.select('text').attr('y'));
+            var legendX = parseInt(firstLegend.select('text').attr('x'));
             legendCon.append('text')
                 .text(firstGrouping)
                 .attr('y', legendY - 20)
+                .attr('x', legendX - 40)
                 .attr('font-size', 15);
-            legendCon.attr("transform", "translate(950, 20)");
+            if(dataGrouping.indexOf('-') > 0) {
+                var legendTxf = legendCon.attr("transform");
+                legendCon.attr("transform", legendTxf.substring(0, legendTxf.length-2) + " 20)");
+            }
             $(bindTo + ' .c3-circle').attr('r', '4');
             $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 15px;\n    }\n</style>');
             return;

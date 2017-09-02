@@ -8,7 +8,7 @@ class CalendarGraph {
             cellSize = 17,
             offset = 30,
             legendElementWidth = cellSize * 2,
-            title = ['key', ''],
+            title = ['Legend', ''],
             lineheight = 14,
             titleheight = 24,
             boxmargin = 4,
@@ -120,7 +120,7 @@ class CalendarGraph {
         var legendSvg = d3v4.select(bindTo + " svg.legend");
 
         var legend = legendSvg.append("g")
-            .attr("transform", "translate (0,0)")
+            .attr("transform", "translate (60,0)")
             .attr("class", "legend");
 
         legend.selectAll("text")
@@ -134,8 +134,8 @@ class CalendarGraph {
         var lb = legend.append("rect")
             .attr("transform", "translate (0,"+titleheight+")")
             .attr("class", "legend-box")
-            .attr("width", boxwidth)
-            .attr("height", ranges*lineheight+2*boxmargin+lineheight-keyheight);
+            .attr("width", boxwidth*11)
+            .attr("height", 40);
 
         // make quantized key legend items
         var li = legend.append("g")
@@ -150,7 +150,7 @@ class CalendarGraph {
               return d;
             }))
             .enter().append("rect")
-            .attr("y", function(d, i) { return i*lineheight+lineheight-keyheight; })
+            .attr("x", function(d, i) { return i*boxwidth; })
             .attr("width", keywidth)
             .attr("height", keyheight)
             .style("fill", function(d) { return color(d[0]); });
@@ -158,8 +158,8 @@ class CalendarGraph {
         li.selectAll("text")
             .data(qrange(color.domain()[1], ranges))
             .enter().append("text")
-            .attr("x", 48)
-            .attr("y", function(d, i) { return (i+1)*lineheight-2; })
+            .attr("y", 30)
+            .attr("x", function(d, i) { return (i)*boxwidth; })
             .text(function(d) { return formatValue(d); });
 
 

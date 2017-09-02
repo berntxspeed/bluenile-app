@@ -11,9 +11,6 @@ class MapGraph {
         for (var i = 1; i < 11; i++) {
             dataRange = dataRange.concat(Math.round(dataMin + (((dataMax - dataMin)/10)*i)));
         }
-        window.drange = dataRange;
-        window.dataMax = dataMax;
-        window.dataMin = dataMin;
 
         var svg = d3v4.select(bindTo),
             width = +svg.attr("width"),
@@ -27,7 +24,7 @@ class MapGraph {
 
         var color = d3v4.scaleThreshold()
             .domain(dataRange)
-            .range(["#006837", "#1a9850", "#66bd63", "#a6d96a", "#d9ef8b", "#ffffbf", "#fee08b", "#fdae61", "#f46d43", "#d73027", "#a50026"]);//d3v4.schemeBlues[8]);
+            .range(d3v4.schemeSpectral[11]);//["#006837", "#1a9850", "#66bd63", "#a6d96a", "#d9ef8b", "#ffffbf", "#fee08b", "#fdae61", "#f46d43", "#d73027", "#a50026"]);//d3v4.schemeBlues[8]);
 
         var g = svg.append("g")
             .attr("class", "key")
