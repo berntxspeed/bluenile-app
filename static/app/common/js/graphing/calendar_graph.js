@@ -85,6 +85,11 @@ class CalendarGraph {
                 .text(months[i]);
         }
 
+        // Define the div for the tooltip
+        var div = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
         var rect = svg.append("g")
             .attr("fill", "none")
             .attr("stroke", "#ccc")
@@ -107,14 +112,27 @@ class CalendarGraph {
 
         var data = d3v4.nest()
             // need to format date like %Y-%m-%d from Mon, 24 Apr 2017 00:00:00 GMT
-            .key(function(d) { return formatDate(new Date(d[0])); })
+            .key(function(d) { return formatDate(new Date(d[0].substring(0, 16))); })
             .rollup(function(d) { return d[0][1]; })
           .object(rawData);
 
         rect.filter(function(d) { return d in data; })
             .attr("fill", function(d) { return color(data[d]); })
-          .append("title")
-            .text(function(d) { return d + ": " + formatValue(data[d]); });
+            .on("mouseover", function(d) {
+                div.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                var dt = new Date(d);
+                div.html(dt.toGMTString().substring(0, 16) +
+                    "<br/>value: <strong>" + formatValue(data[d]) + "</strong>")
+                    .style("left", (d3v4.event.pageX) + "px")
+                    .style("top", (d3v4.event.pageY) + "px");
+                })
+            .on("mouseout", function(d) {
+                div.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
 
         // make legend
         var legendSvg = d3v4.select(bindTo + " svg.legend");

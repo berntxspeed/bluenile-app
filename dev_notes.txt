@@ -115,3 +115,8 @@ records = target_session.query(EmlSend).all()
 -----------to connect to AWS postgres-------------
 >psql "host=postgres-dev.cdwkdjoq5xbu.us-east-2.rds.amazonaws.com port=5432 user=bluenilesw dbname=galileo"
 enter password BlueNileSW123!
+
+----------to do db migrations---------
+set the value of the SQLALCHEMY_DATABASE_URI environment variable to the DB you want to migrate
+then do the normal >python manage.py db migrate
+>python manage.py db upgrade

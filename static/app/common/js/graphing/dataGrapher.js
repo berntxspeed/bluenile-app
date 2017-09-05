@@ -1011,17 +1011,17 @@ class DataGrapher {
 
         // if it's map-graph, render custom map graph instead
         if(graphType == 'map-graph') {
-            $(bindTo).append('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="100%" height="600"></svg>\n<p>MAP GRAPH!</p>');
+            $(bindTo).append('<style>\n    .counties {\n        fill: none;\n    }\n    \n    .states {\n        fill: none;\n        stroke: #000;\n        stroke-linejoin: round;\n    }\n    \n    div.tooltip {\t\n        position: absolute;\t\t\t\n        text-align: center;\t\t\t\n        width: 150px;\t\t\t\t\t\n        height: 35px;\t\t\t\t\t\n        padding: 2px;\t\t\t\t\n        font: 12px sans-serif;\t\t\n        background: lightsteelblue;\t\n        border: 0px;\t\t\n        border-radius: 8px;\t\t\t\n        pointer-events: none;\t\t\t\n    }\n</style>\n<svg width="100%" height="600"></svg>\n<p>MAP GRAPH!</p>');
             var mapGraph = new MapGraph();
             mapGraph.init(bindTo + ' svg', data);
             return;
         } else if(graphType == 'day-hour'){
-            $(bindTo).append('<style>\n  rect.bordered {\n    stroke: #E6E6E6;\n    stroke-width:2px;   \n  }\n\n  text.mono {\n    font-size: 9pt;\n    font-family: Consolas, courier;\n    fill: #aaa;\n  }\n\n  text.axis-workweek {\n    fill: #000;\n  }\n\n  text.axis-worktime {\n    fill: #000;\n  }\n</style>\n<div class="day-hour"></div>\n<p>HEAT MAP!</p>');
+            $(bindTo).append('<style>\n  rect.bordered {\n    stroke: #E6E6E6;\n    stroke-width:2px;   \n  }\n\n  text.mono {\n    font-size: 9pt;\n    font-family: Consolas, courier;\n    fill: #aaa;\n  }\n\n  text.axis-workweek {\n    fill: #000;\n  }\n\n  text.axis-worktime {\n    fill: #000;\n  }\n    \n  div.tooltip {\t\n    position: absolute;\t\t\t\n    text-align: center;\t\t\t\n    width: 90px;\t\t\t\t\t\n    height: 35px;\t\t\t\t\t\n    padding: 2px;\t\t\t\t\n    font: 12px sans-serif;\t\t\n    background: lightsteelblue;\t\n    border: 0px;\t\t\n    border-radius: 8px;\t\t\t\n    pointer-events: none;\t\t\t\n  }\n</style>\n<div class="day-hour"></div>\n<p>HEAT MAP!</p>');
             var dayHourPlot = new DayHourPlot();
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
         } else if(graphType == 'calendar'){
-            $(bindTo).append('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n\n</style>\n<svg class="legend" width="100%" height="80"></svg>\n<svg class="canvas" width="100%" height="600"></svg>');
+            $(bindTo).append('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n    \ndiv.tooltip {\n    position: absolute;\n    text-align: center;\n    width: 120px;\n    height: 35px;\n    padding: 2px;\n    font: 12px sans-serif;\n    background: lightsteelblue;\n    border: 0px;\n    border-radius: 8px;\n    pointer-events: none;\n}\n    \n</style>\n<svg class="legend" width="100%" height="80"></svg>\n<svg class="canvas" width="100%" height="600"></svg>');
             var calendarGraph = new CalendarGraph();
             calendarGraph.init(bindTo, data);
             return;
