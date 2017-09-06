@@ -49,7 +49,7 @@ $(document).ready(function(){
 
     var refreshDefinedSources = function(){
         $.ajax({
-            url: "/data-manager/get-dl-jobs",
+            url: "/data-manager/get-all-data-load-jobs",
             dataType: "json",
             success: function(sources) {
                 // Figure out which load jobs to show/ hide
@@ -341,7 +341,7 @@ $(document).ready(function(){
         destroyTable(data_load_sources_table)
         changeModalHeader('data-sources', 'Select New Source Of Data')
         document.getElementById('source-footer').innerHTML = ""
-        hideElement($("#saved-sources-buttons"))
+        hideElement($("#saved-sources-buttons"), data_load_sources_table)
         showElementInline($("#change-source-buttons"), $("#data-info-block"), $("#source-selector"))
         $("#add-source").val('select')
         for (var i in g_account_atts){

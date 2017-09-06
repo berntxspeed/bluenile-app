@@ -157,12 +157,122 @@
 
         }
     },
-    'mc_email_data': {
-        'filename': 'tracking_extract.zip',
-        'filepath': '/Export/',
-        'ftp_url': 'ftp.s7.exacttarget.com'
+    'mc_email_data':{
+      'creds':
+        {
+            'filename': 'tracking_extract.zip',
+            'filepath': '/Export/',
+            'ftp_url': 'ftp.s7.exacttarget.com'
+        },
+      'file_map': {
+            'journey_sends.csv': {
+                'primary_keys': ['SubscriberKey', 'EventDate'],
+                'db_field_map': {
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate'
+                },
+                'ftp_path': '/Export/',
+                'file_encoding': 'utf16'
+            },
+            'journey_opens.csv': {
+                'primary_keys': ['SubscriberKey', 'EventDate'],
+                'db_field_map': {
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate'
+                },
+                'ftp_path': '/Export/',
+                'file_encoding': 'utf16'
+            },
+            'journey_clicks.csv': {
+                'primary_keys': ['SubscriberKey', 'EventDate'],
+                'db_field_map': {
+                              'SendID': 'SendID',
+                              'SubscriberKey': 'SubscriberKey',
+                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
+                              'EventDate': 'EventDate'
+                },
+                'ftp_path': '/Export/',
+                'file_encoding': 'utf16'
+            },
+            'SendJobs.csv': {
+               'primary_keys': ['SendID'],
+               'db_field_map':{
+                   'SendID': 'SendID',
+                   'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
+                   'EmailName': 'EmailName',
+                   'SchedTime': 'SchedTime',
+                   'SentTime': 'SentTime',
+                   'Subject': 'Subject',
+                   'PreviewURL': 'PreviewURL'
+               }
+            },
+            'Sent.csv':{
+               'primary_keys':['SubscriberKey', 'EventDate'],
+               'db_field_map':{
+                   'SendID': 'SendID',
+                   'SubscriberKey': 'SubscriberKey',
+                   'EmailAddress': 'EmailAddress',
+                   'EventDate': 'EventDate'
+               }
+            },
+            'Opens.csv':{
+               'primary_keys':['SubscriberKey', 'EventDate'],
+               'db_field_map':{
+                   'SendID': 'SendID',
+                   'SubscriberKey': 'SubscriberKey',
+                   'EmailAddress': 'EmailAddress',
+                   'EventDate': 'EventDate',
+                   'IsUnique': 'IsUnique',
+                   'IpAddress': 'IpAddress',
+                   'Country': 'Country',
+                   'Region': 'Region',
+                   'City': 'City',
+                   'Latitude': 'Latitude',
+                   'Longitude': 'Longitude',
+                   'MetroCode': 'MetroCode',
+                   'AreaCode': 'AreaCode',
+                   'Browser': 'Browser',
+                   'EmailClient': 'EmailClient',
+                   'OperatingSystem': 'OperatingSystem',
+                   'Device': 'Device'
+               }
+            },
+            'Clicks.csv':{
+               'primary_keys':['SubscriberKey', 'EventDate'],
+               'db_field_map':{
+                   'SendID': 'SendID',
+                   'SubscriberKey': 'SubscriberKey',
+                   'EmailAddress': 'EmailAddress',
+                   'EventDate': 'EventDate',
+                   'SendURLID': 'SendURLID',
+                   'URLID': 'URLID',
+                   'URL': 'URL',
+                   'Alias': 'Alias',
+                   'IsUnique': 'IsUnique',
+                   'IpAddress': 'IpAddress',
+                   'Country': 'Country',
+                   'Region': 'Region',
+                   'City': 'City',
+                   'Latitude': 'Latitude',
+                   'Longitude': 'Longitude',
+                   'MetroCode': 'MetroCode',
+                   'AreaCode': 'AreaCode',
+                   'Browser': 'Browser',
+                   'EmailClient': 'EmailClient',
+                   'OperatingSystem': 'OperatingSystem',
+                   'Device': 'Device'
+               }
+            }
+      }
     },
     'mc_journeys': {
-        'auth_url': 'https://auth.exacttargetapis.com/v1/requestToken?legacy=1'
+      'creds':
+        {
+            'auth_url': 'https://auth.exacttargetapis.com/v1/requestToken?legacy=1'
+        }
     }
 }

@@ -8,192 +8,25 @@ import yaml
 from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
 from .classes.ftp_file import ZipFile, CsvFile
 from .mongo_user_config_loader import MongoUserApiConfigLoader
-from ...common.services import DbService
 from ...common.models.user_models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, \
     SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
-# user specific: authentication + domain
-"""
-user_api_config = {
-    'magento':  {'domain': "http://127.0.0.1:32768",# domain address before 'index.php'
-                 'token': "npk3nc7gyhn8leab9baifl5075q45uhl"
-                 },
 
-    'x2crm':    {'domain': "http://demo.x2crm.com",
-                 'token': "YWRtaW46dGVzdA=="
-                 },
-
-    'shopify':  {'domain': "https://@xspeed.myshopify.com",
-                 'id': '20627b91731e8d8ee338bf786ae29feb',
-                 'secret': '045febd59c1d2acc3d00ac309360ea46'
-                 },
-
-    'bigcommerce':  {'domain': "https://store-vd63texh7u.mybigcommerce.com",
-                     'id': 'test',
-                     'secret': '07d63370ed9ddb2eee9143acb91b18af38cb5b9d'
-                     },
-
-    'stripe':   {'domain': "https://api.stripe.com/v1",
-                 'id': 'sk_test_C9SgTuKd9DN2PT6hFLPMzlts',
-                 'secret': ''
-                 }
-}
-"""
-
-# general config based on data_source
-"""
-api_config = {
-    'magento': {
-        'headers': {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer '
-        },
-        'params': None,
-        'customer': {
-            'endpoint': "/index.php/rest/V1/customers/search?searchCriteria",
-            'primary_keys': ['customer_id'],
-            'json_data_keys': 'items',
-            'db_field_map': dict(customer_id='id',
-                                 email_address='email',
-                                 fname='firstname',
-                                 lname='lastname',
-                                 created_at='created_at',
-                                 # marketing_allowed='accepts_marketing',
-                                 # purchase_count='orders_count',
-                                 # total_spent_so_far='total_spent'
-                                 )
-        },
-        'purchase': {
-            'endpoint': "/index.php/rest/V1/orders?searchCriteria",
-            'primary_keys': ['purchase_id'],
-            'json_data_keys': 'items',
-            'db_field_map': dict(purchase_id='quote_id',
-                                 customer_id='customer_id',
-                                 created_at='created_at',
-                                 price='total_invoiced',
-                                 # is_paid='financial_status',
-                                 # referring_site='referring_site',
-                                 # landing_site='landing_site',
-                                 # browser_ip='browser_ip',
-                                 # user_agent='client_details.user_agent'
-                                 )
-        }
-    },
-
-    'x2crm': {
-        'headers': {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic '
-        },
-        'params': None,
-        'customer': {
-            'endpoint': "/index.php/api2/Contacts/",
-            'primary_keys': ['customer_id'],
-            'json_data_keys': None,
-
-            'db_field_map': dict(customer_id='id',
-                                 email_address='email',
-                                 fname='firstName',
-                                 city='city',
-                                 interest_area='interest',
-                                 lname='lastName',
-                                 created_at='createDate',
-                                 # marketing_allowed='accepts_marketing',
-                                 # purchase_count='orders_count',
-                                 # total_spent_so_far='total_spent'
-                                 )
-        }
-    },
-
-    'shopify': {
-        'headers': {'Content-Type': 'application/json'},
-        'params': None,
-        'purchase': {
-            'endpoint': "/admin/orders.json",
-            'primary_keys': ['purchase_id'],
-            'json_data_keys': 'orders',
-            'db_field_map': dict(purchase_id='id',
-                                 customer_id='customer.id',
-                                 created_at='created_at',
-                                 price='total_price',
-                                 is_paid='financial_status',
-                                 referring_site='referring_site',
-                                 landing_site='landing_site',
-                                 browser_ip='browser_ip',
-                                 user_agent='client_details.user_agent')
-        },
-        'customer': {
-            'endpoint': "/admin/customers.json",
-            'primary_keys': ['customer_id'],
-            'json_data_keys': 'customers',
-            'db_field_map': dict(customer_id='id',
-                                 email_address='email',
-                                 fname='first_name',
-                                 lname='last_name',
-                                 marketing_allowed='accepts_marketing',
-                                 created_at='created_at',
-                                 purchase_count='orders_count',
-                                 total_spent_so_far='total_spent')
-        }
-    },
-    'bigcommerce': {
-        'headers': {'Content-Type': 'application/json'},
-        'params': None,
-        'purchase': {
-            'endpoint': "/api/v2/orders.json",
-            'primary_keys': ['purchase_id'],
-            'json_data_keys': None,
-            'db_field_map': dict(purchase_id='id',
-                                 customer_id='customer_id',
-                                 created_at='date_created',
-                                 price='total_ex_tax',
-                                 is_paid='payment_status',
-                                 browser_ip='ip_address')
-        },
-        'customer': {
-            'endpoint': "/api/v2/customers.json",
-            'primary_keys': ['customer_id'],
-            'json_data_keys': None,
-            'db_field_map': dict(customer_id='id',
-                                 email_address='email',
-                                 fname='first_name',
-                                 lname='last_name',
-                                 marketing_allowed='accepts_marketing',
-                                 created_at='date_created')
-                                 # purchase_count='orders_count',
-                                 # total_spent_so_far='total_spent')
-        }
-    },
-    'stripe': {
-        'headers': {'Content-Type': 'application/json'},
-        'params': None,
-        'customer': {
-            'endpoint': "/customers",
-            'primary_keys': ['customer_id'],
-            'json_data_keys': 'data',
-            'db_field_map': dict(customer_id='id',
-                                 email_address='email',
-                                 # fname='first_name',
-                                 # lname='last_name',
-                                 # marketing_allowed='accepts_marketing',
-                                 created_at='created')
-            # purchase_count='orders_count',
-            # total_spent_so_far='total_spent')
-        }
-    }
-}
-"""
-
-
-class DataLoadService(DbService):
-    def __init__(self, config, logger, db, db_session, mongo):
-        super(DataLoadService, self).__init__(config, db, logger)
-        self.db_session = db_session
+class UserDataLoadService:
+    def __init__(self, config, logger, mongo):
+        self.config = config
+        self.logger = logger
         self.mongo = mongo
+        self.db_session = None
+        self.user_params = None
         self.data_type_map = {'customer': Customer,
-                              'purchase': Purchase
+                              'purchase': Purchase,
+                              'stg_eml_send': StgEmlSend,
+                              'stg_eml_click': StgEmlClick,
+                              'stg_eml_open': StgEmlOpen,
+                              'stg_send_job': StgSendJob
                               }
-        self.api_config_file = os.path.abspath(os.path.join(self.config['PROJECT_ROOT'], 'api_config.yml'))
+        self.api_config_file = os.path.abspath(os.path.join(self.config['CONFIG_FOLDER'], 'api_config.yml'))
         self.data_load_config = self.load_config()
         self.user_api_config = MongoUserApiConfigLoader(self.mongo.db).get_user_api_config()
 
@@ -254,8 +87,8 @@ class DataLoadService(DbService):
 
         return api_args
 
-    def get_mc_data_args(self, data_source):
-        vendor_config = self.data_load_config.get(data_source, {})
+    def get_mc_creds(self, data_source):
+        vendor_config = self.data_load_config.get(data_source, {}).get('creds', {})
         mc_api_args = copy.copy(vendor_config)
 
         user_config = None
@@ -282,7 +115,7 @@ class DataLoadService(DbService):
         if api_call_config is not None:
             ad1 = ApiDataToSql(**api_call_config)
             ad1.load_data()
-
+    """
     def load_lead_perfection(self):
         config = self.config
         mc_data_creds = config.get('EXT_DATA_CREDS').get(config.get('CUSTOMER_DATA_SOURCE'))
@@ -317,9 +150,25 @@ class DataLoadService(DbService):
 
         # load lead perfection data to db
         csv.load_data()
+    """
+
+    def get_mc_data_load_args(self, filename, data_source, data_type, cfg=None):
+        file_config = self.data_load_config[data_source]['file_map'].get(filename, {})
+        data_load_config = copy.copy(file_config)
+
+        if not data_load_config:
+            raise Exception(f'File {filename} is not a valid source of data')
+
+        data_load_config['file'] = filename
+        data_load_config['db_model'] = self.data_type_map.get(data_type)
+        data_load_config['db_session'] = self.db_session
+        if cfg is not None:
+            data_load_config['ftp_cfg'] = cfg
+
+        return data_load_config
 
     def load_mc_email_data(self, **kwargs):
-        mc_data_config_args = self.get_mc_data_args(kwargs['data_source'])
+        mc_data_config_args = self.get_mc_creds(kwargs['data_source'])
         cfg = {
             'host': mc_data_config_args.get('ftp_url'),
             'username': mc_data_config_args.get('id'),
@@ -335,20 +184,9 @@ class DataLoadService(DbService):
 
         try:
             # load Sendjobs data to db
-            zf.load_data(file='SendJobs.csv',
-                         db_session=self.db_session,
-                         db_model=StgSendJob,
-                         primary_keys=['SendID'],
-                         db_field_map={
-                             'SendID': 'SendID',
-                             'SendDefinitionExternalKey': 'SendDefinitionExternalKey',
-                             'EmailName': 'EmailName',
-                             'SchedTime': 'SchedTime',
-                             'SentTime': 'SentTime',
-                             'Subject': 'Subject',
-                             'PreviewURL': 'PreviewURL'
-                         })
-
+            zf_args = self.get_mc_data_load_args('SendJobs.csv', 'mc_email_data', 'stg_send_job')
+            # execute separate load of exported Journey-based clicks information
+            zf.load_data(**zf_args)
             sql = 'INSERT INTO send_job("SendID", "SendDefinitionExternalKey", "EmailName", "SchedTime", "SentTime", "Subject", "PreviewURL") ' \
                   'SELECT DISTINCT ON (a."SendID") a."SendID", a."SendDefinitionExternalKey", a."EmailName", a."SchedTime", a."SentTime", a."Subject", a."PreviewURL" ' \
                   'FROM stg_send_job a ' \
@@ -365,17 +203,8 @@ class DataLoadService(DbService):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing SendJobs.csv' + traceback.print_tb(exc_traceback))
         try:
-            zf.load_data(file='Sent.csv',
-                         db_session=self.db_session,
-                         db_model=StgEmlSend,
-                         primary_keys=['SubscriberKey', 'EventDate'],
-                         db_field_map={
-                             'SendID': 'SendID',
-                             'SubscriberKey': 'SubscriberKey',
-                             'EmailAddress': 'EmailAddress',
-                             'EventDate': 'EventDate'
-                         })
-
+            zf_args = self.get_mc_data_load_args('Sent.csv', 'mc_email_data', 'stg_eml_send')
+            zf.load_data(**zf_args)
             sql = 'INSERT INTO eml_send ("SendID", "SubscriberKey", "EmailAddress", "EventDate") ' \
                   'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate" ' \
                   'FROM stg_eml_send a ' \
@@ -394,30 +223,8 @@ class DataLoadService(DbService):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing Sent.csv' + traceback.print_tb(exc_traceback))
         try:
-            # load Opens data to db
-            zf.load_data(file='Opens.csv',
-                         db_session=self.db_session,
-                         db_model=StgEmlOpen,
-                         primary_keys=['SubscriberKey', 'EventDate'],
-                         db_field_map={
-                             'SendID': 'SendID',
-                             'SubscriberKey': 'SubscriberKey',
-                             'EmailAddress': 'EmailAddress',
-                             'EventDate': 'EventDate',
-                             'IsUnique': 'IsUnique',
-                             'IpAddress': 'IpAddress',
-                             'Country': 'Country',
-                             'Region': 'Region',
-                             'City': 'City',
-                             'Latitude': 'Latitude',
-                             'Longitude': 'Longitude',
-                             'MetroCode': 'MetroCode',
-                             'AreaCode': 'AreaCode',
-                             'Browser': 'Browser',
-                             'EmailClient': 'EmailClient',
-                             'OperatingSystem': 'OperatingSystem',
-                             'Device': 'Device'
-                         })
+            zf_args = self.get_mc_data_load_args('Opens.csv', 'mc_email_data', 'stg_eml_open')
+            zf.load_data(**zf_args)
 
             sql = 'INSERT INTO eml_open("SendID", "SubscriberKey", "EmailAddress", "EventDate", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device") ' \
                   'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device" ' \
@@ -429,7 +236,6 @@ class DataLoadService(DbService):
 
             res = engine_instance.execute(sql)
             print('inserted ' + str(res.rowcount) + ' opens')
-
             sql = 'DELETE FROM stg_eml_open'
             engine_instance.execute(sql)
 
@@ -437,34 +243,9 @@ class DataLoadService(DbService):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem importing Opens.csv' + traceback.print_tb(exc_traceback))
         try:
+            zf_args = self.get_mc_data_load_args('Opens.csv', 'mc_email_data', 'stg_eml_open')
             # load Clicks data to db
-            zf.load_data(file='Clicks.csv',
-                         db_session=self.db_session,
-                         db_model=StgEmlClick,
-                         primary_keys=['SubscriberKey', 'EventDate'],
-                         db_field_map={
-                             'SendID': 'SendID',
-                             'SubscriberKey': 'SubscriberKey',
-                             'EmailAddress': 'EmailAddress',
-                             'EventDate': 'EventDate',
-                             'SendURLID': 'SendURLID',
-                             'URLID': 'URLID',
-                             'URL': 'URL',
-                             'Alias': 'Alias',
-                             'IsUnique': 'IsUnique',
-                             'IpAddress': 'IpAddress',
-                             'Country': 'Country',
-                             'Region': 'Region',
-                             'City': 'City',
-                             'Latitude': 'Latitude',
-                             'Longitude': 'Longitude',
-                             'MetroCode': 'MetroCode',
-                             'AreaCode': 'AreaCode',
-                             'Browser': 'Browser',
-                             'EmailClient': 'EmailClient',
-                             'OperatingSystem': 'OperatingSystem',
-                             'Device': 'Device'
-                         })
+            zf.load_data(**zf_args)
 
             sql = 'INSERT INTO eml_click("SendID", "SubscriberKey", "EmailAddress", "EventDate", "URLID", "URL", "Alias", "IsUnique", "IpAddress", "Country", "Region", "City", "Latitude", "Longitude", "MetroCode", "AreaCode", "Browser", "EmailClient", "OperatingSystem", "Device") ' \
                   'SELECT DISTINCT ON (a."SubscriberKey", a."EventDate") a."SendID", a."SubscriberKey", a."EmailAddress", a."EventDate", a."URLID", a."URL", a."Alias", a."IsUnique", a."IpAddress", a."Country", a."Region", a."City", a."Latitude", a."Longitude", a."MetroCode", a."AreaCode", a."Browser", a."EmailClient", a."OperatingSystem", a."Device" ' \
@@ -487,23 +268,9 @@ class DataLoadService(DbService):
         zf.clean_up()  # delete downloaded files
 
         try:
+            csv_args = self.get_mc_data_load_args('journey_sends.csv', 'mc_email_data', 'stg_eml_send', cfg)
             # execute separate load of exported Journey-based sends information
-            filename = 'journey_sends.csv'
-            filepath = '/Export/'
-            csv = CsvFile(file=filename,
-                          db_session=self.db_session,
-                          db_model=StgEmlSend,
-                          primary_keys=['SubscriberKey', 'EventDate'],
-                          db_field_map={
-                              'SendID': 'SendID',
-                              'SubscriberKey': 'SubscriberKey',
-                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                              'EventDate': 'EventDate'
-                          },
-                          ftp_path=filepath,
-                          ftp_cfg=cfg,
-                          file_encoding='utf16')
-
+            csv = CsvFile(**csv_args)
             # load journey send data to db
             csv.load_data()
 
@@ -535,22 +302,8 @@ class DataLoadService(DbService):
             print('ALERT: problem loading journey_sends.csv' + traceback.print_tb(exc_traceback))
         try:
             # execute separate load of exported Journey-based opens information
-            filename = 'journey_opens.csv'
-            filepath = '/Export/'
-            csv = CsvFile(file=filename,
-                          db_session=self.db_session,
-                          db_model=StgEmlOpen,
-                          primary_keys=['SubscriberKey', 'EventDate'],
-                          db_field_map={
-                              'SendID': 'SendID',
-                              'SubscriberKey': 'SubscriberKey',
-                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                              'EventDate': 'EventDate'
-                          },
-                          ftp_path=filepath,
-                          ftp_cfg=cfg,
-                          file_encoding='utf16')
-
+            csv_args = self.get_mc_data_load_args('journey_opens.csv', 'mc_email_data', 'stg_eml_open', cfg)
+            csv = CsvFile(**csv_args)
             # load journey opens data to db
             csv.load_data()
 
@@ -581,23 +334,9 @@ class DataLoadService(DbService):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print('ALERT: problem loading journey_opens.csv' + traceback.print_tb(exc_traceback))
         try:
+            csv_args = self.get_mc_data_load_args('journey_clicks.csv', 'mc_email_data', 'stg_eml_click', cfg)
             # execute separate load of exported Journey-based clicks information
-            filename = 'journey_clicks.csv'
-            filepath = '/Export/'
-            csv = CsvFile(file=filename,
-                          db_session=self.db_session,
-                          db_model=StgEmlClick,
-                          primary_keys=['SubscriberKey', 'EventDate'],
-                          db_field_map={
-                              'SendID': 'SendID',
-                              'SubscriberKey': 'SubscriberKey',
-                              'TriggeredSendExternalKey': 'TriggererSendDefinitionObjectID',
-                              'EventDate': 'EventDate'
-                          },
-                          ftp_path=filepath,
-                          ftp_cfg=cfg,
-                          file_encoding='utf16')
-
+            csv = CsvFile(**csv_args)
             # load journey click data to db
             csv.load_data()
 
@@ -643,7 +382,7 @@ class DataLoadService(DbService):
     def __get_mc_auth(self, data_source):
         # TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
 
-        mc_data_config_args = self.get_mc_data_args(data_source)
+        mc_data_config_args = self.get_mc_creds(data_source)
 
         # get auth token
         url = mc_data_config_args.get('auth_url')  # was 'https://auth.exacttargetapis.com/v1/requestToken'
@@ -999,20 +738,6 @@ class DataLoadService(DbService):
                         rec.__setattr__(fips_field, str(row['State FIPS Code'] + row['County FIPS Code']))
                         self.db_session.add(rec)
                     self.db_session.commit()
-
-
-class UserDataLoadService(DataLoadService):
-    def __init__(self, config, logger, mongo):
-        self.config = config
-        self.logger = logger
-        self.mongo = mongo
-        self.db_session = None
-        self.user_params = None
-        self.data_type_map = {'customer': Customer,
-                              'purchase': Purchase
-                              }
-        self.api_config_file = 'api_config.yml'
-        self.data_load_config = self.load_config()
 
     def init_user_db(self, user_params, postgres_required=True):
         self.user_params = user_params

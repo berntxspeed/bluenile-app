@@ -12,6 +12,7 @@ class Config(object):
     # Application
     PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
     STATIC_FOLDER = os.path.join(PROJECT_ROOT, '..', 'static')
+    CONFIG_FOLDER = os.path.join(PROJECT_ROOT, '..', 'config')
     TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'app', 'common', 'templates')
     STATIC_URL_PATH = '/static'
     LOGGER_NAME = 'simple_di_flask_app'

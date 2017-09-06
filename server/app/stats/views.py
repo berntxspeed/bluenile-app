@@ -94,7 +94,7 @@ def save_vendor_api_config(mongo, user_config):
         return error, 500
 
 
-@stats.route('/data-manager/get-dl-jobs')
+@stats.route('/data-manager/get-all-data-load-jobs')
 @inject(mongo=MongoDB, user_config=UserSessionConfig)
 def get_data_load_jobs(mongo, user_config):
 
