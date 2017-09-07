@@ -32,6 +32,7 @@ $(document).ready(function(){
                                 'x2crm_customers'
                          ]
     all_task_groups = ['shopify', 'magento', 'bigcommerce', 'other']
+    all_sources = ['shopify', 'magento', 'bigcommerce', 'stripe', 'zoho', 'x2crm', 'mc_email_data', 'mc_journeys']
     sources_to_task_groups = {
                                 'shopify': 'shopify',
                                 'magento': 'magento',
@@ -48,6 +49,7 @@ $(document).ready(function(){
 
 
     var refreshDefinedSources = function(){
+        $("#data_source").val('all')
         $.ajax({
             url: "/data-manager/get-all-data-load-jobs",
             dataType: "json",
@@ -59,7 +61,8 @@ $(document).ready(function(){
                     defined_jobs.push(sources.data[i].job_type)
                     defined_sources.push(sources.data[i].data_source)
                 }
-                console.log(defined_jobs)
+                console.log('Sources: ', defined_sources)
+                console.log('Jobs: ', defined_jobs)
                 for (var i in all_load_job_types) {
                     element = $("#" + all_load_job_types[i])
                     if (defined_jobs.includes(all_load_job_types[i])) {
@@ -77,12 +80,25 @@ $(document).ready(function(){
                         available_groups.push(group_element)
                     }
                 }
+                // Adjust selection of available sources in Add Sources
+                for (var i in all_sources) {
+                    add_element = $("#add_" + all_sources[i])
+                    if (defined_sources.includes(all_sources[i])){
+                        console.log('show', add_element)
+                        hideElement(add_element)
+                    }
+                    else {
+                        console.log('hide', add_element)
+                        showElement(add_element)
+                    }
+                }
+                // Show appropriate tasks groups and options in the group shortcut menu
                 for (var i in all_task_groups) {
                     tasks_element = $("#" + all_task_groups[i] + "_tasks")
                     option_element = $("#" + all_task_groups[i] + "_option")
 //                    option_element = $("[title~=" + all_task_groups[i] + "]")
                     if (available_groups.includes(all_task_groups[i])){
-                        showElementInline(option_element)
+                        showElement(option_element)
                         showElement(tasks_element)
                         g_visible_groups.push(tasks_element.attr("id"))
                     }
@@ -292,7 +308,7 @@ $(document).ready(function(){
         showElementInline($("#saved-freqs-buttons"))
         $("#frequencyModal").on('show.bs.modal', function () {
             $.ajax({
-                url: "/data-manager/get-dl-jobs",
+                url: "/data-manager/get-all-data-load-jobs",
                 dataType: "json",
                 success: function(data) {
                     data.formatNoMatches = function(){
@@ -318,6 +334,7 @@ $(document).ready(function(){
         changeModalHeader('data-sources', 'Data Sources')
         hideElement($("#change-source-buttons"), $("#data-info-block"), $('#source-selector'))
         showElementInline($("#saved-sources-buttons"))
+        showElement(data_load_sources_table)
         $("#sourcesModal").on('show.bs.modal', function () {
             $.ajax({
                 url: "/data-manager/get-data-sources",
@@ -406,9 +423,11 @@ $(document).ready(function(){
 
 
     $("#btn-save-source").click(function (e) {
+        var added_new_source = false
         if ( $("#source-selector").is(":visible") ){
             source = $("#add-source").val()
             source_full_name = $("#add-source").find(":selected").text()
+            added_new_source = true
         }
         else {
             source = g_current_source.data_source
@@ -449,7 +468,7 @@ $(document).ready(function(){
                     document.getElementById('source-footer').innerHTML = "Data Source Update Successful"
                     $('#source-footer').fadeOut(2000, function(){
                         $("#btn-manage-data-sources").click()
-                        refreshDefinedSources()
+                        if (added_new_source == true) {refreshDefinedSources()}
                         })
                  },
                  error: function(err) {

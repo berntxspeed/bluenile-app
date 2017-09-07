@@ -539,7 +539,7 @@ class Customer(user_db.Model):
 
 @user_db.event.listens_for(Customer, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
-    target.created_at = datetime.datetime.utcnow()
+    # target.created_at = datetime.datetime.utcnow()
     target.hashed_email = base64.b64encode(hmac.new(HASH_SECRET,
                                                     msg=target.email_address.encode('utf-8'),
                                                     digestmod=hashlib.sha256).digest()).hex()
