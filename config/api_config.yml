@@ -111,7 +111,7 @@
                              'marketing_allowed':'accepts_marketing',
                              'created_at':'created_at',
                              'purchase_count':'orders_count',
-                             'total_spent_so_far':'total_spent'
+                             'total_spent_so_far':'total_spent',
                             }
         }
     },
@@ -270,9 +270,20 @@
       }
     },
     'mc_journeys': {
-      'creds':
-        {
+      'creds':{
             'auth_url': 'https://auth.exacttargetapis.com/v1/requestToken?legacy=1'
-        }
+      },
+      'api_config':{
+         'endpoint': 'https://www.exacttargetapis.com/interaction/v1/interactions/',
+         'auth': null,
+         'headers':
+            {'Content-Type': 'application/json',
+             'Authorization': 'Bearer '},
+         'params': null)
+      },
+      'fuelsdk_config':{
+         'default_wsdl': 'https://webservice.s7.exacttarget.com/etframework.wsdl',
+         'auth_url': 'https://auth.exacttargetapis.com/v1/requestToken?legacy=1'
+      }
     }
 }

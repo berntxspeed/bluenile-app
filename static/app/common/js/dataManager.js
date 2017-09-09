@@ -8,11 +8,11 @@ $(document).ready(function(){
                           zoho:             ['domain', 'token'],
                           stripe:           ['domain', 'id'],
                           mc_email_data:    ['id', 'secret'],
-                          mc_journeys:      ['id', 'secret'],
+                          mc_journeys:      ['id', 'secret', 'signature'],
 
                         }
 
-    var g_account_atts = ['domain', 'id', 'secret', 'token']
+    var g_account_atts = ['domain', 'id', 'secret', 'token', 'signature']
 
     var g_current_load_job = null
     var g_current_source = null

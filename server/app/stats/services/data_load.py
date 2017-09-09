@@ -5,10 +5,10 @@ import sys
 import traceback
 import yaml
 
-from .classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
-from .classes.ftp_file import ZipFile, CsvFile
-from .mongo_user_config_loader import MongoUserApiConfigLoader
-from ...common.models.user_models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, \
+from server.app.stats.services.classes.api_data import ApiData, ApiDataToSql, ApiDataToMongo
+from server.app.stats.services.classes.ftp_file import ZipFile, CsvFile
+from server.app.stats.services.mongo_user_config_loader import MongoUserApiConfigLoader
+from server.app.common.models.user_models import StgEmlSend, EmlSend, StgEmlOpen, EmlOpen, StgEmlClick, EmlClick, StgSendJob, \
     SendJob, Customer, Purchase, WebTrackingEvent, WebTrackingPageView, WebTrackingEcomm
 
 
@@ -26,9 +26,9 @@ class UserDataLoadService:
                               'stg_eml_open': StgEmlOpen,
                               'stg_send_job': StgSendJob
                               }
-        self.api_config_file = os.path.abspath(os.path.join(self.config['CONFIG_FOLDER'], 'api_config.yml'))
+        self.api_config_file = self.config['API_CONFIG_FILE']
         self.data_load_config = self.load_config()
-        self.user_api_config = MongoUserApiConfigLoader(self.mongo.db).get_user_api_config()
+        self.user_api_config = None
 
     def load_config(self):
         try:
@@ -374,10 +374,21 @@ class UserDataLoadService:
         for send in sends:
             send._get_stats()
 
+    def get_journeys_api_config(self, data_source, token):
+        api_config = self.data_load_config[data_source].get('api_config', {})
+        data_load_config = copy.copy(api_config)
+
+        if not data_load_config:
+            raise Exception(f'File {filename} is not a valid source of data')
+        data_load_config['headers']['Authorization'] += token
+
+        return data_load_config
+
     def load_mc_journeys(self, **kwargs):
-        token = self.__get_mc_auth(kwargs['data_source'])
-        journeys = self.__get_mc_journeys(token)
-        self.__load_mc_journeys_to_mongo(journeys, token)
+        data_source = kwargs['data_source']
+        token = self.__get_mc_auth(data_source)
+        journeys, api_config = self.__get_mc_journeys(token, data_source)
+        self.__load_mc_journeys_to_mongo(journeys, api_config)
 
     def __get_mc_auth(self, data_source):
         # TODO: resolve duplicated code in emails/services/classes/esp_push.py for images
@@ -396,32 +407,25 @@ class UserDataLoadService:
             raise ValueError('error, no accessToken value returned')
         return token
 
-    def __get_mc_journeys(self, token):
-        ad = ApiData(endpoint='https://www.exacttargetapis.com/interaction/v1/interactions',
-                     auth=None,
-                     headers={'Content-Type': 'application/json',
-                              'Authorization': 'Bearer ' + token},
-                     params=None)
+    def __get_mc_journeys(self, token, data_source):
+        api_config = self.get_journeys_api_config(data_source, token)
+        ad = ApiData(**api_config)
         journeys = ad.get_data().json()
-        return journeys
+        return journeys, api_config
 
-    def __load_mc_journeys_to_mongo(self, journeys, token):
-
+    def __load_mc_journeys_to_mongo(self, journeys, api_config):
         if self.user_params is not None:
             collection = self.mongo.db['journeys_' + self.user_params.get('account_name', '')]
         else:
             collection = self.mongo.db.journeys
+        api_config['collection'] = collection
+        api_config['primary_keys'] = ['id']
+        base_endpoint = api_config['endpoint']
 
         for journey in journeys['items']:
             try:
-                adm = ApiDataToMongo(
-                    endpoint='https://www.exacttargetapis.com/interaction/v1/interactions/' + journey['id'],
-                    auth=None,
-                    headers={'Content-Type': 'application/json',
-                             'Authorization': 'Bearer ' + token},
-                    params=None,
-                    collection=collection,
-                    primary_keys=['id'])
+                api_config['endpoint'] = base_endpoint + journey['id']
+                adm = ApiDataToMongo(**api_config)
                 adm.load_data()
             except KeyError as exc:
                 print('problem with journey id [' + journey['id'] + ']')

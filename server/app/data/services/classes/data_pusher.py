@@ -1,20 +1,59 @@
-import logging
-from FuelSDK import ET_Client, ET_DataExtension, ET_DataExtension_Row
-from sqlalchemy import inspect
-import time
 import datetime
+import yaml
+
+from sqlalchemy import inspect
+from FuelSDK import ET_Client, ET_DataExtension, ET_DataExtension_Row
 
 
 class DataPusher(object):
 
-    def __init__(self, db_session, model):
+    def __init__(self, config, logger, db_session, model, mongo, user_api_config):
+        self.mongo = mongo
+        self.config = config
+        self.logger = logger
         self._db_session = db_session
         self._model = model
         self._tablename = model.__tablename__
 
+        # The following  are credentials and api config params for MC
+        self._api_config_file = self.config['API_CONFIG_FILE']
+        self._data_load_config = self._load_config()
+        self._et_client_params_map = {
+                                        'clientid': 'id',
+                                        'clientsecret': 'secret',
+                                        'appsignature': 'signature',
+                                        'defaultwsdl': 'default_wsdl',
+                                        'authenticationurl': 'auth_url'
+                                     }
+        self._et_client_params = self._get_et_client_params(user_api_config, 'mc_journeys')
+
         # Marketing Cloud Specific
         debug = False
-        self._stub_obj = ET_Client(False, debug)
+        self._stub_obj = ET_Client(False, debug, params=self._et_client_params)
+
+    def _load_config(self):
+        try:
+            with open(self._api_config_file) as config_file:
+                return yaml.load(config_file)
+        except Exception:
+            return {}
+
+    def _get_et_client_params(self, user_config, data_source):
+        et_client_params = {}
+        user_api_config = None
+        for vendor_user_config in user_config:
+            if vendor_user_config.get('data_source') == data_source:
+                user_api_config = vendor_user_config
+                break
+
+        if not user_api_config:
+            raise Exception('Lacking MC credentials: data push is not supported')
+
+        user_api_config.update(self._data_load_config['mc_journeys']['fuelsdk_config'])
+        for k, v in self._et_client_params_map.items():
+            et_client_params[k] = user_api_config[v]
+
+        return et_client_params
 
     def sync_table(self):
         resp = 'no operation performed'
@@ -32,7 +71,7 @@ class DataPusher(object):
             if resp.code and resp.code != 200:
                 return resp
             msg = 'inserted ' + str(len(recs)) + ' records'
-            logging.info(msg)
+            self.logger.info(msg)
 
         # table updates
         recs = self._find_recs_for_update()
@@ -41,7 +80,7 @@ class DataPusher(object):
             if resp.code and resp.code != 200:
                 return resp
             msg = 'updated ' + str(len(recs)) + ' records'
-            logging.info(msg)
+            self.logger.info(msg)
 
         return resp
 
@@ -68,7 +107,7 @@ class DataPusher(object):
             if resp.code is not None and resp.code != 200:
                 return resp
             msg = 'inserted ' + str(len(recs)) + ' records'
-            logging.info(msg)
+            self.logger.info(msg)
 
         return resp
 

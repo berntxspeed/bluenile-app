@@ -64,6 +64,7 @@ class AppModule(Module):
     def provides_logging(self, config):
         formatter = logging.Formatter('[%(levelname)s] %(message)s')
         logger = logging.getLogger(config['LOGGER_NAME'])
+
         stream_handler = logging.StreamHandler(stream=sys.stdout)
         stream_handler.setFormatter(formatter)
         stream_handler.setLevel(logging.ERROR)
