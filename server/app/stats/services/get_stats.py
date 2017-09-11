@@ -42,7 +42,9 @@ class GetStatsService(object):
         except ValueError as exc:
             return jsonify(error=str(exc)), 404
 
-        return jsonify(columns=st.get_columns())
+        columns = st.get_columns()
+        return jsonify(columns=columns)
+
 
     def get_grouping_counts(self, tbl, grp_by, calculate, filters=None):
         """

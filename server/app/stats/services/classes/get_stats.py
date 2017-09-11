@@ -1,4 +1,5 @@
 from sqlalchemy import func, cast, extract, Float, Date
+from sqlalchemy.inspection import inspect
 from ....common.utils.db_datatype_handler import convert_to_attr_datatype
 
 
@@ -64,22 +65,62 @@ class StatsGetter(object):
             raise ValueError('illegal table selection of: ' + self._tbl + '. This is not in the list of allowable tables')
         self._model = self._acceptable_tables.get(self._tbl)
 
+        self._joins = []
+
     def _check_grp_by(self):
-        pass
+        # check for any joins that need to be applied
+        for grp_by in self._grp_by:
+            if '.' in grp_by:
+                join_field = grp_by.split('.')[0]
+                self._joins.append(getattr(self._model, join_field))
 
     def _check_filters(self):
-        pass
+        # check for any joins that need to be applied
+        for filter in self._filters:
+            if '.' in filter.get('name'):
+                join_field = filter.get('name').split('.')[0]
+                self._joins.append(getattr(self._model, join_field))
+
+    def _check_aggregate_calculation(self):
+        # check for any joins that need to be applied
+        if '.' in self._calculate.get('left-operand-field'):
+            join_field = self._calculate.get('left-operand-field').split('.')[0]
+            self._joins.append(getattr(self._model, join_field))
+        if '.' in self._calculate.get('right-operand-field'):
+            join_field = self._calculate.get('right-operand-field').split('.')[0]
+            self._joins.append(getattr(self._model, join_field))
+
+    def _apply_joins(self, q):
+        for join in self._joins:
+            q = q.join(join)
+
+        return q
 
     def _get_column(self, col_request):
+        field = col_request
+        field_op = None
+
         if ':' in col_request:
             field_op = col_request.split(':')[1]
             field = col_request.split(':')[0]
             if field_op in self._allowable_field_operations.keys():
-                return self._allowable_field_operations.get(field_op)(getattr(self._model, field))
+                field_op = self._allowable_field_operations.get(field_op)
             else:
                 raise ValueError('invalid field operation for field: ' + field)
+
+        if '.' in col_request:
+            print('field = ' + field)
+            relationship_field = field.split('.')[0]
+            field = field.split('.')[1]
+            relationship_model = getattr(self._model, relationship_field).property.mapper.class_
+            column = getattr(relationship_model, field)
         else:
-            return getattr(self._model, col_request)
+            column = getattr(self._model, field)
+
+        if field_op:
+            return field_op(column)
+        else:
+            return column
 
     def _apply_filters_to_query(self, q):
         if self._filters is not None:
@@ -159,13 +200,17 @@ class StatsGetter(object):
         """
         Executes query and returns result
         """
+        q = self._db_session.query()
+
         try:
             self._check_grp_by()
             self._check_filters()
+            self._check_aggregate_calculation()
         except ValueError:
             raise ValueError('problem with group by and/or filters.  check api request.')
 
-        q = self._db_session.query()
+        if len(self._joins) > 0:
+            q = self._apply_joins(q)
 
         q = self._apply_group_bys_to_query(q)
         q = self._apply_filters_to_query(q)
@@ -179,26 +224,53 @@ class StatsGetter(object):
         and their data types
         """
         cols = []
+
+        def add_col(column_name, column_type, rel_bool):
+            if rel_bool:
+                rel_bool = 'True'
+            else:
+                rel_bool = 'False'
+
+            cols.append(dict(name=column_name,
+                             type=column_type,
+                             relationship=rel_bool))
+            # add type-specific functions to columns
+            if 'TIMESTAMP' in column_type:
+                # add day/month/year/hour/min options
+                cols.append(dict(name=column_name + ':date',
+                                 type='DATE',
+                                 relationship=rel_bool))
+                cols.append(dict(name=column_name + ':day',
+                                 type='INTEGER',
+                                 relationship=rel_bool))
+                cols.append(dict(name=column_name + ':month',
+                                 type='INTEGER',
+                                 relationship=rel_bool))
+                cols.append(dict(name=column_name + ':year',
+                                 type='INTEGER',
+                                 relationship=rel_bool))
+                cols.append(dict(name=column_name + ':hour',
+                                 type='INTEGER',
+                                 relationship=rel_bool))
+                cols.append(dict(name=column_name + ':minute',
+                                 type='INTEGER',
+                                 relationship=rel_bool))
+
         for column, _ in self._model.__dict__.items():
             try:
+                # add fields on the base table
                 col_type = str(self._model.__table__.c[column].type)
-                cols.append(dict(name=column,
-                                 type=col_type))
-                # add type-specific functions to columns
-                if 'TIMESTAMP' in col_type:
-                    # add day/month/year/hour/min options
-                    cols.append(dict(name=column + ':date',
-                                     type='DATE'))
-                    cols.append(dict(name=column+':day',
-                                     type='INTEGER'))
-                    cols.append(dict(name=column + ':month',
-                                     type='INTEGER'))
-                    cols.append(dict(name=column + ':year',
-                                     type='INTEGER'))
-                    cols.append(dict(name=column + ':hour',
-                                     type='INTEGER'))
-                    cols.append(dict(name=column + ':minute',
-                                     type='INTEGER'))
+                add_col(column, col_type, False)
             except:
-                pass
+                # add the fields on the related table of a relationship field, like SendJob.eml_clicks -> EmlClick
+                if column in inspect(self._model).relationships.keys():
+                    rel = inspect(self._model).relationships[column]
+                    for rel_column in rel.target.columns.keys():
+                        try:
+                            rel_column_type = str(rel.target.c[rel_column].type)
+                            add_col(column + '.' + rel_column, rel_column_type, True)
+                        except:
+                            pass
+                else:
+                    pass
         return cols
