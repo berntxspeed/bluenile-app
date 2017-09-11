@@ -15,11 +15,13 @@ class StatsGetter(object):
             'lt': lambda q, col, val: q.filter(col < convert_to_attr_datatype(col, val)),
             'lte': lambda q, col, val: q.filter(col <= convert_to_attr_datatype(col, val)),
             'contains': lambda q, col, val: q.filter(col.contains(convert_to_attr_datatype(col, val))),
+            'not-contains': lambda q, col, val: q.filter(~col.contains(convert_to_attr_datatype(col, val))),
             'startswith': lambda q, col, val: q.filter(col.startswith(convert_to_attr_datatype(col,val))),
             'endswith': lambda q, col, val: q.filter(col.endsswith(convert_to_attr_datatype(col, val))),
             'isnull': lambda q, col, val: q.filter(col == None),
             'notnull': lambda q, col, val: q.filter(col != None),
-            'in': lambda q, col, val: q.filter(col.in_([convert_to_attr_datatype(col, x) for x in val[1: len(val)-1].split(', ')]))
+            'in': lambda q, col, val: q.filter(col.in_([convert_to_attr_datatype(col, x) for x in val.split(', ')])),
+            'not-in': lambda q, col, val: q.filter(~col.in_([convert_to_attr_datatype(col, x) for x in val.split(', ')]))
         }
 
         self._allowable_math_ops = {
@@ -65,33 +67,37 @@ class StatsGetter(object):
             raise ValueError('illegal table selection of: ' + self._tbl + '. This is not in the list of allowable tables')
         self._model = self._acceptable_tables.get(self._tbl)
 
-        self._joins = []
+        self._joins = {}
 
     def _check_grp_by(self):
         # check for any joins that need to be applied
         for grp_by in self._grp_by:
             if '.' in grp_by:
                 join_field = grp_by.split('.')[0]
-                self._joins.append(getattr(self._model, join_field))
+                if join_field not in self._joins.keys():
+                    self._joins[join_field] = getattr(self._model, join_field)
 
     def _check_filters(self):
         # check for any joins that need to be applied
         for filter in self._filters:
             if '.' in filter.get('name'):
                 join_field = filter.get('name').split('.')[0]
-                self._joins.append(getattr(self._model, join_field))
+                if join_field not in self._joins.keys():
+                    self._joins[join_field] = getattr(self._model, join_field)
 
     def _check_aggregate_calculation(self):
         # check for any joins that need to be applied
         if '.' in self._calculate.get('left-operand-field'):
             join_field = self._calculate.get('left-operand-field').split('.')[0]
-            self._joins.append(getattr(self._model, join_field))
+            if join_field not in self._joins.keys():
+                self._joins[join_field] = getattr(self._model, join_field)
         if '.' in self._calculate.get('right-operand-field'):
             join_field = self._calculate.get('right-operand-field').split('.')[0]
-            self._joins.append(getattr(self._model, join_field))
+            if join_field not in self._joins.keys():
+                self._joins[join_field] = getattr(self._model, join_field)
 
     def _apply_joins(self, q):
-        for join in self._joins:
+        for _, join in self._joins.items():
             q = q.join(join)
 
         return q
@@ -109,7 +115,6 @@ class StatsGetter(object):
                 raise ValueError('invalid field operation for field: ' + field)
 
         if '.' in col_request:
-            print('field = ' + field)
             relationship_field = field.split('.')[0]
             field = field.split('.')[1]
             relationship_model = getattr(self._model, relationship_field).property.mapper.class_
@@ -209,7 +214,7 @@ class StatsGetter(object):
         except ValueError:
             raise ValueError('problem with group by and/or filters.  check api request.')
 
-        if len(self._joins) > 0:
+        if self._joins != {}:
             q = self._apply_joins(q)
 
         q = self._apply_group_bys_to_query(q)

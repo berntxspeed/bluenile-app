@@ -252,9 +252,11 @@ class DataGrapher {
                 { name: 'Equals', value: 'eq' },
                 { name: 'Not Equals', value: 'neq' },
                 { name: 'Contains', value: 'contains' },
+                { name: 'Not Contains', value: 'not-contains' },
                 { name: 'Is Empty', value: 'isnull' },
                 { name: 'Is Not Empty', value: 'notnull' },
-                { name: 'In This List', value: 'in' }
+                { name: 'In This List', value: 'in' },
+                { name: 'Not In This List', value: 'not-in' }
             ],
             numeric: [
                 { name: 'Equals', value: 'eq' },
@@ -266,7 +268,8 @@ class DataGrapher {
                 { name: 'Less Than', value: 'lt' },
                 { name: 'Less Than or Equal To', value: 'lte' },
                 { name: 'Between', value: 'between' },
-                { name: 'In This List', value: 'in' }
+                { name: 'In This List', value: 'in' },
+                { name: 'Not In This List', value: 'not-in' }
             ],
             datetime: [
                 { name: 'Equals', value: 'eq' },
@@ -613,7 +616,7 @@ class DataGrapher {
                     $(self).parent().find('#limit-by-val2').attr('hidden', 'hidden');
                 }
 
-                if (limitByOp == 'in') {
+                if (limitByOp == 'in' || limitByOp == 'not-in') {
                     $(self).parent().find('#limit-by-val1').replaceWith('<textarea id="limit-by-val1" placeholder="separate values with comma"></textarea>');
                 } else {
                     $(self).parent().find('#limit-by-val1').replaceWith('<input type="'+typeOfLimitByField+'" id="limit-by-val1"/>');
@@ -684,7 +687,8 @@ class DataGrapher {
                 el.parent().find(bindings.limitByVal2).attr('hidden', 'hidden');
             }
 
-            if (limitByOp == 'in') {
+            console.log('limitByOp = ' + limitByOp);
+            if (limitByOp == 'in' || limitByOp == 'not-in') {
                 el.parent().find(bindings.limitByVal1).replaceWith('<textarea id="09823409824" placeholder="separate values with comma"></textarea>');
             } else {
                 el.parent().find(bindings.limitByVal1).replaceWith('<input id="09823409824" type="'+typeOfLimitByField+'" />');
@@ -792,6 +796,8 @@ class DataGrapher {
                         filters.push({ "name": filterColumn.name, "op": "neq", "val": filterVal1of2 });
                     } else if (filterOp == 'contains') {
                         filters.push({ "name": filterColumn.name, "op": "contains", "val": filterVal1of2 });
+                    } else if (filterOp == 'not-contains') {
+                        filters.push({ "name": filterColumn.name, "op": "not-contains", "val": filterVal1of2 });
                     } else if (filterOp == 'isnull') {
                         filters.push({ "name": filterColumn.name, "op": "isnull", "val": filterVal1of2 });
                     } else if (filterOp == 'notnull') {
@@ -808,7 +814,9 @@ class DataGrapher {
                         filters.push({ "name": filterColumn.name, "op": "gt", "val": filterVal1of2 });
                         filters.push({ "name": filterColumn.name, "op": "lt", "val": filterVal2of2 });
                     } else if (filterOp == 'in') {
-                        filters.push({ "name": filterColumn.name, "op": "in", "val": "["+filterVal1of2+"]" });
+                        filters.push({ "name": filterColumn.name, "op": "in", "val": filterVal1of2 });
+                    } else if (filterOp == 'not-in') {
+                        filters.push({ "name": filterColumn.name, "op": "not-in", "val": filterVal1of2 });
                     }
                 }
             });
@@ -818,6 +826,10 @@ class DataGrapher {
             var requestMethod;
 
             if (action == 'update') {
+                // render loading gif
+                $(elDrillDownGraph).html('<img src="/img/loader.gif" width="50px" style="display: block; margin: 0 auto;"/>');
+
+                //request data and render graph on response
                 requestMethod = 'POST';
                 endpoint = '/metrics-grouped-by'+'/'+dataSelect+'/'+dataGrouping;
                 successFunc = function(data) {
@@ -872,6 +884,9 @@ class DataGrapher {
         };
 
         var loadReportHandler = function(event, el, callback){
+
+            // render loading gif
+            $(elDrillDownGraph).html('<img src="/img/loader.gif" width="50px" style="display: block; margin: 0 auto;"/>');
 
             reportId = $(this).val();
             reportName = $(this).find('option:selected').text();
