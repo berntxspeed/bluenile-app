@@ -33,10 +33,12 @@ class StatsGetter(object):
 
         self._allowable_aggregate_ops = {
             'sum': lambda field: func.sum(field),
+            'sum-distinct': lambda field: func.sum(field.distinct()),
             'average': lambda field: func.avg(field),
             'max': lambda field: func.max(field),
             'min': lambda field: func.min(field),
-            'count': lambda field: func.count(field)
+            'count': lambda field: func.count(field),
+            'count-distinct': lambda field: func.count(field.distinct())
         }
 
         self._allowable_field_operations = {
@@ -144,6 +146,7 @@ class StatsGetter(object):
             for grp_by in self._grp_by:
                 column = self._get_column(grp_by)
                 q = q.add_columns(column).group_by(column)
+
             return q
 
     def _apply_aggregate_calculation(self, q):
@@ -217,8 +220,8 @@ class StatsGetter(object):
         if self._joins != {}:
             q = self._apply_joins(q)
 
-        q = self._apply_group_bys_to_query(q)
         q = self._apply_filters_to_query(q)
+        q = self._apply_group_bys_to_query(q)
         q = self._apply_aggregate_calculation(q)
 
         return q.all()

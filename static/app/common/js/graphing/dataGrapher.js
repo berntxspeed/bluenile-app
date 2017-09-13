@@ -181,6 +181,18 @@ class DataGrapher {
             EmlClick: [
                 { grouping1: '_day', grouping2: '_hour' },
                 { grouping1: 'AreaCode', grouping2: null }
+            ],
+            Customer: [
+                { grouping1: 'eml_opens.AreaCode', grouping2: null },
+                { grouping1: 'eml_opens._day', grouping2: 'eml_opens._hour' },
+                { grouping1: 'eml_clicks.AreaCode', grouping2: null },
+                { grouping1: 'eml_clicks._day', grouping2: 'eml_clicks._hour' }
+            ],
+            SendJob: [
+                { grouping1: 'eml_opens.AreaCode', grouping2: null },
+                { grouping1: 'eml_opens._day', grouping2: 'eml_opens._hour' },
+                { grouping1: 'eml_clicks.AreaCode', grouping2: null },
+                { grouping1: 'eml_clicks._day', grouping2: 'eml_clicks._hour' }
             ]
 
         };
@@ -231,10 +243,13 @@ class DataGrapher {
                 'dualGrouping': {
                     'tbd': []
                 },
-                'AreaCode': [
-                    { name: 'Map Graph', value: 'map-graph' }
-                ],
                 '_day_hour': [
+                    { name: 'Day Hour Heatmap', value: 'day-hour' }
+                ],
+                'eml_opens._dayeml_opens._hour' : [
+                    { name: 'Day Hour Heatmap', value: 'day-hour' }
+                ],
+                'eml_clicks._dayeml_clicks._hour': [
                     { name: 'Day Hour Heatmap', value: 'day-hour' }
                 ],
                 'SentTime:date': [
@@ -242,6 +257,15 @@ class DataGrapher {
                 ],
                 'SchedTime:date': [
                     { name: 'Calendar Graph', value: 'calendar' }
+                ],
+                'AreaCode': [
+                    { name: 'Map Graph', value: 'map-graph' }
+                ],
+                'eml_opens.AreaCode': [
+                    { name: 'Map Graph', value: 'map-graph' }
+                ],
+                'eml_clicks.AreaCode': [
+                    { name: 'Map Graph', value: 'map-graph' }
                 ]
             }
         };
@@ -777,7 +801,7 @@ class DataGrapher {
                         return alert('must select from "Limit By Operation"');
                     }
                     if (!filterVal1of2) {
-                        if (filterOp != 'notnull' && filterOp != 'isnull'){
+                        if (filterOp != 'notnull' && filterOp != 'isnull' && filterOp != 'distinct'){
                             return alert('must select from "Limit By Value (1 of 2)"');
                         }
                     }
@@ -817,6 +841,8 @@ class DataGrapher {
                         filters.push({ "name": filterColumn.name, "op": "in", "val": filterVal1of2 });
                     } else if (filterOp == 'not-in') {
                         filters.push({ "name": filterColumn.name, "op": "not-in", "val": filterVal1of2 });
+                    } else if (filterOp == 'distinct') {
+                        filters.push({ "name": filterColumn.name, "op": "distinct", "val": null });
                     }
                 }
             });
@@ -1036,7 +1062,7 @@ class DataGrapher {
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
         } else if(graphType == 'calendar'){
-            $(bindTo).append('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n    \ndiv.tooltip {\n    position: absolute;\n    text-align: center;\n    width: 120px;\n    height: 35px;\n    padding: 2px;\n    font: 12px sans-serif;\n    background: lightsteelblue;\n    border: 0px;\n    border-radius: 8px;\n    pointer-events: none;\n}\n    \n</style>\n<svg class="legend" width="100%" height="80"></svg>\n<svg class="canvas" width="100%" height="600"></svg>');
+            $(bindTo).append('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n    \ndiv.tooltip {\n    position: absolute;\n    text-align: center;\n    width: 120px;\n    height: 35px;\n    padding: 2px;\n    font: 12px sans-serif;\n    background: lightsteelblue;\n    border: 0px;\n    border-radius: 8px;\n    pointer-events: none;\n}\n    \n</style>\n<svg class="legend" width="100%" height="80"></svg>\n<div class="canvas" width="100%" height="600"></div>');
             var calendarGraph = new CalendarGraph();
             calendarGraph.init(bindTo, data);
             return;

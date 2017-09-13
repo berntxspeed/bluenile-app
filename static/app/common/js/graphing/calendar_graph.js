@@ -3,10 +3,11 @@ class CalendarGraph {
     constructor(){}
 
     init (bindTo, rawData) {
-        var width = 960,
-            height = 136,
+        var width = 1000,
+            height = 180,
             cellSize = 17,
-            offset = 30,
+            hOffset = 30,
+            vOffset = 30,
             legendElementWidth = cellSize * 2,
             title = ['Legend', ''],
             lineheight = 14,
@@ -40,13 +41,13 @@ class CalendarGraph {
             .domain([dataMin, dataMax])
             .range(colors);
         var ranges = color.range().length;
-        var x = d3.scale.linear()
+        var x = d3v4.scaleLinear()
             .domain([dataMin, dataMax]);
+        window.color = color;
 
-        var svg = d3v4.select(bindTo + " svg.canvas")
-          //.data(d3v4.range(2016, 2018)) //not inclusive of the high number
-          // auto-scale to only show years for which there is data
-          .data(d3v4.range(
+        var svg = d3v4.select(bindTo + " div.canvas")
+            .selectAll("svg")
+            .data(d3v4.range(
               d3v4.min(rawData, function (d) {
                   var d = new Date(d[0]);
                   return d.getFullYear();
@@ -55,8 +56,11 @@ class CalendarGraph {
                   var d = new Date(d[0]);
                   return d.getFullYear();
               }) + 1))
-          .append("g")
-            .attr("transform", "translate(" + (offset + (width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")");
+            .enter().append("svg")
+                .attr("width", width)
+                .attr("height", height)
+            .append("g")
+                .attr("transform", "translate(" + (hOffset + (width - cellSize * 53) / 2) + "," +((height - cellSize * 7 - 1) - vOffset) + ")");
 
         svg.append("text")
             .attr("transform", "translate(-35," + cellSize * 3.5 + ")")//rotate(-90)")
@@ -163,8 +167,8 @@ class CalendarGraph {
         li.selectAll("rect")
             .data(color.range().map(function(colour) {
               var d = color.invertExtent(colour);
-              if (d[0] == null) d[0] = x.domain()[0];
-              if (d[1] == null) d[1] = x.domain()[1];
+              if (d[0] == null) d[0] = color.domain()[0];
+              if (d[1] == null) d[1] = color.domain()[1];
               return d;
             }))
             .enter().append("rect")
@@ -174,11 +178,16 @@ class CalendarGraph {
             .style("fill", function(d) { return color(d[0]); });
 
         li.selectAll("text")
-            .data(qrange(color.domain()[1], ranges))
+            .data(color.range().map(function(colour) {
+              var d = color.invertExtent(colour);
+              if (d[0] == null) d[0] = color.domain()[0];
+              if (d[1] == null) d[1] = color.domain()[1];
+              return d;
+            }))
             .enter().append("text")
             .attr("y", 30)
             .attr("x", function(d, i) { return (i)*boxwidth; })
-            .text(function(d) { return formatValue(d); });
+            .text(function(d) { return formatValue(d[0]); });
 
 
         function pathMonth(t0) {
