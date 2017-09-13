@@ -11,16 +11,17 @@ from tempfile import NamedTemporaryFile
 from shutil import copyfileobj
 from os import remove
 
-from .classes.esp_push import EmlPush, ImgPush
-from ...common.models.user_models import Upload, Template
+from server.app.emails.services.classes.esp_push import EmlPush, ImgPush
+from server.app.common.models.user_models import Upload, Template
 
 
 class EmailService(object):
 
-    def __init__(self, config, db_session, logger):
+    def __init__(self, config, logger, mongo, db_session):
         self.config = config
-        self.db_session = db_session
         self.logger = logger
+        self.mongo = mongo
+        self.db_session = db_session
 
     @staticmethod
     def validate_on_submit(request, form):
@@ -141,7 +142,8 @@ class EmailService(object):
             if key is None:
                 raise ValueError('name cannot be empty')
             print('pushing email with key: ' + key + ' to SFMC...')
-            eml = EmlPush(self.db_session, key)
+
+            eml = EmlPush(self.config, self.mongo, self.db_session, key)
             resp = eml.sync_to_ems()
             return jsonify(results=resp.message), resp.code
         else:

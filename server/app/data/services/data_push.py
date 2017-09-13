@@ -58,6 +58,7 @@ class UserDataPushService:
                         self._models[table],
                         self.mongo,
                         self.user_api_config[1])
+
         resp = dp.sync_table()
         if resp and hasattr(resp, 'code'):
             self.logger.info('sync result:' + str(resp.code))

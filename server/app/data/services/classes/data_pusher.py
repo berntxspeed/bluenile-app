@@ -6,7 +6,6 @@ from FuelSDK import ET_Client, ET_DataExtension, ET_DataExtension_Row
 
 
 class DataPusher(object):
-
     def __init__(self, config, logger, db_session, model, mongo, user_api_config):
         self.mongo = mongo
         self.config = config
