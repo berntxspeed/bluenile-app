@@ -89,7 +89,8 @@ class Purchase(user_db.Model):
 
 @user_db.event.listens_for(Purchase, 'before_insert', retval=True)
 def on_update(mapper, connection, target):
-    target.created_at = datetime.datetime.utcnow()
+    if not hasattr(target, 'created_at'):
+        target.created_at = datetime.datetime.utcnow()
     return target
 
 
