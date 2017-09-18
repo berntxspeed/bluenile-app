@@ -21,7 +21,7 @@ logger = logging.getLogger('alembic.env')
 # target_metadata = mymodel.Base.metadata
 from flask import current_app
 
-all_accounts = current_app.config.get("SQLALCHEMY_BINDS")
+all_accounts = current_app.config.get("SQLALCHEMY_DB_ACCOUNTS")
 random_account = all_accounts.popitem()[-1]
 config.set_main_option('sqlalchemy.url', random_account)
 

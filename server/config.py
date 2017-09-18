@@ -107,7 +107,7 @@ class Config(object):
         return binds
 
     # Database Migration, mockes SQLALCHEMY_BINDS
-    SQLALCHEMY_BINDS = get_sqlalchemy_binds.__func__()
+    SQLALCHEMY_DB_ACCOUNTS = get_sqlalchemy_binds.__func__()
 
     @classmethod
     def init_app(cls, app):

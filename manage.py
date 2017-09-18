@@ -66,8 +66,8 @@ def reset_alembic_version():
 
     # alembic_version tables in each catalog
     for an_account_db in account_dbs:
-        engine = create_engine(an_account_db)
         try:
+            engine = create_engine(an_account_db)
             engine.execute("delete from alembic_version")
             print(f'SUCCESS: Cleared alembic_version table for {an_account_db}')
         except Exception:
