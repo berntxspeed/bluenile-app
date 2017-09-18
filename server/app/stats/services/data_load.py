@@ -962,10 +962,10 @@ class DataLoadService(DbService):
     # - up with the ids of the us-10m.v1.json data from D3
     def add_fips_location_data(self, table, city_field=None, state_field=None, dest_fips_code_field=None):
 
-        # how it works: it goes one by one through each FIPS code in the csv file
-        # - and for each, searches the table for any records with that state/city
-        # - and if it finds some, it throws the FIPS code on the field specified and saves back the records
-        # - then moves on to the next
+        # how it works: it loads FIPS codes from CSV file into memory
+        # - then selects <10k records at a time from db that don't have a AreaCode value
+        # - appends fips code to each by looking up from in-memory FIPS lookup
+        # - saves the batch of records to memory and moves on to the next until there are none left
 
 
         filename = 'static/data/fips_codes_website.csv'
