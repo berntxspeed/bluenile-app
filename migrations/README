@@ -6,7 +6,7 @@ DB MIGRATION STEPS:
     by default, any database in the client_accounts table will be migrated
 2. Make sure that the "migrations" folder contains the modified version of env.py
 3. DB migration needs to be initialized only once and is available as part of the application package under "migrations" folder
-    Generally, running "python manage.py db init --multidb" is not required
+    Running "python manage.py db init --multidb" is only required when the first migration is performed or if the migrations folder is discarded
 4. Run "python manage.py db migrate"
 5. Run "python manage.py db upgrade"
 
