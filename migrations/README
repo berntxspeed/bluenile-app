@@ -13,6 +13,9 @@ DB MIGRATION STEPS:
 In the case of adding another client and a corresponding database (which does not contain the alembic_version table),
 one can perform alembic_version table reset for all accounts by running:
     "python manage.py reset_alembic_version"
+If migration fails with "alembic.util.exc.CommandError: Target database is not up to date":
+	rm migrations/versions/*py
+
 
 
 Notes:
