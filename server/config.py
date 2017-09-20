@@ -25,12 +25,6 @@ class Config(object):
     # Used by Flask-Session
     SESSION_TYPE = 'redis'
 
-    # Database
-    # SQLALCHEMY_BINDS = {
-    #     'user_data':    'postgresql://localhost/simple_di_flask_dev',
-    #     'appmeta':      'postgresql://localhost/bluenile',
-    # }
-
     SQLALCHEMY_MIGRATE_REPO = os.path.join(PROJECT_ROOT, '..', 'db_repository')
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     MONGO_URI = os.getenv('MONGODB_URI')
@@ -101,6 +95,19 @@ class Config(object):
             'filepath': os.getenv('LEAD_PERFECTION_FILEPATH')
         }
     }
+    @staticmethod
+    def get_sqlalchemy_binds():
+        from server.app.common.models.system_models import ClientAccount, session_scope
+        binds = {}
+        with session_scope() as session:
+            client_accounts_result = session.query(ClientAccount).all()
+            for an_account in client_accounts_result:
+                binds[an_account.account_name] = an_account.database_uri
+
+        return binds
+
+    # Database Migration, mockes SQLALCHEMY_BINDS
+    SQLALCHEMY_DB_ACCOUNTS = get_sqlalchemy_binds.__func__()
 
     @classmethod
     def init_app(cls, app):
