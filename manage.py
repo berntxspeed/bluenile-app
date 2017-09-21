@@ -53,5 +53,27 @@ def init_db():
     account_service.execute()
 
 
+@manager.command
+def reset_alembic_version():
+    from sqlalchemy import create_engine
+
+    # get db uris for all accounts
+    account_dbs = []
+    from server.app.common.models.system_models import ClientAccount, session_scope
+    with session_scope() as session:
+        client_accounts_result = session.query(ClientAccount).all()
+        for an_account in client_accounts_result:
+            account_dbs.append(an_account.database_uri)
+
+    # alembic_version tables in each catalog
+    for an_account_db in account_dbs:
+        try:
+            engine = create_engine(an_account_db)
+            engine.execute("delete from alembic_version")
+            print(f'SUCCESS: Cleared alembic_version table for {an_account_db}')
+        except Exception:
+            print(f'FAILURE: Could not clear alembic_version table for {an_account_db}')
+            print()
+
 if __name__ == '__main__':
     manager.run()
