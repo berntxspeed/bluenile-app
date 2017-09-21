@@ -37,7 +37,7 @@ def make_shell_context():
 manager.add_command('shell', Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
 manager.add_command('runserver', Server(host='0.0.0.0',
-                                        port=5001,
+                                        port=5000,
                                         extra_files=['server/asset-config.yaml'],
                                         ))
 
@@ -70,9 +70,9 @@ def reset_alembic_version():
         try:
             engine = create_engine(an_account_db)
             engine.execute("delete from alembic_version")
-            print('SUCCESS: Cleared alembic_version table for {}'.format(an_account_db))
+            print(f'SUCCESS: Cleared alembic_version table for {an_account_db}')
         except Exception:
-            print('FAILURE: Could not clear alembic_version table for {}'.format(an_account_db))
+            print(f'FAILURE: Could not clear alembic_version table for {an_account_db}')
             print()
 
 if __name__ == '__main__':
