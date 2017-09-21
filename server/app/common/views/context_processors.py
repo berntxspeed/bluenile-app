@@ -6,7 +6,6 @@ from ...main import main
 
 def csrf_token():
     from flask import session
-    from flask.ext.login import current_user
     import uuid
     if not session.get('_csrf_token'):
         session['_csrf_token'] = uuid.uuid4().hex

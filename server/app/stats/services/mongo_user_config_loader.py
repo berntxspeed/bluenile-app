@@ -28,7 +28,10 @@ VENDOR_API_TO_TABLES_MAP = {
     'bigcommerce': ['customer', 'purchase'],
     'stripe': ['customer'],
     'x2crm': ['customer'],
-    'zoho': ['customer']
+    'zoho': ['customer'],
+    # generic name for a db record
+    'mc_email_data': [''],
+    'mc_journeys': ['']
 }
 
 
@@ -63,7 +66,7 @@ class MongoDataJobConfigLoader(object):
             if a_dl_job.get('periodic_sync'):
                 if a_dl_job['periodic_sync'] == '1':
                     a_dl_job['frequency'] = str(SYNC_MAP[a_dl_job['periodic_sync']]
-                                               .replace('X', a_dl_job.get('hourly_frequency', 'X')))
+                                                .replace('X', a_dl_job.get('hourly_frequency', 'X')))
                 else:
                     a_dl_job['frequency'] = str(SYNC_MAP[a_dl_job['periodic_sync']])
 
@@ -88,7 +91,7 @@ class MongoDataJobConfigLoader(object):
 
     def get_data_load_config_by_type(self, job_type):
         try:
-            data_load_config = self._collection.find( { self._primary_key: job_type } , { '_id': 0 } )[0]
+            data_load_config = self._collection.find({self._primary_key: job_type}, {'_id': 0})[0]
             return True, data_load_config
         except Exception as e:
             return False, 'Getting Data Load Config Failed: {0}'.format(str(e))
@@ -103,11 +106,16 @@ class MongoDataJobConfigLoader(object):
         return self.save_data_load_config(load_job_config, update=True)
 
     def create_default_config(self, data_source):
-        for a_data_type in VENDOR_API_TO_TABLES_MAP.get(data_source, []):
+        if data_source.startswith('mc_'):
             default_config = dict(data_source=data_source)
-            default_config['data_type'] = a_data_type
-            default_config['job_type'] = '{0}_{1}s'.format(data_source, a_data_type)
+            default_config['job_type'] = data_source
             self.save_data_load_config(default_config)
+        else:
+            for a_data_type in VENDOR_API_TO_TABLES_MAP.get(data_source, []):
+                default_config = dict(data_source=data_source)
+                default_config['data_type'] = a_data_type
+                default_config['job_type'] = '{0}_{1}s'.format(data_source, a_data_type)
+                self.save_data_load_config(default_config)
 
 
 class MongoUserApiConfigLoader(object):
@@ -116,6 +124,7 @@ class MongoUserApiConfigLoader(object):
         self._collection_name = 'user_api_config'
         self._primary_key = 'data_source'
         self._user_config = user_config
+        self._encrypted_fields = ['domain', 'token', 'secret', 'id']
 
         user_account = self._user_config and self._user_config.get('account_name')
         if user_account:
@@ -143,7 +152,7 @@ class MongoUserApiConfigLoader(object):
         try:
             for vendor_config in self._collection.find({}, {'_id': 0}).sort('timestamp', -1):
                 for k, v in vendor_config.items():
-                    if k in ['domain', 'token', 'secret', 'id']:
+                    if k in self._encrypted_fields:
                         vendor_config[k] = MongoUserApiConfigLoader.decrypt(v)
                 all_vendors.append(vendor_config)
 
@@ -157,7 +166,7 @@ class MongoUserApiConfigLoader(object):
             return False, 'Cannot Save Empty Api Config'
         if not update:
             for k, v in vendor_config.items():
-                if k in ['domain', 'token', 'secret', 'id']:
+                if k in self._encrypted_fields:
                     vendor_config[k] = MongoUserApiConfigLoader.encrypt(v)
 
             vendor_config['timestamp'] = str(datetime.datetime.now())
@@ -172,7 +181,7 @@ class MongoUserApiConfigLoader(object):
 
     def get_data_config_by_source(self, data_source):
         try:
-            data_config = self._collection.find( { self._primary_key: data_source } , { '_id': 0 } )[0]
+            data_config = self._collection.find({self._primary_key: data_source}, {'_id': 0})[0]
             return True, data_config
         except Exception as e:
             return False, 'Getting Data Config Failed: {0}'.format(str(e))
@@ -180,7 +189,8 @@ class MongoUserApiConfigLoader(object):
     def remove_api_config_by_source(self, data_source):
         try:
             self._collection.remove({self._primary_key: data_source})
-            return MongoDataJobConfigLoader(self._db, self._user_config).remove_data_load_config_by_data_source(data_source)
+            return MongoDataJobConfigLoader(self._db, self._user_config)\
+                .remove_data_load_config_by_data_source(data_source)
         except Exception as e:
             return False, 'Removing Data Load Config Failed: {0}'.format(str(e))
 

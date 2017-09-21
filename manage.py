@@ -9,7 +9,7 @@ from flask_migrate import Migrate, MigrateCommand
 from server.app import create_injector, create_app, create_event_mgr
 from celery_source import provide_celery
 from server.app.common import models
-from server.app.injector_keys import Config, SQLAlchemy, MongoDB
+from server.app.injector_keys import Config, MongoDB, SQLAlchemy
 
 app = create_app()
 injector = create_injector(app)
@@ -26,7 +26,6 @@ def make_shell_context():
     return {
         'app': app,
         'config': app.config,
-        'db': db,
         'mongo': mongo,
         'injector': injector,
         'models': models,
@@ -37,8 +36,10 @@ def make_shell_context():
 
 manager.add_command('shell', Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
-manager.add_command('runserver', Server(host='0.0.0.0', port=5000,
-                                        extra_files=['server/asset-config.yaml'],))
+manager.add_command('runserver', Server(host='0.0.0.0',
+                                        port=5000,
+                                        extra_files=['server/asset-config.yaml'],
+                                        ))
 
 
 @manager.command

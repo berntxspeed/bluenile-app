@@ -1,0 +1,21 @@
+### Connect to your Linux instance using SSH:
+    ssh -i /path/to/compute-key-pair.pem ec2-user@ec2-18-220-170-10.us-east-2.compute.amazonaws.com
+
+### This outlines a suggested procedure to install packages for EC2 compute instance on AWS
+### EC2 instance is used to migrate large amounts of DB data
+
+### Missing packages could be identified/installed by running the following:
+    sudo yum list <search_query>
+    sudo yum install <package>
+
+### Example of installing gcc
+    sudo yum list gcc*
+    sudo yum install gcc48.x86_64
+
+### Example of installing postgresql libs
+    sudo yum list postgresql*|grep libs
+    sudo yum install postgresql95-libs.x86_64
+
+Start with running the Dev Tools package:
+    sudo yum groupinstall "Development Tools"
+
