@@ -70,9 +70,9 @@ def reset_alembic_version():
         try:
             engine = create_engine(an_account_db)
             engine.execute("delete from alembic_version")
-            print(f'SUCCESS: Cleared alembic_version table for {an_account_db}')
+            print('SUCCESS: Cleared alembic_version table for {}'.format(an_account_db))
         except Exception:
-            print(f'FAILURE: Could not clear alembic_version table for {an_account_db}')
+            print('FAILURE: Could not clear alembic_version table for {}'.format(an_account_db))
             print()
 
 if __name__ == '__main__':
