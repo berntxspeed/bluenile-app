@@ -41,11 +41,11 @@ def task_admin(mongo, user_config):
     return dict(status=status, tasks=tasks, user=user)
 
 
-@inject(config=Config)
+@inject(config=Config, mongo=MongoDB)
 @taskadmin.route('/create-account', methods=['POST'])
-def create_account(config):
+def create_account(config, mongo):
     account_config = request.json
-    service = AccountCreationService(account_config['account'], account_config['username'], config)
+    service = AccountCreationService(account_config['account'], account_config['username'], config, mongo)
     try:
         service.execute()
         if current_user.email == account_config['username'] and account_config['account'] not in session['accounts']:

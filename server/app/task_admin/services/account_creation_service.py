@@ -2,12 +2,15 @@ from server.app.common.models.system_models import session_scope
 from server.app.common.models.system_models import ClientAccount, UserPermissions
 from server.app.common.models.user_models import user_db
 
+from server.app.stats.services.mongo_user_config_loader import MongoDataJobConfigLoader
+
 
 class AccountCreationService:
-    def __init__(self, account_name, admin_user, config=None):
+    def __init__(self, account_name, admin_user, config=None, mongo=None):
         self.admin_user = admin_user
         self.account_name = account_name
         self.config = config
+        self.mongo = mongo
 
     def execute(self):
         userdb_uri = self.create_postgres(self.account_name, user_db)
@@ -70,9 +73,9 @@ class AccountCreationService:
             print(str(ex))
             return None
 
-    @staticmethod
-    def create_mongo(name):
-        return True
+    def create_mongo(self, account_name):
+        if self.mongo is not None:
+            MongoDataJobConfigLoader(self.mongo.db, {'account_name': account_name}).create_default_config_set()
 
     def get_postgres_uri(self, account_name):
         return self.config.get('AWS_DB_URI_PREFIX') + account_name

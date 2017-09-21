@@ -105,7 +105,7 @@ class MongoDataJobConfigLoader(object):
         load_job_config['last_run'] = last_load
         return self.save_data_load_config(load_job_config, update=True)
 
-    def create_default_config(self, data_source):
+    def create_default_config_for_vendor(self, data_source):
         if data_source.startswith('mc_'):
             default_config = dict(data_source=data_source)
             default_config['job_type'] = data_source
@@ -116,6 +116,13 @@ class MongoDataJobConfigLoader(object):
                 default_config['data_type'] = a_data_type
                 default_config['job_type'] = '{0}_{1}s'.format(data_source, a_data_type)
                 self.save_data_load_config(default_config)
+
+    def create_default_config_set(self):
+        from server.app.stats.services.classes.stats_utils import DEFAULT_LOAD_JOBS
+        for a_job_type in DEFAULT_LOAD_JOBS:
+            default_config = dict(data_source='')
+            default_config['job_type'] = a_job_type
+            self.save_data_load_config(default_config)
 
 
 class MongoUserApiConfigLoader(object):
@@ -170,7 +177,8 @@ class MongoUserApiConfigLoader(object):
                     vendor_config[k] = MongoUserApiConfigLoader.encrypt(v)
 
             vendor_config['timestamp'] = str(datetime.datetime.now())
-            MongoDataJobConfigLoader(self._db, self._user_config).create_default_config(vendor_config['data_source'])
+            MongoDataJobConfigLoader(self._db, self._user_config).\
+                        create_default_config_for_vendor(vendor_config['data_source'])
 
         item_loader = MongoDataLoader(self._collection, [self._primary_key])
         try:

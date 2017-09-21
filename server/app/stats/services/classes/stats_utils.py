@@ -1,5 +1,9 @@
 import datetime
 
+from server.app.stats.workers import basic_load_task, load_mc_email_data, load_mc_journeys, \
+    load_web_tracking, load_lead_perfection, add_fips_location_emlopen, add_fips_location_emlclick
+from server.app.data.workers import sync_data_to_mc
+
 SYNC_SCHED_MAP = {
     "Never": "0",
     "Every_x_hours": "1",
@@ -12,10 +16,7 @@ SYNC_SCHED_MAP = {
     "Yearly": "8"
 }
 
-
-from server.app.stats.workers import basic_load_task, load_mc_email_data, load_mc_journeys, \
-    load_web_tracking, load_lead_perfection, add_fips_location_emlopen, add_fips_location_emlclick
-from server.app.data.workers import sync_data_to_mc
+DEFAULT_LOAD_JOBS = ['add_fips_location_emlopen', 'add_fips_location_emlclick']
 
 DATA_JOBS_LOAD_MAP = {'x2crm_customers': {
                                             'load_func': basic_load_task,

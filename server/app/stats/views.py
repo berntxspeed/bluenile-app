@@ -8,7 +8,7 @@ from injector import inject
 
 from . import stats
 from .injector_keys import JbStatsServ, GetStatsServ
-from .services.mongo_user_config_loader import MongoUserApiConfigLoader, MongoDataJobConfigLoader
+from server.app.stats.services.mongo_user_config_loader import MongoUserApiConfigLoader, MongoDataJobConfigLoader
 from server.app.injector_keys import MongoDB, UserSessionConfig
 from ..common.views.decorators import templated
 from ..data_builder.services.query_service import SqlQueryService
@@ -101,7 +101,7 @@ def get_data_load_jobs(mongo, user_config):
     status, data_load_jobs = MongoDataJobConfigLoader(mongo.db, user_config).get_data_load_jobs()
     columns = [{
                     'field': 'job_type_full',
-                    'title': 'Data Load Type'
+                    'title': 'Job Type'
                 },
                 {
                     'field': 'frequency',
