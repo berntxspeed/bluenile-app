@@ -87,6 +87,7 @@
             'db_field_map': {'purchase_id':'id',
                              'customer_id':'customer.id',
                              'created_at':'created_at',
+                             'updated_at':'updated_at',
                              'price':'total_price',
                              'is_paid':'financial_status',
                              'referring_site':'referring_site',
@@ -110,6 +111,7 @@
                              'lname':'last_name',
                              'marketing_allowed':'accepts_marketing',
                              'created_at':'created_at',
+                             'updated_at':'updated_at',
                              'purchase_count':'orders_count',
                              'total_spent_so_far':'total_spent',
                             }
