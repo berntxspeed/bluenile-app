@@ -1,0 +1,67 @@
+MongoDB & Data Load
+Application’s MongoDB comprises the following N sets of collections:
+
+data_builder_qs_ACCOUNT_NAME
+journeys_ACCOUNT_NAME
+celery_tasks_ACCOUNT_NAME
+user_api_config_ACCOUNT_NAME
+data_load_jobs_ACCOUNT_NAME
+
+where N is the number of active accounts.
+
+“Data Load” uses the last two collections to store:
+	user credentials to access data vendors (user_api_config)
+	data load jobs settings (data_load_jobs)
+
+When account admin adds a new data source to a particular account, a record is added to user_api_config collections containing login credentials to access data vendor’s API. At the same time, the relevant record(s) are added to the data_load_jobs collection. Those records determine the nature of the data to be loaded, as well as the frequency of a specific Data Load job(defaults to never).
+For instance, in case of adding Shopify as the source of Data, the following record is added to the user_api_config collection(note: ‘domain’, ‘id’, and ‘secret’ fields are encrypted).
+
+{ 'data_source': 'shopify',
+ 'domain': 'gAAAAABZfJsMMNIsLU4aG0kT_OvEH2WeVjSIcNruTeLKT3irho-GZn730ABvnul0hi8ngzIevRzmIAm5MfauRns_F_Vx7D7TZjgBdUXm7y_Yr-85Cquiar4=',
+ 'id': 'gAAAAABZfJsMhGi2Muca_QQSnLAV4O1dkqOmHzY0Inajrzim03Pt5EqnFhzghre8ZmXfzEUQ_E-xLJXtn5E2eIdUXc6wW4zuV3kI4xm4Q5SCc_TyOfsyASayc_jYBSA5gAvIU-DQv77m',
+ 'secret': 'gAAAAABZfJsMUN-H9_Q-0EV4quJ8181grv06ulCgMLCW5EPiXcZ-3zokD8OC6lsiOigh8jj2EoSEi37cI7jGBzIwBwd0iOA2sCrJQCLVbua9spW1vhJ6NNJs8yDX75p_QfCBVQoCd_hb',
+ 'timestamp': '2017-07-29 10:26:20.308068'}
+
+Simultaneously, two records are added to data_load_jobs collection: one corresponding to “Shopify Customers” and another - to “Shopify Purchases.” This allows the Data Load jobs to be scheduled separately and independently from each other.
+
+Note, that api_config.yml complements user_api_config collection and provides a universal metadata for Data Load jobs, such as corresponding db_field_map(s), as well as immutable parameters for API calls for the corresponding Data Load jobs, e.g.:
+'shopify': {
+    'headers': {'Content-Type': 'application/json'},
+    'params': null,
+    'purchase': {
+        'pagination': {
+          'endpoint': '/admin/orders.json?limit=250=&page=',
+          'count_endpoint': '/admin/orders/count.json',
+          'count_data_key': 'count',
+          'records_limit': 250,
+        },
+        'primary_keys': ['purchase_id'],
+        'json_data_keys': 'orders',
+        'db_field_map': {'purchase_id':'id',
+                         'customer_id':'customer.id',
+                         'created_at':'created_at',
+                         'updated_at':'updated_at',
+                         'price':'total_price',
+                         'is_paid':'financial_status',
+                         'referring_site':'referring_site',
+                         'landing_site':'landing_site',
+                         'browser_ip':'browser_ip',
+                         'user_agent':'client_details.user_agent'
+                        }
+    },
+    ...
+
+'fuelsdk_config':{
+ 'default_wsdl': 'https://webservice.s7.exacttarget.com/etframework.wsdl',
+ 'auth_url': 'https://auth.exacttargetapis.com/v1/requestToken?legacy=1'
+}
+
+Elimination of Environment Variables:
+This is done via the combination of defining Account specific Data Load parameters On Data Manager page
+(“Manage Data Sources” —> “Add Source” —> “Marketing Cloud Journeys”)
+
+FUELSDK_CLIENT_ID:              pmbrqffimjnc2p9hfdnvg1sn
+FUELSDK_CLIENT_SECRET:         	R1HWMpHIpzqx0l2vp9glolND
+
+and moving general (not account-specific) parameters to api_config.yml, e.g.
+FUELSDK_AUTH_URL              	https://auth.exacttargetapis.com/v1/requestToken?legacy=1
