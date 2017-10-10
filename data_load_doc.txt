@@ -1,19 +1,24 @@
 MongoDB & Data Load
-Application’s MongoDB comprises the following N sets of collections:
+Application’s MongoDB comprises the following N sets of collections corresponding to the following application modules:
 
-data_builder_qs_ACCOUNT_NAME
-journeys_ACCOUNT_NAME
-celery_tasks_ACCOUNT_NAME
-user_api_config_ACCOUNT_NAME
-data_load_jobs_ACCOUNT_NAME
+Data Builder:   data_builder_qs_ACCOUNT_NAME
+Journeys:       journeys_ACCOUNT_NAME
+Admin Page:     celery_tasks_ACCOUNT_NAME
+Data Load:      user_api_config_ACCOUNT_NAME
+Data Load:      data_load_jobs_ACCOUNT_NAME
 
-where N is the number of active accounts.
+    ,where N is the number of active accounts.
 
-“Data Load” uses the last two collections to store:
-	user credentials to access data vendors (user_api_config)
-	data load jobs settings (data_load_jobs)
+“Data Load” uses the last two collections to store the following data:
+	-user credentials to access data vendor APIs (user_api_config)
+	-data load jobs settings (data_load_jobs)
 
-When account admin adds a new data source to a particular account, a record is added to user_api_config collections containing login credentials to access data vendor’s API. At the same time, the relevant record(s) are added to the data_load_jobs collection. Those records determine the nature of the data to be loaded, as well as the frequency of a specific Data Load job(defaults to never).
+The decision to separate the "Data Load" related documents into distinct collections comes from the different nature of the stored data:
+    -encrypted (and relatively immutable per account) credentials data is stored in user_api_config (one document per data vendor)
+    -non-encrypted (and more dynamic) data related to scheduling of Data Load jobs for a particular "vendor / data type" combination is stored in data_load_jobs.
+There's a one-to-many relationship between a document in user_api_config and documents in data_load_jobs, depending on the number of types of data ( or data models) downloaded from the vendor.
+
+When account admin adds a new data source to a particular account, a record is added to user_api_config collections containing login credentials to access data vendor’s API. At the same time, the relevant record(s) are added to the data_load_jobs collection. Those records determine the nature of the data to be loaded(data model), as well as the frequency of a specific Data Load job(defaults to "never").
 For instance, in case of adding Shopify as the source of Data, the following record is added to the user_api_config collection(note: ‘domain’, ‘id’, and ‘secret’ fields are encrypted).
 
 { 'data_source': 'shopify',
@@ -24,7 +29,8 @@ For instance, in case of adding Shopify as the source of Data, the following rec
 
 Simultaneously, two records are added to data_load_jobs collection: one corresponding to “Shopify Customers” and another - to “Shopify Purchases.” This allows the Data Load jobs to be scheduled separately and independently from each other.
 
-Note, that api_config.yml complements user_api_config collection and provides a universal metadata for Data Load jobs, such as corresponding db_field_map(s), as well as immutable parameters for API calls for the corresponding Data Load jobs, e.g.:
+Note, that api_config.yml complements user_api_config collection and provides a universal metadata for Data Load jobs, such as corresponding db_field_map(s), as well as immutable parameters for API calls for the corresponding Data Load jobs.
+This file holds static data that is relevant to a Data Vendor and is shared between all accounts which define the vendor as the source of data.
 'shopify': {
     'headers': {'Content-Type': 'application/json'},
     'params': null,
