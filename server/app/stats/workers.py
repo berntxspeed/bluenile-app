@@ -231,7 +231,7 @@ def schedule_load_jobs(**kwargs):
             user_configs.append(dict(account_name=an_account.account_name, postgres_uri=an_account.database_uri))
 
     for a_user_config in user_configs:
-        print(f'User_config: {a_user_config}')
+        print('User_config: {a_user_config}')
         with app.app_context():
             mongo = injector.get(MongoDB)
             status, dl_jobs = MongoDataJobConfigLoader(mongo.db, a_user_config).get_data_load_jobs()
