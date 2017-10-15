@@ -7,8 +7,8 @@
 {% block body_content %}
       <div class="row">
           <div class="col-md-6 center-block">
-              <h1>&nbsp;</h1>
-              <h1>Hello {{ user.nickname }},<br><br> Welcome to the BlueNile Application</h1>
+              <h2>&nbsp;</h2>
+              <h2 style="color:#1c4072">Welcome to the Bluenile Application</h2>
               <h2>You are logged in for account {{user.account}}</h2>
               <select class="selectpicker show-tick" id="option" data-width="auto" onchange="leaveChange()">
                   {% for x in session.accounts %}

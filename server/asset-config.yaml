@@ -41,6 +41,8 @@ graphing-js:
           - app/common/js/graphing/dataGrapher.js
           - app/common/js/graphing/day_hour.js
           - app/common/js/graphing/map_graph.js
+          - app/common/js/graphing/calendar_graph.js
+          - app/common/js/graphing/circle_pack_graph.js
           filters: babeljs
           output: gen/graphing.babel.js
 

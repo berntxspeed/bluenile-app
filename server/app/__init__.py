@@ -30,7 +30,7 @@ def create_app():
                 template_folder=config_obj.TEMPLATE_FOLDER,
                 static_url_path=config_obj.STATIC_URL_PATH)
 
-    app.debug = False
+    app.debug = True
     app.config.from_object(config_obj)
     config_obj.init_app(app)
     Session(app)

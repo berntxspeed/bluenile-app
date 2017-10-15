@@ -6,10 +6,8 @@
     <div class="banner banner-jumbotron banner-gray">
         <div class="container">
             <div class="row">
-                <div class="col-md-6 center-block">
-                    <h1>&nbsp;</h1>
-                    <h1>Build Emails to send to your subscribers</h1>
-                </div>
+                <h2>&nbsp;</h2>
+                <h2 style="color:#1c4072">Build Emails to send to your subscribers</h2>
             </div>
         </div>
     </div>
@@ -17,31 +15,41 @@
 
 
 {% block body_content %}
-    <div class="row">
-        <div class="col-md-6 center-block">
-            <div class="well form-well signup-info">
-                <strong>You can either start from a bare template or resume editing an existing email</strong>
+
+    <!--<li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/versafix-1/template-versafix-1.html' }}">Versafix Template</a></li>
+    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/tedc15/template-tedc15.html' }}">Tedc15 Template</a></li>
+    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/tutorial/template-tutorial.html' }}">Tutorial Template</a></li>-->
+
+    <h4 style="display:inline;">Start From Scratch: </h4>
+    <a class="btn btn-info" role="button" href="{{ url_for('emails.editor') + '#static/mosaico/templates/bluenile/template-bluenile.html' }}">
+        GO!
+    </a>
+    <br/><h4>Pickup where you left off:</h4>
+
+    {% for template in templates %}
+
+        {% if loop.index % 4 == 0 %}
+        <div class="row">
+        {% endif %}
+
+            <div class="well col-md-3" height="150px">
+
+                <a href="{{ url_for('emails.editor') + '#' + template.key }}"><strong>{{ template.name }}</strong></a>
+
+                {% if template.created %}
+                <br><strong>created on:</strong> {{ template.created.strftime('%Y-%m-%d %I:%M %p') }}
+                {% endif %}
+
+                {% if template.last_modified %}
+                <br><strong>last edited on:</strong> {{ template.last_modified.strftime('%Y-%m-%d %I:%M %p') }}
+                {% endif %}
+
             </div>
-            <div class="well form-well">
-                <h4>Base Templates:</h4>
-                <ul>
-                    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/bluenile/template-bluenile.html' }}">Start From Scratch</a></li>
-                    <!--<li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/versafix-1/template-versafix-1.html' }}">Versafix Template</a></li>
-                    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/tedc15/template-tedc15.html' }}">Tedc15 Template</a></li>
-                    <li><a href="{{ url_for('emails.editor') + '#static/mosaico/templates/tutorial/template-tutorial.html' }}">Tutorial Template</a></li>-->
-                </ul>
-            </div>
-            <div class="well form-well">
-                <h4>Pickup where you left off:</h4>
-                <ul>
-                    {% for template in templates %}
-                        <li><a href="{{ url_for('emails.editor') + '#' + template.key }}"><strong>{{ template.name }}</strong></a>
-                            <br><strong>last edited on:</strong> {{ template.last_modified }}
-                            <br><strong>created on:</strong> {{ template.created }}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
+
+        {% if loop.index % 4 == 0 %}
         </div>
-    </div>
+        {% endif %}
+
+    {% endfor %}
+
 {% endblock %}

@@ -11,6 +11,9 @@ var bindings = {
             dataGrouping2: '#data-grouping2',
             aggregateOp: '#aggregate-op',
             aggregateField: '#aggregate-field',
+            aggregateOp2: '#aggregate-op-2',
+            aggregateField2: '#aggregate-field-2',
+            mathOp: '#math-op',
             graphType: '#graph-type',
             drillDownButton: '.drill-down-button',
             limitByAdd: '#limit-by-add',
@@ -60,6 +63,24 @@ class DataGrapher {
             var elAggregateField = bindTo + ' ' + bindings.aggregateField;
         } else {
             return console.error('missing aggregateField in bindings');
+        }
+
+        if (bindings.aggregateOp2) {
+            var elAggregateOp2 = bindTo + ' ' + bindings.aggregateOp2;
+        } else {
+            return console.error('missing aggregateOp2 in bindings');
+        }
+
+        if (bindings.aggregateField2) {
+            var elAggregateField2 = bindTo + ' ' + bindings.aggregateField2;
+        } else {
+            return console.error('missing aggregateField2 in bindings');
+        }
+
+        if (bindings.mathOp) {
+            var elMathOp = bindTo + ' ' + bindings.mathOp;
+        } else {
+            return console.error('missing mathOp in bindings');
         }
 
         if (bindings.graphType) {
@@ -160,7 +181,20 @@ class DataGrapher {
             EmlClick: [
                 { grouping1: '_day', grouping2: '_hour' },
                 { grouping1: 'AreaCode', grouping2: null }
+            ],
+            Customer: [
+                { grouping1: 'eml_opens.AreaCode', grouping2: null },
+                { grouping1: 'eml_opens._day', grouping2: 'eml_opens._hour' },
+                { grouping1: 'eml_clicks.AreaCode', grouping2: null },
+                { grouping1: 'eml_clicks._day', grouping2: 'eml_clicks._hour' }
+            ],
+            SendJob: [
+                { grouping1: 'eml_opens.AreaCode', grouping2: null },
+                { grouping1: 'eml_opens._day', grouping2: 'eml_opens._hour' },
+                { grouping1: 'eml_clicks.AreaCode', grouping2: null },
+                { grouping1: 'eml_clicks._day', grouping2: 'eml_clicks._hour' }
             ]
+
         };
 
         var graphTypes = {
@@ -170,7 +204,8 @@ class DataGrapher {
                 { name: 'Smoothed Line Graph', value: 'spline' },
                 { name: 'Scatter Plot', value: 'scatter' },
                 { name: 'Pie Chart', value: 'pie' },
-                { name: 'Donut Chart', value: 'donut' }
+                { name: 'Donut Chart', value: 'donut'},
+                { name: 'Bubble Graph', value: 'circle-pack'}
             ],
             numeric: [
                 { name: 'Bar Graph', value: 'numericbar' },
@@ -178,7 +213,8 @@ class DataGrapher {
                 { name: 'Smoothed Line Graph', value: 'numericspline' },
                 { name: 'Scatter Plot', value: 'numericscatter' },
                 { name: 'Pie Chart', value: 'pie' },
-                { name: 'Donut Chart', value: 'donut' }
+                { name: 'Donut Chart', value: 'donut' },
+                { name: 'Bubble Graph', value: 'circle-pack'}
             ],
             datetime: [
                 { name: 'Bar Graph', value: 'datebar' },
@@ -186,17 +222,50 @@ class DataGrapher {
                 { name: 'Smoothed Line Graph', value: 'datespline' },
                 { name: 'Scatter Plot', value: 'datescatter' }
             ],
+            date: [
+                { name: 'Bar Graph', value: 'datebar' },
+                { name: 'Line Graph', value: 'dateline' },
+                { name: 'Smoothed Line Graph', value: 'datespline' },
+                { name: 'Scatter Plot', value: 'datescatter' },
+                { name: 'Bubble Graph', value: 'circle-pack'}
+            ],
             boolean: [
                 { name: 'Bar Graph', value: 'bar' },
                 { name: 'Pie Chart', value: 'pie' },
                 { name: 'Donut Chart', value: 'donut' }
             ],
             special: {
+                'singleGrouping': {
+                    'date': [
+                        { name: 'Calendar Graph', value: 'calendar' }
+                    ]
+                },
+                'dualGrouping': {
+                    'tbd': []
+                },
+                '_day_hour': [
+                    { name: 'Day Hour Heatmap', value: 'day-hour' }
+                ],
+                'eml_opens._dayeml_opens._hour' : [
+                    { name: 'Day Hour Heatmap', value: 'day-hour' }
+                ],
+                'eml_clicks._dayeml_clicks._hour': [
+                    { name: 'Day Hour Heatmap', value: 'day-hour' }
+                ],
+                'SentTime:date': [
+                    { name: 'Calendar Graph', value: 'calendar' }
+                ],
+                'SchedTime:date': [
+                    { name: 'Calendar Graph', value: 'calendar' }
+                ],
                 'AreaCode': [
                     { name: 'Map Graph', value: 'map-graph' }
                 ],
-                '_day_hour': [
-                    { name: 'Day Hour Heatmap', value: 'day-hour' }
+                'eml_opens.AreaCode': [
+                    { name: 'Map Graph', value: 'map-graph' }
+                ],
+                'eml_clicks.AreaCode': [
+                    { name: 'Map Graph', value: 'map-graph' }
                 ]
             }
         };
@@ -207,9 +276,11 @@ class DataGrapher {
                 { name: 'Equals', value: 'eq' },
                 { name: 'Not Equals', value: 'neq' },
                 { name: 'Contains', value: 'contains' },
+                { name: 'Not Contains', value: 'not-contains' },
                 { name: 'Is Empty', value: 'isnull' },
                 { name: 'Is Not Empty', value: 'notnull' },
-                { name: 'In This List', value: 'in' }
+                { name: 'In This List', value: 'in' },
+                { name: 'Not In This List', value: 'not-in' }
             ],
             numeric: [
                 { name: 'Equals', value: 'eq' },
@@ -221,7 +292,8 @@ class DataGrapher {
                 { name: 'Less Than', value: 'lt' },
                 { name: 'Less Than or Equal To', value: 'lte' },
                 { name: 'Between', value: 'between' },
-                { name: 'In This List', value: 'in' }
+                { name: 'In This List', value: 'in' },
+                { name: 'Not In This List', value: 'not-in' }
             ],
             datetime: [
                 { name: 'Equals', value: 'eq' },
@@ -347,8 +419,15 @@ class DataGrapher {
             $(elAggregateField).removeAttr('disabled')
                 .find('option').remove().end()
                 .append('<option value="">-- optional --</option>');
+            $(elAggregateField2).removeAttr('disabled')
+                .find('option').remove().end()
+                .append('<option value="">-- optional --</option>');
 
             $(elAggregateOp).val('count');
+            $(elAggregateOp2).val('');
+
+            // clear math op option
+            $(elMathOp).val('');
 
             // get columns and add data grouping options (one for each column)
             $.ajax({
@@ -367,6 +446,8 @@ class DataGrapher {
                           columnType = 'datetime';
                       } else if (column.type.indexOf('BOOLEAN') > -1) {
                           columnType = 'boolean';
+                      } else if (column.type.indexOf('DATE') > -1) {
+                          columnType = 'date';
                       }
                       columns[column.name] = { type: columnType, special: false };
                       $(elDataGrouping1).append('<option value="'+column.name+'">'+column.name+'</option>');
@@ -376,6 +457,7 @@ class DataGrapher {
                       // only add the numeric / datetime / boolean fields to the aggregate-field options
                       if (columnType == 'numeric' || columnType == 'datetime' || columnType == 'boolean') {
                           $(elAggregateField).append('<option value"'+column.name+'">'+column.name+'</option>');
+                          $(elAggregateField2).append('<option value"'+column.name+'">'+column.name+'</option>');
                       }
                   });
 
@@ -393,6 +475,11 @@ class DataGrapher {
 
             if (!el) {
                 el = $(this);
+            }
+
+            if(!el.val() && $(elDataGrouping2).val()){
+                $(elDataGrouping1).val($(elDataGrouping2).val());
+                $(elDataGrouping2).val(null);
             }
 
             if (el.val()) {
@@ -420,16 +507,23 @@ class DataGrapher {
                     graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special[tempkey]);
                 }
 
+                if (!$(elDataGrouping2).val()){
+                    // single grouped data
+                    if (graphTypes.special.singleGrouping.hasOwnProperty(grouping.type)){
+                        graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special.singleGrouping[grouping.type]);
+                    }
+                } else {
+                    // double grouped data
+                    if (graphTypes.special.dualGrouping.hasOwnProperty(grouping.type)){
+                        graphTypesToAdd = graphTypesToAdd.concat(graphTypes.special.dualGrouping[grouping.type]);
+                    }
+                }
+
                 graphTypesToAdd = graphTypesToAdd.concat(graphTypes[grouping.type]);
 
                 graphTypesToAdd.forEach(function(graphTypeToAdd){
                     $(elGraphType).append('<option value="'+graphTypeToAdd.value+'">'+graphTypeToAdd.name+'</option>')
                 });
-            } else {
-                if ($(elDataGrouping2).val()) {
-                    $(elDataGrouping1).val($(elDataGrouping2).val());
-                    $(elDataGrouping2).val(null);
-                }
             }
 
         };
@@ -546,7 +640,7 @@ class DataGrapher {
                     $(self).parent().find('#limit-by-val2').attr('hidden', 'hidden');
                 }
 
-                if (limitByOp == 'in') {
+                if (limitByOp == 'in' || limitByOp == 'not-in') {
                     $(self).parent().find('#limit-by-val1').replaceWith('<textarea id="limit-by-val1" placeholder="separate values with comma"></textarea>');
                 } else {
                     $(self).parent().find('#limit-by-val1').replaceWith('<input type="'+typeOfLimitByField+'" id="limit-by-val1"/>');
@@ -617,7 +711,8 @@ class DataGrapher {
                 el.parent().find(bindings.limitByVal2).attr('hidden', 'hidden');
             }
 
-            if (limitByOp == 'in') {
+            console.log('limitByOp = ' + limitByOp);
+            if (limitByOp == 'in' || limitByOp == 'not-in') {
                 el.parent().find(bindings.limitByVal1).replaceWith('<textarea id="09823409824" placeholder="separate values with comma"></textarea>');
             } else {
                 el.parent().find(bindings.limitByVal1).replaceWith('<input id="09823409824" type="'+typeOfLimitByField+'" />');
@@ -652,7 +747,13 @@ class DataGrapher {
             var aggregateOp = $(elAggregateOp).val();
             var aggregateField = $(elAggregateField).val();
             if (aggregateOp == 'count' && !aggregateField) {
-                aggregateField = 'none';
+                aggregateField = '';
+            }
+            var aggregateOp2 = $(elAggregateOp2).val();
+            var aggregateField2 = $(elAggregateField2).val();
+            var mathOp = $(elMathOp).val();
+            if (aggregateOp2 == 'count' && !aggregateField2) {
+                aggregateField2 = '';
             }
 
             // ensure all options have values
@@ -662,11 +763,21 @@ class DataGrapher {
                 return alert('must select from "Group Data By"');
             } else if (!graphType) {
                 return alert('must select from "Graph Type"');
-            } else if (aggregateOp != 'count') {
-                if (!aggregateField) {
-                    return alert('must select a field to aggregate by if aggregate operation is NOT count');
-                }
+            } else if (aggregateOp != 'count' && !aggregateField) {
+                return alert('must select a field to aggregate by if aggregate operation is NOT count');
+            } else if ( (aggregateOp2 && !mathOp) || (!aggregateOp2 && mathOp) ) {
+                return alert('must select a math operation and a second aggregation');
+            } else if (aggregateOp2 && aggregateOp2 != 'count' && !aggregateField2) {
+                return alert('must select a field to aggregate by if second aggregate operation is NOT count');
             }
+
+            var calculate = {
+                'left-operand-field': aggregateField,
+                'left-operand-agg-op': aggregateOp,
+                'right-operand-field': aggregateField2,
+                'right-operand-agg-op': aggregateOp2,
+                'math-op': mathOp
+            };
 
             // get all filters and add them to filters variable
             var filters = [];
@@ -690,7 +801,7 @@ class DataGrapher {
                         return alert('must select from "Limit By Operation"');
                     }
                     if (!filterVal1of2) {
-                        if (filterOp != 'notnull' && filterOp != 'isnull'){
+                        if (filterOp != 'notnull' && filterOp != 'isnull' && filterOp != 'distinct'){
                             return alert('must select from "Limit By Value (1 of 2)"');
                         }
                     }
@@ -709,6 +820,8 @@ class DataGrapher {
                         filters.push({ "name": filterColumn.name, "op": "neq", "val": filterVal1of2 });
                     } else if (filterOp == 'contains') {
                         filters.push({ "name": filterColumn.name, "op": "contains", "val": filterVal1of2 });
+                    } else if (filterOp == 'not-contains') {
+                        filters.push({ "name": filterColumn.name, "op": "not-contains", "val": filterVal1of2 });
                     } else if (filterOp == 'isnull') {
                         filters.push({ "name": filterColumn.name, "op": "isnull", "val": filterVal1of2 });
                     } else if (filterOp == 'notnull') {
@@ -725,7 +838,11 @@ class DataGrapher {
                         filters.push({ "name": filterColumn.name, "op": "gt", "val": filterVal1of2 });
                         filters.push({ "name": filterColumn.name, "op": "lt", "val": filterVal2of2 });
                     } else if (filterOp == 'in') {
-                        filters.push({ "name": filterColumn.name, "op": "in", "val": "["+filterVal1of2+"]" });
+                        filters.push({ "name": filterColumn.name, "op": "in", "val": filterVal1of2 });
+                    } else if (filterOp == 'not-in') {
+                        filters.push({ "name": filterColumn.name, "op": "not-in", "val": filterVal1of2 });
+                    } else if (filterOp == 'distinct') {
+                        filters.push({ "name": filterColumn.name, "op": "distinct", "val": null });
                     }
                 }
             });
@@ -735,10 +852,14 @@ class DataGrapher {
             var requestMethod;
 
             if (action == 'update') {
+                // render loading gif
+                $(elDrillDownGraph).html('<img src="/img/loader.gif" width="50px" style="display: block; margin: 0 auto;"/>');
+
+                //request data and render graph on response
                 requestMethod = 'POST';
-                endpoint = '/metrics-grouped-by'+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
+                endpoint = '/metrics-grouped-by'+'/'+dataSelect+'/'+dataGrouping;
                 successFunc = function(data) {
-                    self.renderGraph(self, elDrillDownGraph, graphType, data.results, dataGrouping, aggregateOp, aggregateField);
+                    self.renderGraph(self, elDrillDownGraph, reportName, graphType, data.results, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2);
                 }
             } else if (action == 'save') {
                 requestMethod = 'POST';
@@ -746,18 +867,20 @@ class DataGrapher {
                     reportName = prompt('name of report: ');
                     reportId = 'null';
                 }
-                endpoint = '/save-report/'+reportId+'/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
+                endpoint = '/save-report/'+reportId+'/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping;
                 successFunc = function(data) {
                     reportId = data.reportId;
                     alert('saved report');
+                    $(bindTo + ' #report-title').text(reportName);
                 }
             } else if (action == 'save-as') {
                 requestMethod = 'POST';
                 reportName = prompt('enter new report name: ');
-                endpoint = '/save-report/null/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping+'/'+aggregateOp+'/'+aggregateField;
+                endpoint = '/save-report/null/'+reportName+'/'+graphType+'/'+dataSelect+'/'+dataGrouping;
                 successFunc = function(data) {
                     reportId = data.reportId;
                     alert('saved report');
+                    $(bindTo + ' #report-title').text(reportName);
                 }
             } else if (action == 'delete') {
                 requestMethod = 'GET';
@@ -774,7 +897,11 @@ class DataGrapher {
                 type: requestMethod,
                 url: endpoint,
                 data: {
-                    q: JSON.stringify({'filters': filters}),
+                    q: JSON.stringify({
+                        'filters': filters,
+                        //'groupings': groupings,
+                        'calculate': calculate
+                    }),
                     csrf: $('#csrf-token').text()
                 },
                 success: successFunc
@@ -783,6 +910,9 @@ class DataGrapher {
         };
 
         var loadReportHandler = function(event, el, callback){
+
+            // render loading gif
+            $(elDrillDownGraph).html('<img src="/img/loader.gif" width="50px" style="display: block; margin: 0 auto;"/>');
 
             reportId = $(this).val();
             reportName = $(this).find('option:selected').text();
@@ -805,6 +935,9 @@ class DataGrapher {
 
                         $(elAggregateOp).val(report.aggregate_op);
                         $(elAggregateField).val(report.aggregate_field);
+                        $(elAggregateOp2).val(report.aggregate_op_2);
+                        $(elAggregateField2).val(report.aggregate_field_2);
+                        $(elMathOp).val(report.math_op);
                         $(elGraphType).val(report.graph_type);
 
                         report.filters_json.forEach(function(filter){
@@ -912,23 +1045,77 @@ class DataGrapher {
         return fdata;
     }
 
-    renderGraph(self, bindTo, graphType, data, dataGrouping, aggregateOp, aggregateField) {
+    renderGraph(self, bindTo, reportTitle, graphType, data, dataGrouping, aggregateOp, aggregateField, mathOp, aggregateOp2, aggregateField2) {
+        // clear out html in report area, and replace with just the report title
+        if(!reportTitle){ reportTitle = 'Unnamed Report'; }
+        $(bindTo).html('<h1 id="report-title" style="text-align: center;">'+reportTitle+'</h1>');
+
         // if it's map-graph, render custom map graph instead
         if(graphType == 'map-graph') {
-            $(bindTo).html('<style>\n    .counties {\n      fill: none;\n    }\n    \n    .states {\n      fill: none;\n      stroke: #000;\n      stroke-linejoin: round;\n    }\n</style>\n<svg width="960" height="600"></svg>\n<p>MAP GRAPH!</p>');
+            $(bindTo).append('<style>\n    .counties {\n        fill: none;\n    }\n    \n    .states {\n        fill: none;\n        stroke: #000;\n        stroke-linejoin: round;\n    }\n    \n    div.tooltip {\t\n        position: absolute;\t\t\t\n        text-align: center;\t\t\t\n        width: 150px;\t\t\t\t\t\n        height: 35px;\t\t\t\t\t\n        padding: 2px;\t\t\t\t\n        font: 12px sans-serif;\t\t\n        background: lightsteelblue;\t\n        border: 0px;\t\t\n        border-radius: 8px;\t\t\t\n        pointer-events: none;\t\t\t\n    }\n</style>\n<svg width="100%" height="600"></svg>\n<p>MAP GRAPH!</p>');
             var mapGraph = new MapGraph();
             mapGraph.init(bindTo + ' svg', data);
             return;
         } else if(graphType == 'day-hour'){
-            $(bindTo).html('<style>\n  rect.bordered {\n    stroke: #E6E6E6;\n    stroke-width:2px;   \n  }\n\n  text.mono {\n    font-size: 9pt;\n    font-family: Consolas, courier;\n    fill: #aaa;\n  }\n\n  text.axis-workweek {\n    fill: #000;\n  }\n\n  text.axis-worktime {\n    fill: #000;\n  }\n</style>\n<div class="day-hour"></div>\n<p>HEAT MAP!</p>');
+            $(bindTo).append('<style>\n  rect.bordered {\n    stroke: #E6E6E6;\n    stroke-width:2px;   \n  }\n\n  text.mono {\n    font-size: 9pt;\n    font-family: Consolas, courier;\n    fill: #aaa;\n  }\n\n  text.axis-workweek {\n    fill: #000;\n  }\n\n  text.axis-worktime {\n    fill: #000;\n  }\n    \n  div.tooltip {\t\n    position: absolute;\t\t\t\n    text-align: center;\t\t\t\n    width: 90px;\t\t\t\t\t\n    height: 35px;\t\t\t\t\t\n    padding: 2px;\t\t\t\t\n    font: 12px sans-serif;\t\t\n    background: lightsteelblue;\t\n    border: 0px;\t\t\n    border-radius: 8px;\t\t\t\n    pointer-events: none;\t\t\t\n  }\n</style>\n<div class="day-hour"></div>\n<p>HEAT MAP!</p>');
             var dayHourPlot = new DayHourPlot();
             dayHourPlot.init(bindTo + ' .day-hour', data);
             return;
+        } else if(graphType == 'calendar'){
+            $(bindTo).append('<style>\n    \n.key path {\n  display: none;\n}\n\n.key line {\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.legend-title {\n    font-weight: bold;\n}\n\n.legend-box {\n    fill: none;\n    stroke: #888;\n    font-size: 10px;\n}\n    \ndiv.tooltip {\n    position: absolute;\n    text-align: center;\n    width: 120px;\n    height: 35px;\n    padding: 2px;\n    font: 12px sans-serif;\n    background: lightsteelblue;\n    border: 0px;\n    border-radius: 8px;\n    pointer-events: none;\n}\n    \n</style>\n<svg class="legend" width="100%" height="80"></svg>\n<div class="canvas" width="100%" height="600"></div>');
+            var calendarGraph = new CalendarGraph();
+            calendarGraph.init(bindTo, data);
+            return;
+        } else if(graphType == 'circle-pack'){
+            $(bindTo).append('<style type="text/css">\n    svg text {\n      font-size: 11px;\n      pointer-events: none;\n    }\n    \n    svg text.parent {\n      fill: #c61d1b;\n      font-size: 25px;\n      font-weight: bold;\n    }\n    \n    svg circle {\n      fill: #ccc;\n      stroke: #999;\n      pointer-events: all;\n    }\n    \n    svg circle.parent {\n      fill: #1f77b4;\n      fill-opacity: .1;\n      stroke: steelblue;\n    }\n    \n    svg circle.parent:hover {\n      stroke: #ff7f0e;\n      stroke-width: .5px;\n    }\n    \n    svg circle.child {\n      pointer-events: none;\n    }\n    \n    svg a:link, svg a:visited {\n      color: #777;\n      text-decoration: none;\n    }\n    \n    svg a:hover {\n      color: #666;\n    }\n    \n    svg blockquote {\n      margin: 0;\n    }\n    \n    svg blockquote:before {\n      content: "“";\n      position: absolute;\n      left: -.4em;\n    }\n    \n    svg blockquote:after {\n      content: "”";\n      position: absolute;\n    }\n    \n    svg > ul {\n      margin: 0;\n      padding: 0;\n    }\n    \n    svg h1 {\n      font-size: 64px;\n    }\n    \n    h1, h2, h3 {\n      font-weight: inherit;\n      margin: 0;\n    }\n    \n    h2, h3 {\n      text-align: right;\n      font-size: inherit;\n      position: absolute;\n      bottom: 0;\n      right: 0;\n    }\n    \n    h2 {\n      font-size: 24px;\n      position: absolute;\n    }\n    \n    h3 {\n      bottom: -20px;\n      font-size: 18px;\n    }\n    \n    .invert {\n      background: #1f1f1f;\n      color: #dcdccc;\n    }\n    \n    .invert h2, .invert h3 {\n      color: #7f9f7f;\n    }\n    \n    .string, .regexp {\n      color: #f39;\n    }\n    \n    .keyword {\n      color: #00c;\n    }\n    \n    .comment {\n      color: #777;\n      font-style: oblique;\n    }\n    \n    .number {\n      color: #369;\n    }\n    \n    .class, .special {\n      color: #1181B8;\n    }\n    \n    body > svg {\n      position: absolute;\n      top: -80px;\n      //left: -160px;\n    }\n\n</style>');
+            var circlePackGraph = new CirclePackGraph();
+
+            // restructure data to feed into graph: {name:'', children: [{name:'', size:x}, ...]}
+            window.d = data;
+            var formattedData = {
+                'name': '',
+                'children': []
+            };
+            var tempData;
+            if (data[1][2]) {
+                // in the case of dual grouped data
+                tempData = {};
+                data.forEach(function(item){
+                    var outerGrouping = item[0],
+                        innerGrouping = item[1],
+                        value = item[2];
+                    if (!tempData.hasOwnProperty(outerGrouping)) {
+                        // new group, make new key and instantiate array with first subgrouping
+                        tempData[outerGrouping] = [{'name': innerGrouping, 'size': value}];
+                    } else {
+                        // existing group, add next subgrouping to existing array
+                        tempData[outerGrouping] = tempData[outerGrouping].concat({'name': innerGrouping, 'size': value});
+                    }
+                });
+                Object.keys(tempData).forEach(function(key){
+                    var children = tempData[key];
+                    formattedData.children = formattedData.children.concat({'name': key, 'children': children});
+                });
+            } else {
+                // in the case of single grouped data
+                tempData = [];
+                data.forEach(function(item){
+                    var grouping = item[0],
+                        value = item[1];
+                    tempData = tempData.concat({'name': grouping, 'size': value});
+                });
+                formattedData.children = tempData;
+            }
+
+            circlePackGraph.init(bindTo, formattedData);
+            return;
         } else if(graphType == 'line' || graphType == 'scatter' || graphType == 'spline' || graphType == 'bar' || graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar'){
+            $(bindTo).append('<div id="c3-area"></div>');
             var secondGrouping = dataGrouping;
             var firstGrouping = '';
             var xAxisKey = 'x';
             var xAxisType = 'category';
+            var padValue = { top: 20 };
             if (graphType == 'numericline' || graphType == 'numericscatter' || graphType == 'numericspline' || graphType == 'numericbar') {
                 xAxisType = 'indexed';
                 graphType = graphType.substring(7);
@@ -942,8 +1129,8 @@ class DataGrapher {
                 data = self.formatDualGroupedData(data, secondGrouping);
                 window.data = data;
                 xAxisKey = secondGrouping;
-                if(data[0].length > 10){ legendShow = false; }
-                if(data.length > 30){ xAxisShow = false; }
+                if(data[0].length > 10){ legendShow = true; }
+                if(data.length > 30){ xAxisShow = true; }
                 //if(!isNaN(data[1][data[1].length-1])){ xAxisType = 'indexed'; }
             } else {
                 // single grouping
@@ -953,7 +1140,7 @@ class DataGrapher {
             }
 
             c3.generate({
-                bindto: bindTo,
+                bindto: bindTo + ' #c3-area',
                 data: {
                     x: xAxisKey,
                     rows: data,
@@ -964,7 +1151,7 @@ class DataGrapher {
                 },
                 legend: {
                     show: legendShow,
-                    position: 'bottom'
+                    position: 'right'
                 },
                 axis: {
                     x: {
@@ -977,7 +1164,7 @@ class DataGrapher {
                     },
                     y: {
                         label: {
-                            text: aggregateOp + ' ' + aggregateField,
+                            text: aggregateOp + ' ' + aggregateField + ' ' + mathOp + ' ' + aggregateOp2 + ' ' + aggregateField2 ,
                             position: 'outer-middle'
                         }
                     }
@@ -985,16 +1172,32 @@ class DataGrapher {
                 grid: { x: { show: true }, y: { show: true } }
             });
 
+            // add title to legend
+            var firstLegend = d3.select(bindTo + ' .c3-legend-item');
+            var legendCon = d3.select(firstLegend.node().parentNode);
+            var legendY = parseInt(firstLegend.select('text').attr('y'));
+            var legendX = parseInt(firstLegend.select('text').attr('x'));
+            legendCon.append('text')
+                .text(firstGrouping)
+                .attr('y', legendY - 20)
+                .attr('x', legendX - 40)
+                .attr('font-size', 15);
+            if(dataGrouping.indexOf('-') > 0) {
+                var legendTxf = legendCon.attr("transform");
+                legendCon.attr("transform", legendTxf.substring(0, legendTxf.length-2) + " 20)");
+            }
             $(bindTo + ' .c3-circle').attr('r', '4');
-            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 18px;\n    }\n</style>');
+            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 15px;\n    }\n</style>');
             return;
         } else if(graphType == 'dateline' || graphType == 'datescatter' || graphType == 'datespline' || graphType == 'datebar'){
+            $(bindTo).append('<div id="c3-area"></div>');
             var secondGrouping = dataGrouping;
             var firstGrouping = dataGrouping;
             var xAxisKey = 'x';
             var xAxisType = 'timeseries';
             var xAxisShow = true;
             var legendShow = true;
+            var padValue = { top: 20 };
             if (dataGrouping.indexOf('-') > 0){
                 // double grouping
                 firstGrouping = dataGrouping.substring(0, dataGrouping.indexOf('-'));
@@ -1002,8 +1205,8 @@ class DataGrapher {
                 data = self.formatDualGroupedData(data, secondGrouping);
                 xAxisKey = secondGrouping;
                 if(data.length > 30){
-                    xAxisShow = false;
-                    legendShow = false;
+                    xAxisShow = true;
+                    legendShow = true;
                 }
             } else {
                 // single grouping
@@ -1012,7 +1215,7 @@ class DataGrapher {
             }
 
             window.graph = c3.generate({
-                bindto: bindTo,
+                bindto: bindTo + ' #c3-area',
                 data: {
                     x: xAxisKey,
                     xFormat: '%a, %d %b %Y %H:%M:%S GMT',
@@ -1023,7 +1226,7 @@ class DataGrapher {
                     r: '4'
                 },
                 legend: {
-                    position: 'bottom',
+                    position: 'right',
                     show: legendShow
                 },
                 axis: {
@@ -1040,7 +1243,7 @@ class DataGrapher {
                     },
                     y: {
                         label: {
-                            text: aggregateOp + ' ' + aggregateField,
+                            text: aggregateOp + ' ' + aggregateField + ' ' + mathOp + ' ' + aggregateOp2 + ' ' + aggregateField2,
                             position: 'outer-middle'
                         }
                     }
@@ -1048,22 +1251,51 @@ class DataGrapher {
                 grid: { x: { show: true }, y: { show: true } }
             });
 
+            // add title to legend
+            var firstLegend = d3.select(bindTo + ' .c3-legend-item');
+            var legendCon = d3.select(firstLegend.node().parentNode);
+            var legendY = parseInt(firstLegend.select('text').attr('y'));
+            var legendX = parseInt(firstLegend.select('text').attr('x'));
+            legendCon.append('text')
+                .text(firstGrouping)
+                .attr('y', legendY - 20)
+                .attr('x', legendX - 40)
+                .attr('font-size', 15);
+            if(dataGrouping.indexOf('-') > 0) {
+                var legendTxf = legendCon.attr("transform");
+                legendCon.attr("transform", legendTxf.substring(0, legendTxf.length-2) + " 20)");
+            }
             $(bindTo + ' .c3-circle').attr('r', '4');
-            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 18px;\n    }\n</style>');
+            $(bindTo).prepend('<style>\n    .c3-axis-y-label,\n    .c3-axis-x-label {\n        font-size: 15px;\n    }\n</style>');
             return;
         } else if(graphType == 'pie' || graphType == 'donut') {
+            $(bindTo).append('<div id="c3-area"></div>');
             c3.generate({
-                bindto: bindTo,
+                bindto: bindTo + ' #c3-area',
                 data: {
                     columns: data,
                     type: graphType
                 },
-                legend: { hide: true }
+                legend: {
+                    show: true,
+                    position: 'right'
+                }
             });
+
+            // add title to legend
+            var firstLegend = d3.select(bindTo + ' .c3-legend-item');
+            var legendCon = d3.select(firstLegend.node().parentNode);
+            var legendY = parseInt(firstLegend.select('text').attr('y'));
+            legendCon.append('text')
+                .text(dataGrouping)
+                .attr('y', legendY - 20)
+                .attr('font-size', 15);
+            legendCon.attr("transform", "translate(700, 10)");
         } else {
+            $(bindTo).append('<div id="c3-area"></div>');
             // render C3 graph here
             c3.generate({
-                bindto: bindTo,
+                bindto: bindTo + ' #c3-area',
                 data: {
                     columns: data,
                     type: graphType

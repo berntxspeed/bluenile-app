@@ -13,9 +13,9 @@
     <div class="banner banner-jumbotron banner-gray">
         <div class="container">
             <div class="row">
-                <div class="col-md-6 center-block">
-                    <h1>&nbsp;</h1>
-                    <h1>Analyze your data by grouping and graphing it.</h1>
+                <div class="col-md-12 center-block">
+                    <h2>&nbsp;</h2>
+                    <h2 style="color:#1c4072">Analyze your data by grouping and graphing it.</h2>
                 </div>
             </div>
         </div>
@@ -25,7 +25,7 @@
 {% block body_content %}
     <div class="row">
         <div class="col-md-12 center-block" id="c-side">
-            <strong>Drill Down into any data (C SIDE)</strong>
+
             <div class="well" id="drill-down-well">
                 <div id="drill-down-areaC" class="row" style="background-color: ghostwhite">
 
@@ -61,14 +61,40 @@
 
                     <div class="well form-well col-md-6">
                         <label>Calculate:</label>
+                        <br/>
                         <select id="aggregate-op">
+                            <option value="">-- select one --</option>
                             <option value="count">Count</option>
+                            <option value="count-distinct">Count (distinct values only)</option>
                             <option value="average">Average</option>
                             <option value="max">Maximum</option>
                             <option value="min">Minimum</option>
                             <option value="sum">Sum</option>
+                            <option value="sum-distinct">Sum (distinct values only)</option>
                         </select>
                         <select id="aggregate-field" disabled>
+                            <option value="">-- select one--</option>
+                        </select>
+                        <br/>
+                        <select id="math-op">
+                            <option value="">-- select one--</option>
+                            <option value="plus">plus</option>
+                            <option value="minus">minus</option>
+                            <option value="times">times</option>
+                            <option value="dividedby">dividedby</option>
+                        </select>
+                        <br/>
+                        <select id="aggregate-op-2">
+                            <option value="">-- select one --</option>
+                            <option value="count">Count</option>
+                            <option value="count-distinct">Count (distinct values only)</option>
+                            <option value="average">Average</option>
+                            <option value="max">Maximum</option>
+                            <option value="min">Minimum</option>
+                            <option value="sum">Sum</option>
+                            <option value="sum-distinct">Sum (distinct values only)</option>
+                        </select>
+                        <select id="aggregate-field-2" disabled>
                             <option value="">-- select one--</option>
                         </select>
 
@@ -115,7 +141,7 @@
 
     <div class="row">
         <div class="col-md-12 center-block" id="email-side">
-            <strong>Drill Down into email data</strong>
+
             <div class="well" id="drill-down-well">
 
                 <label>By Specific Send Job:</label>
@@ -176,14 +202,40 @@
 
                     <div class="well form-well col-md-6">
                         <label>Calculate:</label>
+                        <br/>
                         <select id="aggregate-op">
+                            <option value="">-- select one --</option>
                             <option value="count">Count</option>
+                            <option value="count-distinct">Count (distinct values only)</option>
                             <option value="average">Average</option>
                             <option value="max">Maximum</option>
                             <option value="min">Minimum</option>
                             <option value="sum">Sum</option>
+                            <option value="sum-distinct">Sum (distinct values only)</option>
                         </select>
                         <select id="aggregate-field" disabled>
+                            <option value="">-- select one --</option>
+                        </select>
+                        <br/>
+                        <select id="math-op">
+                            <option value="">-- select one --</option>
+                            <option value="plus">plus</option>
+                            <option value="minus">minus</option>
+                            <option value="times">times</option>
+                            <option value="dividedby">dividedby</option>
+                        </select>
+                        <br/>
+                        <select id="aggregate-op-2">
+                            <option value="">-- select one --</option>
+                            <option value="count">Count</option>
+                            <option value="count-distinct">Count (distinct values only)</option>
+                            <option value="average">Average</option>
+                            <option value="max">Maximum</option>
+                            <option value="min">Minimum</option>
+                            <option value="sum">Sum</option>
+                            <option value="sum-distinct">Sum (distinct values only)</option>
+                        </select>
+                        <select id="aggregate-field-2" disabled>
                             <option value="">-- select one--</option>
                         </select>
 
