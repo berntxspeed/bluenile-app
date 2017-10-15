@@ -51,26 +51,26 @@ class ApiData(object):
                 last_timestamp = self._db_session.query(self._db_model).order_by((self._db_model.created_at.desc())).first()
                 # no current records or not a Customer table
                 if last_timestamp is None: #or self._db_model.__name__ != 'Customer':
-                    print(f'No records in {self._db_model.__name__} Table... loading everything')
+                    print('No records in {self._db_model.__name__} Table... loading everything')
                     created_at_min = ''
                 else:
                     max_timestamp = last_timestamp.created_at.isoformat()
-                    created_at_min = f'created_at_min={max_timestamp}'
-                    print(f'latest timestamp in {self._db_model.__name__} Table: {max_timestamp}')
+                    created_at_min = 'created_at_min={max_timestamp}'
+                    print('latest timestamp in {self._db_model.__name__} Table: {max_timestamp}')
 
-                total_no_of_records_response = requests.get(url=f'{self._pagination["count_endpoint"]}',
+                total_no_of_records_response = requests.get(url='{self._pagination["count_endpoint"]}',
                                                       params=self._params,
                                                       headers=self._headers,
                                                       auth=self._auth)
 
-                no_of_records_response = requests.get(url=f'{self._pagination["count_endpoint"]}?{created_at_min}',
+                no_of_records_response = requests.get(url='{self._pagination["count_endpoint"]}?{created_at_min}',
                                                       params=self._params,
                                                       headers=self._headers,
                                                       auth=self._auth)
 
                 no_of_records = no_of_records_response.json().get(self._pagination['count_data_key'])
                 total_no_of_records = total_no_of_records_response.json().get(self._pagination['count_data_key'])
-                print(f'Getting {no_of_records} out of {total_no_of_records} records...')
+                print('Getting {no_of_records} out of {total_no_of_records} records...')
                 if no_of_records is None:
                     raise Exception('Failed to get records count: check credentials for your GET request')
 
@@ -80,7 +80,7 @@ class ApiData(object):
                 else:
                     number_of_pages = int_no_of_pages
                 for page_no in range(1, number_of_pages + 1):
-                    page_url = f'{self._pagination["endpoint"]}{page_no}&{created_at_min}'
+                    page_url = '{self._pagination["endpoint"]}{page_no}&{created_at_min}'
                     page_response = requests.get(url=page_url,
                                                  params=self._params,
                                                  headers=self._headers,
