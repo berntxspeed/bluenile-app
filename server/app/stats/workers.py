@@ -150,23 +150,6 @@ def add_fips_location_emlclick(**kwargs):
             service.init_user_db(user_params)
             service.exec_safe_session(service.add_fips_location_data, 'EmlClick')
 
-@celery.task
-def add_day_hour_to_emlopen(**kwargs):
-    user_params = kwargs.get('user_params')
-    if user_params:
-        with app.app_context():
-            service = injector.get(UserDataLoadServ)
-            service.init_user_db(user_params)
-            service.exec_safe_session(service.add_day_hour_to_data, 'EmlOpen')
-
-@celery.task
-def add_day_hour_to_emlclick(**kwargs):
-    user_params = kwargs.get('user_params')
-    if user_params:
-        with app.app_context():
-            service = injector.get(UserDataLoadServ)
-            service.init_user_db(user_params)
-            service.exec_safe_session(service.add_day_hour_to_data, 'EmlClick')
 
 @celery.task(base=BaseTask)
 def sync_all_queries_to_mc(**kwargs):

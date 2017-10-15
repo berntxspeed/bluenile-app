@@ -23,9 +23,6 @@ class Config(object):
     UPLOAD_FOLDER = os.path.join(PROJECT_ROOT, '..', 'static/uploads')
     REDIS_URI = os.getenv('REDIS_URL')
 
-    # used for db migration
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
-
     # Used by Flask-Session
     SESSION_TYPE = 'redis'
 
